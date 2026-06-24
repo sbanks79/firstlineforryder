@@ -1,1 +1,604 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Firstline Road Solutions - UPS Call Taking</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a1a2e;min-height:100vh}header{background:linear-gradient(135deg,#1a1a2e,#0f3460);color:#fff;padding:18px 30px;display:flex;align-items:center;justify-content:space-between}.hl{display:flex;align-items:center;gap:15px}.logo{width:52px;height:52px;background:#FFB500;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#1a1a2e}header h1{font-size:1.4rem;font-weight:700}header p{font-size:.8rem;opacity:.75;margin-top:2px}.badge{background:#FFB500;color:#1a1a2e;padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700}.stats{display:flex;gap:16px;padding:16px 30px 8px}.sc{background:#fff;border-radius:10px;padding:12px 20px;box-shadow:0 2px 8px rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;min-width:110px}.sn{font-size:1.6rem;font-weight:800;color:#1a1a2e}.sn.g{color:#22c55e}.sl{font-size:.72rem;color:#64748b;font-weight:600;text-transform:uppercase}.main-panel{max-width:700px;margin:30px auto;padding:0 20px}.dispatch-panel{background:#fff;border-radius:14px;padding:28px;box-shadow:0 2px 12px rgba(0,0,0,.08)}.dispatch-panel h2{font-size:1.05rem;font-weight:700;color:#1a1a2e;margin-bottom:6px}.dispatch-panel p{font-size:.82rem;color:#64748b;margin-bottom:18px}.sel-wrap{position:relative;margin-bottom:18px}select#loc-select{width:100%;padding:13px 16px;border:2px solid #e2e8f0;border-radius:10px;font-size:.95rem;color:#1a1a2e;background:#f8fafc;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none}.sel-wrap::after{content:"▼";position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:#64748b;font-size:.8rem}select#loc-select:focus{border-color:#FFB500}#open-btn{width:100%;padding:14px;background:#FFB500;color:#1a1a2e;border:none;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;transition:background .2s;letter-spacing:.03em}#open-btn:hover{background:#e6a200}#open-btn:disabled{background:#e2e8f0;color:#94a3b8;cursor:not-allowed}.result-info{margin-top:18px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #22c55e;font-size:.82rem;color:#166534;display:none}footer{text-align:center;padding:20px;color:#94a3b8;font-size:.8rem;background:#fff;border-top:1px solid #e2e8f0;margin-top:40px}</style></head><body><header><div class="hl"><div class="logo">UPS</div><div><h1>Firstline Road Solutions - UPS Call Taking</h1><p>Select a location to submit a service request</p></div></div><div class="badge">INTERNAL USE ONLY</div></header><div class="stats"><div class="sc"><div class="sn">35</div><div class="sl">Total Locations</div></div><div class="sc"><div class="sn g">35</div><div class="sl">Links Active</div></div></div><div class="main-panel"><div class="dispatch-panel"><h2>Open Dispatch Portal</h2><p>Select a UPS location from the dropdown, then click the button to open the dispatch portal.</p><div class="sel-wrap"><select id="loc-select" onchange="onSelect()"><option value="">-- Select a UPS Location --</option></select></div><button id="open-btn" onclick="openPortal()" disabled>Open Dispatch Portal</button><div class="result-info" id="result-info"></div></div></div><footer>2026 Firstline Road Solutions - Internal Use Only</footer><script>var locs=[{name:"UPS - Ceres",addr:"1400 Hillmore St, Ceres, CA",url:"https://public.towbook.com/Vrgq"},{name:"UPS - Concord",addr:"1970 Olivera Rd, Concord, CA",url:"https://public.towbook.com/EqQY"},{name:"UPS - Freight San Leandro",addr:"3050 Teagarden St, San Leandro, CA",url:"https://public.towbook.com/g7mn"},{name:"UPS - Fremont",addr:"5588 Cushing Pkwy, Fremont, CA",url:"https://public.towbook.com/Za4Z"},{name:"UPS - Fresno",addr:"1601 W McKinley Ave, Fresno, CA",url:"https://public.towbook.com/p7k7"},{name:"UPS - Lakeport",addr:"1275 Craig Ave, Lakeport, CA",url:"https://public.towbook.com/qa45"},{name:"UPS - Lathrop",addr:"11800 S Harlan Rd, Lathrop, CA",url:"https://public.towbook.com/jR77"},{name:"UPS - Menlo Park",addr:"1355 Adams Ct, Menlo Park, CA",url:"https://public.towbook.com/6ndK"},{name:"UPS - Monterey",addr:"6 Upper Ragsdale Dr, Monterey, CA",url:"https://public.towbook.com/56dv"},{name:"UPS - Napa",addr:"2531 Napa Valley Corporate Dr, Napa, CA",url:"https://public.towbook.com/B3z2"},{name:"UPS - Oakland",addr:"8400 Pardee Dr, Oakland, CA",url:"https://public.towbook.com/oO2d"},{name:"UPS - Oakland Air",addr:"Allen Shepard Way, Oakland, CA",url:"https://public.towbook.com/wWmZ"},{name:"UPS - Oakley",addr:"5300 Live Oak Ave, Oakley, CA",url:"https://public.towbook.com/Nrw5"},{name:"UPS - Petaluma",addr:"3860 Cypress Dr, Petaluma, CA",url:"https://public.towbook.com/0XdY"},{name:"UPS - Plant Eng. Fremont",addr:"5588 Cushing Pkwy, Fremont, CA",url:"https://public.towbook.com/Wogx"},{name:"UPS - Plant Eng. San Francisco",addr:"2222 17th St, San Francisco, CA",url:"https://public.towbook.com/O2Wp"},{name:"UPS - Plant Eng. San Jose",addr:"1999 S 7th St, San Jose, CA",url:"https://public.towbook.com/D3vG"},{name:"UPS - Richmond",addr:"1601 Atlas Rd, Richmond, CA",url:"https://public.towbook.com/xAMV"},{name:"UPS - Rocklin",addr:"2275 Sierra Meadow Dr, Rocklin, CA",url:"https://public.towbook.com/Rr6y"},{name:"UPS - Salinas",addr:"1139 Madison Lane, Salinas, CA",url:"https://public.towbook.com/n7YX"},{name:"UPS - San Bruno",addr:"657 Forbes Blvd, S San Francisco, CA",url:"https://public.towbook.com/PeQL"},{name:"UPS - San Francisco",addr:"2222 17th St, San Francisco, CA",url:"https://public.towbook.com/Yqpr"},{name:"UPS - San Jose",addr:"1999 S 7th St, San Jose, CA",url:"https://public.towbook.com/k72J"},{name:"UPS - San Jose Airport",addr:"1277 Airport Blvd, San Jose, CA",url:"https://public.towbook.com/rVzA"},{name:"UPS - San Rafael",addr:"2985 Kerner Blvd, San Rafael, CA",url:"https://public.towbook.com/G2mK"},{name:"UPS - San Ramon",addr:"4500 Norris Canyon Rd, San Ramon, CA",url:"https://public.towbook.com/2gdE"},{name:"UPS - Santa Cruz",addr:"251 Sylvania Ave, Santa Cruz, CA",url:"https://public.towbook.com/1Xd5"},{name:"UPS - Santa Rosa",addr:"3331 Industrial Dr, Santa Rosa, CA",url:"https://public.towbook.com/dMvj"},{name:"UPS - Sparks",addr:"355 Vista Blvd, Sparks, NV",url:"https://public.towbook.com/KrwE"},{name:"UPS - Sunnyvale",addr:"1245 Hammerwood Ct, Sunnyvale, CA",url:"https://public.towbook.com/oOyd"},{name:"UPS - Tacoma",addr:"5101 12th East, Tacoma, WA",url:"https://public.towbook.com/ZYg3"},{name:"UPS - Ukiah",addr:"259 Cherry St, Ukiah, CA",url:"https://public.towbook.com/Prgz"},{name:"UPS - Visalia",addr:"3240 N Plaza Dr, Visalia, CA",url:"https://public.towbook.com/YPgw"},{name:"UPS - West Sacramento",addr:"1380 Shore St, West Sacramento, CA",url:"https://public.towbook.com/y0Jo"},{name:"UPS - Yuba City",addr:"1470 Furneaux Rd, Marysville, CA",url:"https://public.towbook.com/k7oX"}];var sel=document.getElementById("loc-select");locs.forEach(function(l){var o=document.createElement("option");o.value=l.url;o.textContent=l.name;o.dataset.addr=l.addr;sel.appendChild(o);});function onSelect(){var btn=document.getElementById("open-btn");var info=document.getElementById("result-info");if(sel.value){btn.disabled=false;var opt=sel.options[sel.selectedIndex];info.style.display="block";info.textContent="Selected: "+opt.textContent+" — "+opt.dataset.addr;}else{btn.disabled=true;info.style.display="none";}}function openPortal(){if(sel.value)window.open(sel.value,"_blank");}</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Firstline Road Solutions — UPS West Call Taking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:       #1a2e6e;
+      --navy-light: #e8ecf8;
+      --red:        #cc2027;
+      --bg:         #f4f6fb;
+      --card-bg:    #ffffff;
+      --card-border:#dde2f0;
+      --text:       #1a1f2e;
+      --muted:      #6b7394;
+      --green:      #16a34a;
+      --green-bg:   #dcfce7;
+      --red-bg:     #fee2e2;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      background-image:
+        radial-gradient(ellipse at 15% 0%, rgba(26,46,110,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 100%, rgba(204,32,39,0.05) 0%, transparent 50%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .logo-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 40px;
+      box-shadow: 0 2px 20px rgba(26,46,110,0.12), 0 1px 4px rgba(0,0,0,0.06);
+      display: inline-block;
+      border: 1px solid var(--card-border);
+    }
+
+    .logo-wrap img { height: 72px; display: block; }
+
+    .tagline {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      max-width: 860px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--card-border), transparent);
+      margin-bottom: 40px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      text-align: center;
+    }
+
+    /* ── ACCOUNT CARD ── */
+    .account-card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px 36px 36px;
+      box-shadow: 0 4px 24px rgba(26,46,110,0.09), 0 1px 4px rgba(0,0,0,0.04);
+      position: relative;
+      overflow: visible;
+    }
+
+    /* ── ACCOUNT HEADER ── */
+    .account-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .account-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #4a3210, #6b4a17);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(107,74,23,0.3);
+    }
+
+    .account-info h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .account-info p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .badge {
+      margin-left: auto;
+      background: var(--navy-light);
+      border: 1px solid #c5cde8;
+      color: var(--navy);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+
+    /* ── DROPDOWN BUTTON ── */
+    .dropdown-wrapper { position: relative; }
+
+    .dropdown-btn {
+      width: 100%;
+      background: #f8f9fd;
+      border: 1.5px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      user-select: none;
+    }
+
+    .dropdown-btn:hover {
+      border-color: var(--navy);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26,46,110,0.1);
+    }
+
+    .dropdown-btn.open {
+      border-color: var(--navy);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(26,46,110,0.12);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .dropdown-btn .btn-left { display: flex; align-items: center; gap: 10px; }
+
+    .chevron {
+      width: 18px; height: 18px;
+      flex-shrink: 0;
+      transition: transform 0.25s ease;
+      color: var(--muted);
+    }
+    .chevron.rotated { transform: rotate(180deg); }
+
+    /* ── DROPDOWN MENU ── */
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%; left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid var(--navy);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      max-height: 360px;
+      overflow-y: auto;
+      z-index: 100;
+      box-shadow: 0 12px 40px rgba(26,46,110,0.12);
+    }
+    .dropdown-menu.open { display: block; }
+
+    .dropdown-menu::-webkit-scrollbar { width: 6px; }
+    .dropdown-menu::-webkit-scrollbar-track { background: #f4f6fb; }
+    .dropdown-menu::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+    /* search */
+    .menu-search {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--card-border);
+      position: sticky; top: 0;
+      background: #fff;
+      z-index: 1;
+    }
+
+    .menu-search input {
+      width: 100%;
+      background: #f4f6fb;
+      border: 1.5px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .menu-search input:focus { border-color: var(--navy); background: #fff; }
+    .menu-search input::placeholder { color: var(--muted); }
+
+    /* items */
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      font-size: 0.855rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-decoration: none;
+      border-bottom: 1px solid #f0f2f8;
+      color: var(--text);
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item.has-link:hover { background: var(--navy-light); color: var(--navy); }
+
+    .item-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .has-link .item-dot { background: var(--green); box-shadow: 0 0 5px rgba(22,163,74,0.4); }
+
+    .item-name { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .item-addr { font-size: 0.72rem; font-weight: 400; color: var(--muted); }
+    .has-link:hover .item-addr { color: var(--navy); opacity: 0.75; }
+
+    .link-arrow { font-size: 0.75rem; color: var(--navy); opacity: 0; transition: opacity 0.15s; }
+    .has-link:hover .link-arrow { opacity: 1; }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      gap: 24px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .legend-dot.green { background: var(--green); }
+    .legend-dot.red   { background: var(--red); }
+
+    /* ── STATS ── */
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-top: 24px;
+      width: 100%;
+      max-width: 560px;
+    }
+    .stat-card {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 18px 20px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(26,46,110,0.06);
+    }
+    .stat-num { font-size: 1.8rem; font-weight: 700; color: var(--text); }
+    .stat-num.green { color: var(--green); }
+    .stat-num.red   { color: var(--red); }
+    .stat-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 56px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-wrap">
+      <img src="https://firstlineroad.com/wp-content/uploads/2023/10/FL_LandingLogo-v2.png" alt="Firstline Road Solutions"/>
+    </div>
+    <p class="tagline">Call Taking Portal &mdash; UPS West Locations</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <div style="width:100%;max-width:560px;margin:0 auto 18px;">
+    <a href="../index.html" style="font-size:0.82rem;font-weight:600;color:var(--navy);text-decoration:none;">&larr; Home</a>
+  </div>
+
+  <p class="section-label">Select Account</p>
+
+  <div class="account-card">
+    <div class="account-header">
+      <div class="account-icon">📦</div>
+      <div class="account-info">
+        <h2>UPS West</h2>
+        <p>CA / NV / WA &mdash; 35 locations</p>
+      </div>
+      <span class="badge">Active</span>
+    </div>
+
+    <div class="dropdown-wrapper">
+      <button class="dropdown-btn" id="dropBtn" onclick="toggleDropdown()">
+        <span class="btn-left">
+          <span>📍</span>
+          <span id="btnText">Select a location&hellip;</span>
+        </span>
+        <svg class="chevron" id="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+
+      <div class="dropdown-menu" id="dropMenu">
+        <div class="menu-search">
+          <input type="text" id="searchInput" placeholder="Search by city or address…" oninput="filterItems()" autocomplete="off"/>
+        </div>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Vrgq" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Ceres<span class="item-addr">1400 Hillmore St, Ceres, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/EqQY" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Concord<span class="item-addr">1970 Olivera Rd, Concord, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/g7mn" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Freight San Leandro<span class="item-addr">3050 Teagarden St, San Leandro, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Za4Z" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Fremont<span class="item-addr">5588 Cushing Pkwy, Fremont, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/p7k7" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Fresno<span class="item-addr">1601 W McKinley Ave, Fresno, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/qa45" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Lakeport<span class="item-addr">1275 Craig Ave, Lakeport, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/jR77" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Lathrop<span class="item-addr">11800 S Harlan Rd, Lathrop, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/6ndK" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Menlo Park<span class="item-addr">1355 Adams Ct, Menlo Park, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/56dv" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Monterey<span class="item-addr">6 Upper Ragsdale Dr, Monterey, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/B3z2" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Napa<span class="item-addr">2531 Napa Valley Corporate Dr, Napa, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/oO2d" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Oakland<span class="item-addr">8400 Pardee Dr, Oakland, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/wWmZ" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Oakland Air<span class="item-addr">Allen Shepard Way, Oakland, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Nrw5" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Oakley<span class="item-addr">5300 Live Oak Ave, Oakley, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/0XdY" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Petaluma<span class="item-addr">3860 Cypress Dr, Petaluma, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Wogx" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Plant Eng. Fremont<span class="item-addr">5588 Cushing Pkwy, Fremont, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/O2Wp" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Plant Eng. San Francisco<span class="item-addr">2222 17th St, San Francisco, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/D3vG" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Plant Eng. San Jose<span class="item-addr">1999 S 7th St, San Jose, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/xAMV" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Richmond<span class="item-addr">1601 Atlas Rd, Richmond, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Rr6y" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Rocklin<span class="item-addr">2275 Sierra Meadow Dr, Rocklin, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/n7YX" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Salinas<span class="item-addr">1139 Madison Lane, Salinas, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/PeQL" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; San Bruno<span class="item-addr">657 Forbes Blvd, S San Francisco, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Yqpr" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; San Francisco<span class="item-addr">2222 17th St, San Francisco, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/k72J" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; San Jose<span class="item-addr">1999 S 7th St, San Jose, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/rVzA" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; San Jose Airport<span class="item-addr">1277 Airport Blvd, San Jose, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/G2mK" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; San Rafael<span class="item-addr">2985 Kerner Blvd, San Rafael, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/2gdE" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; San Ramon<span class="item-addr">4500 Norris Canyon Rd, San Ramon, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/1Xd5" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Santa Cruz<span class="item-addr">251 Sylvania Ave, Santa Cruz, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/dMvj" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Santa Rosa<span class="item-addr">3331 Industrial Dr, Santa Rosa, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/KrwE" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Sparks<span class="item-addr">355 Vista Blvd, Sparks, NV</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/oOyd" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Sunnyvale<span class="item-addr">1245 Hammerwood Ct, Sunnyvale, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/ZYg3" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Tacoma<span class="item-addr">5101 12th East, Tacoma, WA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/Prgz" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Ukiah<span class="item-addr">259 Cherry St, Ukiah, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/YPgw" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Visalia<span class="item-addr">3240 N Plaza Dr, Visalia, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/y0Jo" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; West Sacramento<span class="item-addr">1380 Shore St, West Sacramento, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+        <a class="menu-item has-link" href="https://public.towbook.com/k7oX" target="_blank">
+          <span class="item-dot"></span>
+          <span class="item-name">UPS &ndash; Yuba City<span class="item-addr">1470 Furneaux Rd, Marysville, CA</span></span>
+          <span class="link-arrow">↗</span>
+        </a>
+
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot green"></span> Link active</div>
+      <div class="legend-item"><span class="legend-dot red"></span> Link needed</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num">35</div><div class="stat-label">Total Locations</div></div>
+    <div class="stat-card"><div class="stat-num green">35</div><div class="stat-label">Links Active</div></div>
+    <div class="stat-card"><div class="stat-num red">0</div><div class="stat-label">Links Needed</div></div>
+  </div>
+
+  <footer>&copy; 2026 Firstline Road Solutions &mdash; Internal Use Only</footer>
+
+  <script>
+    function toggleDropdown(){
+      const b=document.getElementById('dropBtn'),m=document.getElementById('dropMenu'),c=document.getElementById('chevron'),o=m.classList.contains('open');
+      m.classList.toggle('open');b.classList.toggle('open');c.classList.toggle('rotated');
+      if(!o)setTimeout(()=>document.getElementById('searchInput').focus(),50);
+    }
+    function filterItems(){
+      const q=document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('.menu-item').forEach(i=>{i.style.display=i.textContent.toLowerCase().includes(q)?'':'none';});
+    }
+    document.addEventListener('click',e=>{
+      const w=document.querySelector('.dropdown-wrapper');
+      if(!w.contains(e.target)){
+        document.getElementById('dropMenu').classList.remove('open');
+        document.getElementById('dropBtn').classList.remove('open');
+        document.getElementById('chevron').classList.remove('rotated');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Firstline Employees — Staff Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:       #1a2e6e;
+      --navy-light: #e8ecf8;
+      --red:        #cc2027;
+      --bg:         #f4f6fb;
+      --card-bg:    #ffffff;
+      --card-border:#dde2f0;
+      --text:       #1a1f2e;
+      --muted:      #6b7394;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      background-image:
+        radial-gradient(ellipse at 15% 0%, rgba(26,46,110,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 100%, rgba(204,32,39,0.05) 0%, transparent 50%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .logo-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 40px;
+      box-shadow: 0 2px 20px rgba(26,46,110,0.12), 0 1px 4px rgba(0,0,0,0.06);
+      display: inline-block;
+      border: 1px solid var(--card-border);
+    }
+
+    .logo-wrap img { height: 72px; display: block; }
+
+    .tagline {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      max-width: 860px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--card-border), transparent);
+      margin-bottom: 40px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    /* ── BACK LINK ── */
+    .back-link {
+      align-self: flex-start;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto 22px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--navy);
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* ── ACCOUNT GRID ── */
+    .account-grid {
+      width: 100%;
+      max-width: 720px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 560px) {
+      .account-grid { grid-template-columns: 1fr; }
+    }
+
+    .account-link {
+      text-decoration: none;
+      color: inherit;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 30px 28px;
+      box-shadow: 0 4px 24px rgba(26,46,110,0.09), 0 1px 4px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    }
+
+    .account-link:hover {
+      transform: translateY(-3px);
+      border-color: var(--navy);
+      box-shadow: 0 10px 34px rgba(26,46,110,0.16), 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .account-top {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .account-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      flex-shrink: 0;
+    }
+    .account-icon.ryder { background: linear-gradient(135deg, #f5a623, #f7c048); box-shadow: 0 4px 12px rgba(245,166,35,0.3); }
+    .account-icon.ups   { background: linear-gradient(135deg, #4a3210, #6b4a17); box-shadow: 0 4px 12px rgba(107,74,23,0.3); }
+
+    .account-info h2 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .account-info p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .account-cta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--navy);
+      border-top: 1px solid #f0f2f8;
+      padding-top: 16px;
+    }
+    .account-cta .arrow { transition: transform 0.18s; }
+    .account-link:hover .account-cta .arrow { transform: translateX(4px); }
+
+    /* ── ADD-LOCATION FORM ── */
+    .form-card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 34px 32px;
+      box-shadow: 0 4px 24px rgba(26,46,110,0.09), 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .form-card h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .form-card .lead {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 7px;
+    }
+    .field .req { color: var(--red); }
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.92rem;
+      color: var(--text);
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.18s;
+    }
+    .field textarea { resize: vertical; min-height: 64px; }
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus { border-color: var(--navy); background: #fff; }
+    .field .hint { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
+
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+    .btn {
+      flex: 1;
+      min-width: 160px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .btn-primary { background: var(--navy); color: #fff; box-shadow: 0 4px 14px rgba(26,46,110,0.28); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(26,46,110,0.34); }
+    .btn-secondary { background: #fff; color: var(--navy); border: 2px solid var(--navy); }
+    .btn-secondary:hover { background: var(--navy-light); }
+
+    .confirm {
+      display: none;
+      margin-top: 20px;
+      padding: 16px 18px;
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #166534;
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 56px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-wrap">
+      <img src="https://firstlineroad.com/wp-content/uploads/2023/10/FL_LandingLogo-v2.png" alt="Firstline Road Solutions"/>
+    </div>
+    <p class="tagline">Firstline Employees</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <a class="back-link" href="index.html">&larr; Back to Call Taking Portal</a>
+
+  <p class="section-label">Open a Portal</p>
+
+  <div class="account-grid">
+
+    <a class="account-link" href="portals/ryderwest.html">
+      <div class="account-top">
+        <div class="account-icon ryder">🚛</div>
+        <div class="account-info">
+          <h2>Ryder West</h2>
+          <p>California &mdash; 41 locations</p>
+        </div>
+      </div>
+      <div class="account-cta">
+        <span>Open portal</span>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+
+    <a class="account-link" href="portals/upswest.html">
+      <div class="account-top">
+        <div class="account-icon ups">📦</div>
+        <div class="account-info">
+          <h2>UPS West</h2>
+          <p>CA / NV / WA &mdash; 35 locations</p>
+        </div>
+      </div>
+      <div class="account-cta">
+        <span>Open portal</span>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="divider" style="margin-top:48px;"></div>
+
+  <p class="section-label">Add a Location</p>
+
+  <div class="form-card">
+    <h2>Request a new location</h2>
+    <p class="lead">
+      Fill this out to add a location to a portal. When you submit, an email opens
+      (or copy the details) and it&rsquo;s sent to the admin to add. Dispatch links are
+      reviewed before going live so nothing breaks.
+    </p>
+
+    <form id="loc-form" onsubmit="return false;">
+      <div class="field">
+        <label for="portal">Which portal? <span class="req">*</span></label>
+        <select id="portal" required>
+          <option value="">-- Select a portal --</option>
+          <option value="Ryder West">Ryder West</option>
+          <option value="UPS West">UPS West</option>
+          <option value="New / Other">New account or portal (describe below)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="locname">Location name <span class="req">*</span></label>
+        <input type="text" id="locname" placeholder="e.g. UPS - Bakersfield" required/>
+      </div>
+
+      <div class="field">
+        <label for="addr">Address</label>
+        <input type="text" id="addr" placeholder="e.g. 123 Main St, Bakersfield, CA"/>
+      </div>
+
+      <div class="field">
+        <label for="link">Dispatch link (Towbook URL)</label>
+        <input type="url" id="link" placeholder="https://public.towbook.com/..."/>
+        <p class="hint">Paste the Towbook public link for this location, if you have it.</p>
+      </div>
+
+      <div class="field">
+        <label for="notes">Notes</label>
+        <textarea id="notes" placeholder="Anything the admin should know (new account name, hours, etc.)"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="who">Your name <span class="req">*</span></label>
+        <input type="text" id="who" placeholder="Your name" required/>
+      </div>
+
+      <div class="field">
+        <label for="email">Your email <span class="req">*</span></label>
+        <input type="email" id="email" placeholder="you@firstlineroad.com" required/>
+      </div>
+
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" onclick="sendRequest()">📧 Send request by email</button>
+        <button type="button" class="btn btn-secondary" onclick="copyRequest()">📋 Copy details</button>
+      </div>
+
+      <div class="confirm" id="confirm"></div>
+    </form>
+  </div>
+
+  <footer>&copy; 2026 Firstline Road Solutions &mdash; Internal Use Only</footer>
+
+  <script>
+    // Where location requests are sent. Change this to your preferred inbox.
+    var ADMIN_EMAIL = "shaunambanks@gmail.com";
+
+    function val(id) { return document.getElementById(id).value.trim(); }
+
+    function validate() {
+      var required = [["portal","portal"],["locname","location name"],["who","your name"],["email","your email"]];
+      for (var i = 0; i < required.length; i++) {
+        if (!val(required[i][0])) {
+          alert("Please fill in: " + required[i][1]);
+          document.getElementById(required[i][0]).focus();
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function buildBody() {
+      return "NEW LOCATION REQUEST\n" +
+        "----------------------------------------\n" +
+        "Portal:        " + val("portal") + "\n" +
+        "Location name: " + val("locname") + "\n" +
+        "Address:       " + (val("addr") || "(not provided)") + "\n" +
+        "Dispatch link: " + (val("link") || "(not provided)") + "\n" +
+        "Notes:         " + (val("notes") || "(none)") + "\n" +
+        "----------------------------------------\n" +
+        "Submitted by:  " + val("who") + " <" + val("email") + ">\n";
+    }
+
+    function showConfirm(msg) {
+      var c = document.getElementById("confirm");
+      c.style.display = "block";
+      c.textContent = msg;
+    }
+
+    function sendRequest() {
+      if (!validate()) return;
+      var subject = "New location request: " + val("locname") + " (" + val("portal") + ")";
+      var url = "mailto:" + ADMIN_EMAIL +
+                "?subject=" + encodeURIComponent(subject) +
+                "&body=" + encodeURIComponent(buildBody());
+      window.location.href = url;
+      showConfirm("✅ Your email app should be opening with the request ready to send. If nothing opened, use the “Copy details” button instead and paste it into an email to " + ADMIN_EMAIL + ".");
+    }
+
+    function copyRequest() {
+      if (!validate()) return;
+      var text = buildBody();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          showConfirm("✅ Copied! Paste this into an email or message to " + ADMIN_EMAIL + ".");
+        }, function () {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); showConfirm("✅ Copied! Paste this into an email to " + ADMIN_EMAIL + "."); }
+      catch (e) { showConfirm("Couldn't auto-copy. Here are the details to copy manually:\n\n" + text); }
+      document.body.removeChild(ta);
+    }
+  </script>
+
+</body>
+</html>
