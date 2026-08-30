@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Call Taking Guide — Firstline Road Solutions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:       #1a2e6e;
+      --navy-light: #e8ecf8;
+      --red:        #cc2027;
+      --bg:         #f4f6fb;
+      --card-bg:    #ffffff;
+      --card-border:#dde2f0;
+      --text:       #1a1f2e;
+      --muted:      #6b7394;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 80px;
+      background-image:
+        radial-gradient(ellipse at 15% 0%, rgba(26,46,110,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 100%, rgba(204,32,39,0.05) 0%, transparent 50%);
+    }
+
+    /* ── HEADER ── */
+    header {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .logo-wrap {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px 40px;
+      box-shadow: 0 2px 20px rgba(26,46,110,0.12), 0 1px 4px rgba(0,0,0,0.06);
+      display: inline-block;
+      border: 1px solid var(--card-border);
+    }
+
+    .logo-wrap img { height: 72px; display: block; }
+
+    .tagline {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      max-width: 860px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--card-border), transparent);
+      margin-bottom: 40px;
+    }
+
+    /* ── SECTION LABEL ── */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 22px;
+      text-align: center;
+    }
+
+    /* ── BACK LINK ── */
+    .back-link {
+      align-self: flex-start;
+      width: 100%;
+      max-width: 720px;
+      margin: 0 auto 22px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--navy);
+      text-decoration: none;
+    }
+    .back-link:hover { text-decoration: underline; }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 34px 32px;
+      box-shadow: 0 4px 24px rgba(26,46,110,0.09), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .card + .card { margin-top: 20px; }
+
+    .card h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .card .lead {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    /* ── INTAKE CHECKLIST ── */
+    .intake { list-style: none; counter-reset: intake; }
+    .intake li {
+      counter-increment: intake;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f2f8;
+    }
+    .intake li:last-child { border-bottom: none; padding-bottom: 0; }
+    .intake li::before {
+      content: counter(intake);
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--navy-light);
+      color: var(--navy);
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .intake .q { font-size: 0.92rem; font-weight: 600; }
+    .intake .why { font-size: 0.76rem; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+    /* ── CALL FLOW STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 10px rgba(26,46,110,0.25);
+    }
+    .step-body h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 4px; }
+    .step-body p { font-size: 0.84rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── SCENARIO GRID ── */
+    .scenarios {
+      width: 100%;
+      max-width: 720px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 560px) {
+      .scenarios { grid-template-columns: 1fr; }
+    }
+    .scenario {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 26px 24px;
+      box-shadow: 0 4px 24px rgba(26,46,110,0.09), 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .scenario .icon { font-size: 1.5rem; margin-bottom: 10px; display: block; }
+    .scenario h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+    .scenario p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── URGENT CALLOUT ── */
+    .urgent {
+      border-left: 4px solid var(--red);
+      background: #fef4f4;
+      border-radius: 8px;
+      padding: 16px 18px;
+      margin-top: 20px;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: #7f1d1d;
+    }
+    .urgent strong { color: var(--red); }
+
+    /* ── CONTACT TABLE ── */
+    .contacts { width: 100%; border-collapse: collapse; }
+    .contacts th, .contacts td {
+      text-align: left;
+      padding: 12px 8px;
+      border-bottom: 1px solid #f0f2f8;
+      font-size: 0.86rem;
+    }
+    .contacts th {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .contacts td:first-child { font-weight: 600; }
+    .contacts tr:last-child td { border-bottom: none; }
+    .todo { color: var(--red); font-weight: 600; }
+    .table-wrap { overflow-x: auto; }
+
+    /* ── BUTTONS ── */
+    .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+    .btn {
+      flex: 1;
+      min-width: 160px;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .btn-primary { background: var(--navy); color: #fff; box-shadow: 0 4px 14px rgba(26,46,110,0.28); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(26,46,110,0.34); }
+    .btn-secondary { background: #fff; color: var(--navy); border: 2px solid var(--navy); }
+    .btn-secondary:hover { background: var(--navy-light); }
+
+    .confirm {
+      display: none;
+      margin-top: 18px;
+      padding: 16px 18px;
+      background: #f0fdf4;
+      border-left: 4px solid #22c55e;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #166534;
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 56px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-wrap">
+      <img src="https://firstlineroad.com/wp-content/uploads/2023/10/FL_LandingLogo-v2.png" alt="Firstline Road Solutions"/>
+    </div>
+    <p class="tagline">Call Taking Guide</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <a class="back-link" href="index.html">&larr; Back to Call Taking Portal</a>
+
+  <p class="section-label">Every Call &mdash; Get This Information</p>
+
+  <div class="card">
+    <h2>Intake checklist</h2>
+    <p class="lead">
+      Work top to bottom. Don&rsquo;t hang up until you have items 1&ndash;7.
+      If the caller is in a dangerous spot, jump to the safety question first.
+    </p>
+
+    <ol class="intake">
+      <li>
+        <div>
+          <div class="q">Account &amp; location</div>
+          <div class="why">Which company &mdash; Ryder, UPS, other? Which branch or terminal? This decides which portal you dispatch from.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">Caller name and callback number</div>
+          <div class="why">Get the number first in case the call drops. Repeat it back.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">Exact location of the vehicle</div>
+          <div class="why">Street address, or highway + direction + nearest exit or mile marker. Ask for a cross street. &ldquo;On the 5&rdquo; is not enough.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">Is the vehicle in a safe place?</div>
+          <div class="why">Shoulder, live lane, blocking traffic? Anyone in the vehicle? This sets the priority of the call.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">Unit number and vehicle details</div>
+          <div class="why">Unit / truck number, year and make, box truck vs. tractor-trailer, loaded or empty.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">What&rsquo;s wrong?</div>
+          <div class="why">Tire, jump start, lockout, fuel, won&rsquo;t start, accident. Which tire &mdash; and which position? Be specific.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">Purchase order / reference number</div>
+          <div class="why">Required by most accounts before a truck rolls. If the caller doesn&rsquo;t have one, note who authorized the call.</div>
+        </div>
+      </li>
+      <li>
+        <div>
+          <div class="q">Anything else on scene</div>
+          <div class="why">Police or DOT present? Trailer attached? Cargo issue? Note it in the dispatch.</div>
+        </div>
+      </li>
+    </ol>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" onclick="copyTemplate()">📋 Copy blank intake template</button>
+    </div>
+    <div class="confirm" id="confirm"></div>
+  </div>
+
+  <div class="divider" style="margin-top:48px;"></div>
+
+  <p class="section-label">How a Call Runs</p>
+
+  <div class="card">
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Answer and identify</h3>
+          <p>Greet with the company name, your name, and offer help. Confirm which account the caller is with before anything else.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Run the intake checklist</h3>
+          <p>Type as you go. Read the location and callback number back to the caller to confirm you have them right.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Open the right portal</h3>
+          <p>Go to the <a href="index.html" style="color:var(--navy);font-weight:600;">hub</a> and pick the account, then find the location in the list to get its dispatch link.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Submit the dispatch</h3>
+          <p>Enter everything you collected. Put the safety situation and the PO number where they can&rsquo;t be missed.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Set expectations and close</h3>
+          <p>Tell the caller what happens next and roughly how long. Give them the callback number. Don&rsquo;t promise an ETA you can&rsquo;t back up.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Follow up</h3>
+          <p>Confirm the dispatch was picked up. If nothing has moved in the expected window, escalate rather than waiting.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="urgent">
+      <strong>If anyone is injured, or the vehicle is in a live traffic lane:</strong>
+      tell the caller to call <strong>911</strong> first and stay clear of the vehicle. Dispatch after that.
+    </div>
+  </div>
+
+  <div class="divider" style="margin-top:48px;"></div>
+
+  <p class="section-label">Common Situations</p>
+
+  <div class="scenarios">
+
+    <div class="scenario">
+      <span class="icon">🛞</span>
+      <h3>Tire call</h3>
+      <p>Get the exact position &mdash; steer, drive, or trailer; inside or outside; driver or passenger side. Ask if there&rsquo;s a spare on the unit.</p>
+    </div>
+
+    <div class="scenario">
+      <span class="icon">🔋</span>
+      <h3>Jump start / won&rsquo;t start</h3>
+      <p>Does it crank or is it silent? Lights and dash coming on? This tells the tech whether to bring a jump pack or plan for a tow.</p>
+    </div>
+
+    <div class="scenario">
+      <span class="icon">🔑</span>
+      <h3>Lockout</h3>
+      <p>Confirm the keys are actually in the vehicle and not lost. Is the engine running? Anyone or anything inside that makes it urgent?</p>
+    </div>
+
+    <div class="scenario">
+      <span class="icon">⛽</span>
+      <h3>Out of fuel</h3>
+      <p>Diesel or gas, and how many gallons to get moving. Confirm the location is reachable by a fuel truck.</p>
+    </div>
+
+    <div class="scenario">
+      <span class="icon">📍</span>
+      <h3>Caller doesn&rsquo;t know where they are</h3>
+      <p>Ask for the last exit passed, direction of travel, and anything visible &mdash; signs, businesses, mile markers. Have them drop a pin and text it.</p>
+    </div>
+
+    <div class="scenario">
+      <span class="icon">❓</span>
+      <h3>Location isn&rsquo;t in the portal</h3>
+      <p>Take the call and get all the details, then submit it through the <a href="employees.html" style="color:var(--navy);font-weight:600;">Employees page</a> so it gets added.</p>
+    </div>
+
+  </div>
+
+  <div class="divider" style="margin-top:48px;"></div>
+
+  <p class="section-label">Escalation</p>
+
+  <div class="card">
+    <h2>Who to call</h2>
+    <p class="lead">
+      Escalate when a dispatch hasn&rsquo;t been accepted, an account is asking for a status you can&rsquo;t give,
+      or the situation is unsafe.
+    </p>
+
+    <div class="table-wrap">
+      <table class="contacts">
+        <thead>
+          <tr><th>Situation</th><th>Contact</th><th>How</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Injury or live-lane hazard</td>
+            <td>Emergency services</td>
+            <td>911</td>
+          </tr>
+          <tr>
+            <td>Dispatch not picked up</td>
+            <td><span class="todo">&mdash; add name &mdash;</span></td>
+            <td><span class="todo">&mdash; add number &mdash;</span></td>
+          </tr>
+          <tr>
+            <td>Account escalation / complaint</td>
+            <td><span class="todo">&mdash; add name &mdash;</span></td>
+            <td><span class="todo">&mdash; add number &mdash;</span></td>
+          </tr>
+          <tr>
+            <td>After hours supervisor</td>
+            <td><span class="todo">&mdash; add name &mdash;</span></td>
+            <td><span class="todo">&mdash; add number &mdash;</span></td>
+          </tr>
+          <tr>
+            <td>Portal or site problem</td>
+            <td>Site admin</td>
+            <td><a href="mailto:shaunambanks@gmail.com" style="color:var(--navy);font-weight:600;">shaunambanks@gmail.com</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>&copy; 2026 Firstline Road Solutions &mdash; Internal Use Only</footer>
+
+  <script>
+    var INTAKE_TEMPLATE =
+      "CALL INTAKE\n" +
+      "----------------------------------------\n" +
+      "Account / location:\n" +
+      "Caller name:\n" +
+      "Callback number:\n" +
+      "Vehicle location:\n" +
+      "Safe location? (Y/N):\n" +
+      "Unit number:\n" +
+      "Vehicle (year/make/type):\n" +
+      "Problem:\n" +
+      "PO / reference number:\n" +
+      "Notes (police on scene, trailer, cargo):\n" +
+      "----------------------------------------\n" +
+      "Taken by:\n" +
+      "Time:\n";
+
+    function showConfirm(msg) {
+      var c = document.getElementById("confirm");
+      c.style.display = "block";
+      c.textContent = msg;
+    }
+
+    function copyTemplate() {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(INTAKE_TEMPLATE).then(function () {
+          showConfirm("✅ Blank intake template copied. Paste it into your notes and fill it in as you talk.");
+        }, function () {
+          fallbackCopy(INTAKE_TEMPLATE);
+        });
+      } else {
+        fallbackCopy(INTAKE_TEMPLATE);
+      }
+    }
+
+    function fallbackCopy(text) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); showConfirm("✅ Blank intake template copied. Paste it into your notes and fill it in as you talk."); }
+      catch (e) { showConfirm("Couldn't auto-copy. Copy this manually:\n\n" + text); }
+      document.body.removeChild(ta);
+    }
+  </script>
+
+</body>
+</html>

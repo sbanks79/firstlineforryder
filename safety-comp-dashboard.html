@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fleet Compliance Dashboard — FirstLine Road Solutions NorCal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+  :root{
+    --bg:#15181c; --panel:#1d2126; --panel-alt:#22262c; --line:#2c3138;
+    --text:#e7e9ec; --sub:#8b929c; --red:#e6000e; --amber:#ec5c07;
+    --yellow:#ffb200; --blue:#3aa0ff; --green:#3ecf6e;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; padding:28px 24px; }
+  table{ border-collapse:collapse; width:100%; }
+  th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--sub); padding:8px 10px; border-bottom:1px solid var(--line); font-weight:600; }
+  td{ padding:9px 10px; font-size:13px; border-bottom:1px solid var(--line); }
+  tr:hover td{ background:var(--panel-alt); }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+  .btn{ background:none; border:1px solid var(--line); color:var(--sub); font-size:12px; padding:6px 12px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .btn:hover{ color:var(--text); border-color:var(--sub); }
+  .btn.primary{ background:var(--blue); color:#0d0f11; border-color:var(--blue); font-weight:700; }
+  .btn.primary:hover{ opacity:.85; color:#0d0f11; }
+  .btn.danger{ border-color:var(--red); color:var(--red); }
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; }
+  .kpi{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 20px; flex:1; min-width:200px; }
+  .kpi-label{ display:flex; align-items:center; gap:8px; color:var(--sub); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+  .kpi-value{ font-size:34px; font-weight:700; color:var(--text); font-family:'JetBrains Mono',monospace; margin-top:6px; }
+  .kpi-sub{ font-size:12px; color:var(--sub); margin-top:4px; }
+  .section-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .section-title{ font-size:16px; font-weight:700; letter-spacing:.02em; margin:0; text-transform:uppercase; }
+  .count-badge{ font-size:12px; font-weight:700; padding:2px 10px; border-radius:999px; color:#0d0f11; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; flex-shrink:0; margin-right:6px; }
+  .grid-2{ display:grid; grid-template-columns:1.1fr 1fr; gap:20px; margin-bottom:20px; }
+  @media (max-width:900px){ .grid-2{ grid-template-columns:1fr; } }
+  .status-badge{ font-size:11px; font-weight:700; padding:2px 8px; border-radius:5px; color:#0d0f11; }
+  .header-bar{ display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:24px; flex-wrap:wrap; }
+  .edit-input, .edit-select{ background:var(--panel-alt); border:1px solid var(--sub); color:var(--text); font-size:13px; padding:4px 6px; border-radius:4px; width:100%; font-family:inherit; }
+  .edit-input.mono, .edit-select.mono{ font-family:'JetBrains Mono',monospace; }
+  .edit-banner{ background:#2a2410; border:1px solid var(--yellow); color:var(--yellow); font-size:12px; padding:10px 14px; border-radius:8px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .save-note{ font-size:11px; color:var(--sub); margin-top:16px; text-align:center; }
+  .row-actions{ display:flex; gap:4px; }
+  .icon-btn{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:14px; padding:2px 6px; }
+  .icon-btn:hover{ color:var(--text); }
+  .back-link{ display:inline-block; color:var(--sub); text-decoration:none; font-size:12px; font-weight:600; margin-bottom:18px; }
+  .back-link:hover{ color:var(--blue); }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">&larr; Back to Call Taking Portal</a>
+
+<div class="header-bar">
+  <div>
+    <div style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">FirstLine Road Solutions — NorCal</div>
+    <h1 style="font-size:26px;font-weight:700;margin:4px 0 2px;letter-spacing:-.01em;">Fleet Compliance Dashboard</h1>
+    <div style="font-size:13px;color:var(--sub);" id="subline">Source: Ed Wood's emails, Aug 15–30, 2026 · Registrations, Camera Status, Safety Scores</div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="btn" id="editToggle">✏️ Edit</button>
+    <button class="btn primary" id="saveBtn" style="display:none;">Save Changes</button>
+    <button class="btn danger" id="resetBtn" style="display:none;">Reset to Original</button>
+  </div>
+</div>
+
+<div id="editBanner" class="edit-banner" style="display:none;">
+  <span>Edit mode on — click any status, day count, or name to change it. Changes save to <b>this browser only</b> — they won't appear for other people viewing this page elsewhere.</span>
+</div>
+
+<div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:28px;" id="kpiRow"></div>
+
+<div class="grid-2">
+  <div class="panel">
+    <div class="section-header">
+      <h2 class="section-title">Registrations — Expired / Expiring</h2>
+      <span class="count-badge" style="background:var(--red);" id="regCount"></span>
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.5;">
+      Expired units are blocked on repair, not paperwork — CARB requires fault codes cleared and a readiness-monitor drive cycle before smog/registration can go through.
+    </div>
+    <table>
+      <thead><tr><th>Asset</th><th>Expires</th><th>Days</th><th>Status</th><th></th></tr></thead>
+      <tbody id="regBody"></tbody>
+    </table>
+    <button class="btn" id="addRegBtn" style="margin-top:10px;display:none;">+ Add row</button>
+  </div>
+
+  <div class="panel">
+    <div class="section-header">
+      <h2 class="section-title">Camera Status</h2>
+      <span class="count-badge" style="background:var(--amber);" id="camCount"></span>
+    </div>
+    <table>
+      <thead><tr><th>Asset</th><th>Issue</th><th>Location</th><th>Days</th><th></th></tr></thead>
+      <tbody id="camBody"></tbody>
+    </table>
+    <button class="btn" id="addCamBtn" style="margin-top:10px;display:none;">+ Add row</button>
+  </div>
+</div>
+
+<div class="panel" style="margin-bottom:20px;">
+  <div class="section-header">
+    <h2 class="section-title">Safety Scores — Below 90 Minimum</h2>
+    <span class="count-badge" style="background:var(--yellow);" id="safetyCount"></span>
+  </div>
+  <div style="font-size:12px;color:var(--sub);margin-bottom:16px;" id="opcoBreakdown"></div>
+  <table>
+    <thead><tr><th>Rank</th><th>Driver</th><th>OpCo</th><th>Score</th><th></th></tr></thead>
+    <tbody id="safetyBody"></tbody>
+  </table>
+  <button class="btn" id="showAllSafety" style="margin-top:10px;">Show all</button>
+  <button class="btn" id="addSafetyBtn" style="margin-top:10px;display:none;">+ Add row</button>
+</div>
+
+<div class="panel">
+  <div class="section-header">
+    <h2 class="section-title">Source Emails from Ed Wood</h2>
+    <span class="count-badge" style="background:var(--blue);" id="logCount"></span>
+  </div>
+  <table>
+    <thead><tr><th style="width:70px;">Date</th><th>Subject</th></tr></thead>
+    <tbody id="logBody"></tbody>
+  </table>
+  <button class="btn" id="showAllLog" style="margin-top:10px;">Show all</button>
+</div>
+
+<div class="save-note">
+  Registrations and camera figures are latest snapshot as of Aug 30 · Safety score policy: 90 minimum effective Sept 1, 2026
+</div>
+
+<script>
+// ---------- DEFAULT DATA (sourced from Ed Wood's emails, Aug 15–30, 2026) ----------
+const DEFAULT_DATA = {
+  registrations: [
+    { asset:"ACTION-1336 MD", exp:"2026/06/30", days:-59, status:"Expired", blocked:true },
+    { asset:"FSP 45-06 FB", exp:"2026/07/31", days:-28, status:"Expired", blocked:true },
+    { asset:"GAT-102", exp:"2026/07/31", days:-28, status:"Expired", blocked:true },
+    { asset:"GAT-58", exp:"2026/07/31", days:-28, status:"Expired", blocked:true },
+    { asset:"ACTION-4693 HD", exp:"2026/08/30", days:1, status:"Expiring Soon" },
+    { asset:"ACTION-HVAC-1", exp:"2026/08/30", days:1, status:"Expiring Soon" },
+    { asset:"ACTION-4684", exp:"2026/08/30", days:1, status:"Expiring Soon" },
+    { asset:"FSP 45-05 FB", exp:"2026/08/30", days:1, status:"Expiring Soon" },
+    { asset:"ACTION-1330 WL", exp:"2026/08/31", days:2, status:"Expiring Soon" },
+    { asset:"ACTION-1378 BS", exp:"2026/08/31", days:2, status:"Expiring Soon" },
+    { asset:"FSP 45-04 WL", exp:"2026/08/31", days:2, status:"Expiring Soon" },
+    { asset:"ACTION-1376 BS", exp:"2026/08/31", days:3, status:"Expiring Soon" },
+    { asset:"FSP 45-03 WL", exp:"2026/08/31", days:3, status:"Expiring Soon" },
+    { asset:"GAT-1312 FB", exp:"2026/08/31", days:3, status:"Expiring Soon" }
+  ],
+  cameras: [
+    { asset:"ACTION-1301 FB", status:"In for Repair", location:"Action RS Repair Shop, Redwood City", days:"30+", severity:"amber" },
+    { asset:"ACTION-1315 FB", status:"Tec-SF Repairs", location:"TEC-SF, San Francisco", days:"30+", severity:"amber" },
+    { asset:"ACTION-1320 FB", status:"In for Repair", location:"Monarch Truck Repair, Union City", days:"3", severity:"amber" },
+    { asset:"ACTION-JEEP", status:"Low Use Vehicle", location:"Action RS, Redwood City", days:"30+", severity:"gray" },
+    { asset:"COT 81", status:"Warranty Camera Ordered", location:"Sacramento", days:"30+", severity:"red" },
+    { asset:"ELLISON'S-1185 BS", status:"Waiting for Vehicle Replacement", location:"Mountain View", days:"29", severity:"yellow" },
+    { asset:"GAT-ST01", status:"No Camera in Truck", location:"San Jose", days:"8", severity:"red" },
+    { asset:"GAT-1313 N", status:"Warranty Camera Ordered", location:"San Jose", days:"30+", severity:"red" },
+    { asset:"GAT-1314 FB", status:"Not Detected", location:"San Jose", days:"25", severity:"red" },
+    { asset:"GAT-1353 WL", status:"In for Repair", location:"San Jose", days:"14", severity:"red" },
+    { asset:"GAT-1385 BS", status:"Waiting for Vehicle Replacement", location:"Redwood City", days:"9", severity:"red" }
+  ],
+  safetySummary: { avg:95, drivers:181, events:185, behaviors:192, priorAvg:93 },
+  below90: [
+    { rank:181, name:"Neev Moa", opco:"Action", score:29 },
+    { rank:180, name:"Victor Moo Yah", opco:"Action", score:30 },
+    { rank:179, name:"g767FranciscoV", opco:"Great America", score:39 },
+    { rank:178, name:"g614 Matthew Soza", opco:"Great America", score:57 },
+    { rank:177, name:"Tevita Tongi", opco:"Action", score:71 },
+    { rank:176, name:"Armando Carlin", opco:"Action", score:71 },
+    { rank:175, name:"Triston Chapman", opco:"College Oak", score:73 },
+    { rank:174, name:"Ray Navarro", opco:"Action", score:73 },
+    { rank:173, name:"Bobby Riggs", opco:"College Oak", score:74 },
+    { rank:172, name:"Chris Andrews", opco:"College Oak", score:75 },
+    { rank:171, name:"Waad Yaqoov", opco:"Great America", score:76 },
+    { rank:170, name:"e031FernandoP", opco:"Ellison's", score:80 },
+    { rank:169, name:"Yevhen Petunin", opco:"Action", score:80 },
+    { rank:168, name:"Fred Albert", opco:"Action", score:81 },
+    { rank:167, name:"Ronald Ordonez", opco:"Action", score:82 },
+    { rank:166, name:"g667ManuelA", opco:"Great America", score:82 },
+    { rank:165, name:"g733AntnioL", opco:"Great America", score:83 },
+    { rank:164, name:"Tong Luo", opco:"Action", score:84 },
+    { rank:163, name:"g738KyleG", opco:"Great America", score:85 },
+    { rank:162, name:"g673SteveS", opco:"Great America", score:85 },
+    { rank:161, name:"Osvaldo Gomez", opco:"Action", score:86 },
+    { rank:160, name:"Matthew Severin", opco:"Great America", score:86 },
+    { rank:159, name:"g679MarwanA", opco:"Great America", score:86 },
+    { rank:158, name:"E061Pablo N", opco:"Ellison's", score:88 },
+    { rank:157, name:"Luis Gutierrez", opco:"College Oak", score:89 },
+    { rank:156, name:"Jairo Buenrostro", opco:"Action", score:89 }
+  ],
+  emailLog: [
+    { date:"Aug 30", subj:"Camera Status" },
+    { date:"Aug 30", subj:"Re: Overview Action, Ellison's and GAT (Safety Scores)" },
+    { date:"Aug 30", subj:"Re: Upcoming Training this week" },
+    { date:"Aug 29", subj:"Cameras (fleet-wide, cc'd all OpCo leads)" },
+    { date:"Aug 29", subj:"Recognition — Jeff Heron (90 days no safety events)" },
+    { date:"Aug 29", subj:"Registration (all companies)" },
+    { date:"Aug 29", subj:"Registrations" },
+    { date:"Aug 29", subj:"Yevhen — cell phone use while driving" },
+    { date:"Aug 26", subj:"DEF report request — Action HD assets below 50%" },
+    { date:"Aug 26", subj:"Update — open defect list (worn seat, broken light bar, etc.)" },
+    { date:"Aug 26", subj:"Cameras - Adjustments (3 HD trucks still need adjustment)" },
+    { date:"Aug 26", subj:"Issues — pending repair issues list" },
+    { date:"Aug 25", subj:"Minimum Acceptable Score of 90 (College Oak)" },
+    { date:"Aug 25", subj:"Minimum Acceptable Score of 90 (Action/GAT)" },
+    { date:"Aug 25", subj:"Scores 89 & Below" },
+    { date:"Aug 24", subj:"Registration" },
+    { date:"Aug 23", subj:"Safety Score Minimum — policy: 90 min effective 9/1/26" },
+    { date:"Aug 23", subj:"Re: Overview Action, Ellison's and GAT (Safety Scores)" },
+    { date:"Aug 22", subj:"Camera Health" },
+    { date:"Aug 22", subj:"Upcoming Training this week" },
+    { date:"Aug 21", subj:"Registration - Expired, Soon to be Expired" },
+    { date:"Aug 20", subj:"Registration" },
+    { date:"Aug 19", subj:"Focus Group to 90 (coaching list)" },
+    { date:"Aug 19", subj:"Re: Ray Navarro's Driving Habits (heavy speeding, 83 in 65)" },
+    { date:"Aug 18", subj:"Ray Navarro's Driving Habits — needs 1:1" },
+    { date:"Aug 17", subj:"Defensive Driving — LaupamaV avoided collision w/ deer" },
+    { date:"Aug 16", subj:"Registration/Replacement Vehicle — 4-axle truck status" },
+    { date:"Aug 16", subj:"Re: Overview Action, Ellison's and GAT (Safety Scores)" },
+    { date:"Aug 16", subj:"Re: Defective Cameras" },
+    { date:"Aug 16", subj:"Re: Defective Cameras (HD trucks, battery service trucks)" },
+    { date:"Aug 15", subj:"(thread start) Defective Cameras" }
+  ]
+};
+
+const STORAGE_KEY = "fleet_dashboard_data_v1";
+const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
+
+let data = loadData();
+let editMode = false;
+let showAllSafetyRows = false;
+let showAllLogRows = false;
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+function persist(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  document.getElementById('subline').textContent =
+    "Source: Ed Wood's emails, Aug 15–30, 2026 · Manually edited " + new Date().toLocaleString();
+}
+
+function render(){
+  renderKpis();
+  renderRegistrations();
+  renderCameras();
+  renderSafety();
+  renderLog();
+}
+
+function renderKpis(){
+  const expired = data.registrations.filter(r=>r.status==="Expired").length;
+  const expiring = data.registrations.filter(r=>r.status==="Expiring Soon").length;
+  const under80 = data.below90.filter(d=>d.score<80).length;
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="kpi-label">🚫 Registrations Expired</div>
+      <div class="kpi-value">${expired}</div>
+      <div class="kpi-sub">blocked on repair · ${expiring} more expiring in ≤3 days</div></div>
+    <div class="kpi"><div class="kpi-label">📷 Cameras Down</div>
+      <div class="kpi-value">${data.cameras.length}</div>
+      <div class="kpi-sub">across 5 yards</div></div>
+    <div class="kpi"><div class="kpi-label">🛡️ Fleet Safety Score</div>
+      <div class="kpi-value">${data.safetySummary.avg}</div>
+      <div class="kpi-sub">up from ${data.safetySummary.priorAvg} · ${data.safetySummary.drivers} drivers</div></div>
+    <div class="kpi"><div class="kpi-label">⚠️ Drivers Below 90</div>
+      <div class="kpi-value">${data.below90.length}</div>
+      <div class="kpi-sub">${under80} of those under 80 — min. becomes 90 on 9/1</div></div>
+  `;
+}
+
+function editableCell(value, onSave, mono){
+  if(!editMode) return `<span>${value}</span>`;
+  return `<input class="edit-input${mono?' mono':''}" value="${String(value).replace(/"/g,'&quot;')}" data-onchange="true" />`;
+}
+
+function renderRegistrations(){
+  document.getElementById('regCount').textContent = data.registrations.length;
+  document.getElementById('regBody').innerHTML = data.registrations.map((r,i)=>`
+    <tr>
+      <td class="mono" style="font-weight:600;">${editMode ? `<input class="edit-input mono" data-reg="${i}" data-field="asset" value="${r.asset}">` : r.asset}</td>
+      <td class="mono">${editMode ? `<input class="edit-input mono" data-reg="${i}" data-field="exp" value="${r.exp}">` : r.exp}</td>
+      <td class="mono" style="color:${r.days<0?'var(--red)':'var(--yellow)'};font-weight:700;">${editMode ? `<input class="edit-input mono" data-reg="${i}" data-field="days" value="${r.days}">` : r.days}</td>
+      <td>
+        ${editMode ? `
+          <select class="edit-select" data-reg="${i}" data-field="status">
+            <option ${r.status==='Expired'?'selected':''}>Expired</option>
+            <option ${r.status==='Expiring Soon'?'selected':''}>Expiring Soon</option>
+            <option ${r.status==='Current'?'selected':''}>Current</option>
+          </select>` :
+        `<span class="status-badge" style="background:${r.status==='Expired'?'var(--red)':(r.status==='Current'?'var(--green)':'var(--yellow)')};">${r.status}</span>
+         ${r.blocked ? '<span style="font-size:10px;color:var(--sub);margin-left:6px;">· blocked on repair</span>' : ''}`}
+      </td>
+      <td>${editMode ? `<button class="icon-btn" data-del-reg="${i}">🗑</button>` : ''}</td>
+    </tr>
+  `).join('');
+  document.getElementById('addRegBtn').style.display = editMode ? 'inline-flex' : 'none';
+}
+
+function renderCameras(){
+  document.getElementById('camCount').textContent = data.cameras.length;
+  document.getElementById('camBody').innerHTML = data.cameras.map((c,i)=>`
+    <tr>
+      <td class="mono" style="font-weight:600;">${editMode ? `<input class="edit-input mono" data-cam="${i}" data-field="asset" value="${c.asset}">` : c.asset}</td>
+      <td>
+        ${editMode ? `<input class="edit-input" data-cam="${i}" data-field="status" value="${c.status}">` :
+          `<span class="dot" style="background:${SEVERITY_COLOR[c.severity]||'#5a6270'};"></span>${c.status}`}
+      </td>
+      <td style="color:var(--sub);font-size:12px;">${editMode ? `<input class="edit-input" data-cam="${i}" data-field="location" value="${c.location}">` : c.location}</td>
+      <td class="mono">${editMode ? `<input class="edit-input mono" data-cam="${i}" data-field="days" value="${c.days}">` : c.days}</td>
+      <td>${editMode ? `<button class="icon-btn" data-del-cam="${i}">🗑</button>` : ''}</td>
+    </tr>
+  `).join('');
+  document.getElementById('addCamBtn').style.display = editMode ? 'inline-flex' : 'none';
+}
+
+function renderSafety(){
+  const list = showAllSafetyRows ? data.below90 : data.below90.slice(0,10);
+  document.getElementById('safetyCount').textContent = data.below90.length;
+  const opcoMap = {};
+  data.below90.forEach(d=>{ opcoMap[d.opco]=(opcoMap[d.opco]||0)+1; });
+  const opcoEntries = Object.entries(opcoMap).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('opcoBreakdown').innerHTML =
+    '<span style="color:var(--text);font-weight:700;">By OpCo: </span>' +
+    opcoEntries.map(([o,n])=>`<span class="mono">${o} (${n})</span>`).join(' · ');
+  document.getElementById('safetyBody').innerHTML = list.map((d)=>{
+    const idx = data.below90.indexOf(d);
+    return `
+    <tr>
+      <td class="mono" style="color:var(--sub);">${d.rank}</td>
+      <td style="font-weight:600;">${editMode ? `<input class="edit-input" data-safety="${idx}" data-field="name" value="${d.name}">` : d.name}</td>
+      <td style="color:var(--sub);font-size:12px;">${editMode ? `<input class="edit-input" data-safety="${idx}" data-field="opco" value="${d.opco}">` : d.opco}</td>
+      <td class="mono" style="font-weight:700;color:${d.score<80?'var(--red)':'var(--yellow)'};">${editMode ? `<input class="edit-input mono" data-safety="${idx}" data-field="score" value="${d.score}">` : d.score}</td>
+      <td>${editMode ? `<button class="icon-btn" data-del-safety="${idx}">🗑</button>` : ''}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('showAllSafety').textContent = showAllSafetyRows ? '▲ Show fewer' : `▼ Show all ${data.below90.length}`;
+  document.getElementById('addSafetyBtn').style.display = editMode ? 'inline-flex' : 'none';
+}
+
+function renderLog(){
+  const list = showAllLogRows ? data.emailLog : data.emailLog.slice(0,8);
+  document.getElementById('logCount').textContent = data.emailLog.length;
+  document.getElementById('logBody').innerHTML = list.map(e=>`
+    <tr><td class="mono" style="color:var(--sub);">${e.date}</td><td>✉️ ${e.subj}</td></tr>
+  `).join('');
+  document.getElementById('showAllLog').textContent = showAllLogRows ? '▲ Show fewer' : `▼ Show all ${data.emailLog.length}`;
+}
+
+// ---------- Event delegation for inline edits ----------
+document.addEventListener('change', (e)=>{
+  const t = e.target;
+  if(t.dataset.reg !== undefined){
+    const i = +t.dataset.reg, f = t.dataset.field;
+    data.registrations[i][f] = (f==='days') ? Number(t.value) : t.value;
+    render();
+  } else if(t.dataset.cam !== undefined){
+    const i = +t.dataset.cam, f = t.dataset.field;
+    data.cameras[i][f] = t.value;
+    render();
+  } else if(t.dataset.safety !== undefined){
+    const i = +t.dataset.safety, f = t.dataset.field;
+    data.below90[i][f] = (f==='score') ? Number(t.value) : t.value;
+    render();
+  }
+});
+
+document.addEventListener('click', (e)=>{
+  if(e.target.dataset.delReg !== undefined){
+    data.registrations.splice(+e.target.dataset.delReg, 1); render();
+  }
+  if(e.target.dataset.delCam !== undefined){
+    data.cameras.splice(+e.target.dataset.delCam, 1); render();
+  }
+  if(e.target.dataset.delSafety !== undefined){
+    data.below90.splice(+e.target.dataset.delSafety, 1); render();
+  }
+});
+
+document.getElementById('addRegBtn').addEventListener('click', ()=>{
+  data.registrations.push({ asset:"NEW-ASSET", exp:"2026/00/00", days:0, status:"Current" });
+  render();
+});
+document.getElementById('addCamBtn').addEventListener('click', ()=>{
+  data.cameras.push({ asset:"NEW-ASSET", status:"New Issue", location:"", days:"0", severity:"gray" });
+  render();
+});
+document.getElementById('addSafetyBtn').addEventListener('click', ()=>{
+  const nextRank = data.below90.length ? Math.min(...data.below90.map(d=>d.rank))-1 : 1;
+  data.below90.push({ rank:nextRank, name:"New Driver", opco:"Action", score:0 });
+  render();
+});
+
+document.getElementById('editToggle').addEventListener('click', ()=>{
+  editMode = !editMode;
+  document.getElementById('editToggle').style.display = editMode ? 'none' : 'inline-flex';
+  document.getElementById('saveBtn').style.display = editMode ? 'inline-flex' : 'none';
+  document.getElementById('resetBtn').style.display = editMode ? 'inline-flex' : 'none';
+  document.getElementById('editBanner').style.display = editMode ? 'flex' : 'none';
+  render();
+});
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  persist();
+  editMode = false;
+  document.getElementById('editToggle').style.display = 'inline-flex';
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('editBanner').style.display = 'none';
+  render();
+});
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Reset all data back to the original snapshot? This clears your saved edits on this browser.')){
+    localStorage.removeItem(STORAGE_KEY);
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    document.getElementById('subline').textContent = "Source: Ed Wood's emails, Aug 15–30, 2026 · Registrations, Camera Status, Safety Scores";
+    render();
+  }
+});
+document.getElementById('showAllSafety').addEventListener('click', ()=>{ showAllSafetyRows = !showAllSafetyRows; renderSafety(); });
+document.getElementById('showAllLog').addEventListener('click', ()=>{ showAllLogRows = !showAllLogRows; renderLog(); });
+
+render();
+</script>
+</body>
+</html>
