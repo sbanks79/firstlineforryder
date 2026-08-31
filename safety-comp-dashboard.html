@@ -101,6 +101,18 @@
 
 <div class="panel" style="margin-bottom:20px;">
   <div class="section-header">
+    <h2 class="section-title">Vehicles In Repair</h2>
+    <span class="count-badge" style="background:var(--amber);" id="repairCount"></span>
+  </div>
+  <table>
+    <thead><tr><th>Asset</th><th>Shop</th><th>Repair</th><th>Notes</th><th></th></tr></thead>
+    <tbody id="repairBody"></tbody>
+  </table>
+  <button class="btn" id="addRepairBtn" style="margin-top:10px;display:none;">+ Add row</button>
+</div>
+
+<div class="panel" style="margin-bottom:20px;">
+  <div class="section-header">
     <h2 class="section-title">Safety Scores — Below 90 Minimum</h2>
     <span class="count-badge" style="background:var(--yellow);" id="safetyCount"></span>
   </div>
@@ -222,6 +234,17 @@ const DEFAULT_DATA = {
     { date:"Aug 16", subj:"Re: Defective Cameras" },
     { date:"Aug 16", subj:"Re: Defective Cameras (HD trucks, battery service trucks)" },
     { date:"Aug 15", subj:"(thread start) Defective Cameras" }
+  ],
+  repairs: [
+    { asset:"ACTION-1301", shop:"Golden Gate Truck Center", repair:"Turbo", notes:"" },
+    { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
+    { asset:"ACTION-1320", shop:"Monarch", repair:"VGT Replacement", notes:"" },
+    { asset:"ACTION-1385", shop:"Pacific Truck and Tractor", repair:"VGT Replacement", notes:"" },
+    { asset:"ACTION-4693", shop:"Pacific Truck and Tractor", repair:"Rear main seal & clutch", notes:"Blocking registration renewal" },
+    { asset:'ACTION-4680B "Lowboy"', shop:"—", repair:"—", notes:"At shop, waiting on parts this week" },
+    { asset:'ACTION-4684B "Cozad"', shop:"—", repair:"Cable chain", notes:"Waiting on part" },
+    { asset:"ACTION-4690", shop:"—", repair:"AC & under reach", notes:"Needs to be downed when 4693 gets back" },
+    { asset:"ELLISON'S-1173", shop:"Boardwalk", repair:"Overheating", notes:"" }
   ]
 };
 
@@ -236,7 +259,14 @@ let showAllLogRows = false;
 function loadData(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
+    if(raw){
+      const saved = JSON.parse(raw);
+      // fill in any sections added after this browser last saved
+      Object.keys(DEFAULT_DATA).forEach(k=>{
+        if(saved[k] === undefined) saved[k] = JSON.parse(JSON.stringify(DEFAULT_DATA[k]));
+      });
+      return saved;
+    }
   }catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
@@ -250,6 +280,7 @@ function render(){
   renderKpis();
   renderRegistrations();
   renderCameras();
+  renderRepairs();
   renderSafety();
   renderLog();
 }
@@ -271,6 +302,9 @@ function renderKpis(){
     <div class="kpi"><div class="kpi-label">⚠️ Drivers Below 90</div>
       <div class="kpi-value">${data.below90.length}</div>
       <div class="kpi-sub">${under80} of those under 80 — min. becomes 90 on 9/1</div></div>
+    <div class="kpi"><div class="kpi-label">🔧 Vehicles In Repair</div>
+      <div class="kpi-value">${data.repairs.length}</div>
+      <div class="kpi-sub">across multiple shops</div></div>
   `;
 }
 
@@ -317,6 +351,20 @@ function renderCameras(){
     </tr>
   `).join('');
   document.getElementById('addCamBtn').style.display = editMode ? 'inline-flex' : 'none';
+}
+
+function renderRepairs(){
+  document.getElementById('repairCount').textContent = data.repairs.length;
+  document.getElementById('repairBody').innerHTML = data.repairs.map((r,i)=>`
+    <tr>
+      <td class="mono" style="font-weight:600;">${editMode ? `<input class="edit-input mono" data-repair="${i}" data-field="asset" value="${r.asset.replace(/"/g,'&quot;')}">` : r.asset}</td>
+      <td>${editMode ? `<input class="edit-input" data-repair="${i}" data-field="shop" value="${r.shop.replace(/"/g,'&quot;')}">` : r.shop}</td>
+      <td>${editMode ? `<input class="edit-input" data-repair="${i}" data-field="repair" value="${r.repair.replace(/"/g,'&quot;')}">` : r.repair}</td>
+      <td style="color:var(--sub);font-size:12px;">${editMode ? `<input class="edit-input" data-repair="${i}" data-field="notes" value="${r.notes.replace(/"/g,'&quot;')}">` : r.notes}</td>
+      <td>${editMode ? `<button class="icon-btn" data-del-repair="${i}">🗑</button>` : ''}</td>
+    </tr>
+  `).join('');
+  document.getElementById('addRepairBtn').style.display = editMode ? 'inline-flex' : 'none';
 }
 
 function renderSafety(){
@@ -367,6 +415,10 @@ document.addEventListener('change', (e)=>{
     const i = +t.dataset.safety, f = t.dataset.field;
     data.below90[i][f] = (f==='score') ? Number(t.value) : t.value;
     render();
+  } else if(t.dataset.repair !== undefined){
+    const i = +t.dataset.repair, f = t.dataset.field;
+    data.repairs[i][f] = t.value;
+    render();
   }
 });
 
@@ -379,6 +431,9 @@ document.addEventListener('click', (e)=>{
   }
   if(e.target.dataset.delSafety !== undefined){
     data.below90.splice(+e.target.dataset.delSafety, 1); render();
+  }
+  if(e.target.dataset.delRepair !== undefined){
+    data.repairs.splice(+e.target.dataset.delRepair, 1); render();
   }
 });
 
@@ -393,6 +448,10 @@ document.getElementById('addCamBtn').addEventListener('click', ()=>{
 document.getElementById('addSafetyBtn').addEventListener('click', ()=>{
   const nextRank = data.below90.length ? Math.min(...data.below90.map(d=>d.rank))-1 : 1;
   data.below90.push({ rank:nextRank, name:"New Driver", opco:"Action", score:0 });
+  render();
+});
+document.getElementById('addRepairBtn').addEventListener('click', ()=>{
+  data.repairs.push({ asset:"NEW-ASSET", shop:"", repair:"", notes:"" });
   render();
 });
 
