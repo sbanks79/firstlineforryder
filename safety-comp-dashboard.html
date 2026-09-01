@@ -77,10 +77,10 @@
       <span class="count-badge" style="background:var(--red);" id="regCount"></span>
     </div>
     <div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.5;">
-      Expired units are blocked on repair, not paperwork — CARB requires fault codes cleared and a readiness-monitor drive cycle before smog/registration can go through.
+      Units marked <b>in process at DMV</b> have paperwork filed and are waiting on the state. Units <b>blocked on repair</b> can't be filed yet — CARB requires fault codes cleared and a readiness-monitor drive cycle before smog/registration can go through.
     </div>
     <table>
-      <thead><tr><th>Asset</th><th>Expires</th><th>Days</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>Asset</th><th>Expires</th><th>Days</th><th>Status</th><th></th><th></th></tr></thead>
       <tbody id="regBody"></tbody>
     </table>
     <button class="btn" id="addRegBtn" style="margin-top:10px;display:none;">+ Add row</button>
@@ -138,18 +138,18 @@
 </div>
 
 <div class="save-note">
-  Registrations and camera figures are latest snapshot as of Aug 30 · Safety score policy: 90 minimum effective Sept 1, 2026
+  Registrations current as of Sep 1 · camera figures as of Aug 30 · Safety score policy: 90 minimum effective Sept 1, 2026
 </div>
 
 <script>
 // ---------- DEFAULT DATA (sourced from Ed Wood's emails, Aug 15–30, 2026) ----------
 const DEFAULT_DATA = {
   registrations: [
-    { asset:"FSP 45-06 FB", exp:"2026/07/31", days:-28, status:"Expired", blocked:true },
-    { asset:"GAT-102", exp:"2026/07/31", days:-28, status:"Expired", blocked:true },
-    { asset:"ACTION-4693 HD", exp:"2026/08/30", days:1, status:"Expiring Soon" },
-    { asset:"ACTION-4684", exp:"2026/08/30", days:1, status:"Expiring Soon" },
-    { asset:"ACTION-1330 WL", exp:"2026/08/31", days:2, status:"Expiring Soon" }
+    { asset:"FSP 45-06 FB", exp:"2026/07/31", days:-32, status:"Expired", note:"blocked on repair" },
+    { asset:"GAT-102", exp:"2026/07/31", days:-32, status:"Expired", note:"blocked on repair" },
+    { asset:"ACTION-4693 HD", exp:"2026/08/30", days:-2, status:"Expired", note:"in process at DMV" },
+    { asset:"ACTION-4684", exp:"2026/08/30", days:-2, status:"Expired", note:"in process at DMV" },
+    { asset:"ACTION-1330 WL", exp:"2026/08/31", days:-1, status:"Expired", note:"in process at DMV" }
   ],
   cameras: [
     { asset:"ACTION-1301 FB", status:"In for Repair", location:"Action RS Repair Shop, Redwood City", days:"30+", severity:"amber" },
@@ -279,11 +279,15 @@ function render(){
 function renderKpis(){
   const expired = data.registrations.filter(r=>r.status==="Expired").length;
   const expiring = data.registrations.filter(r=>r.status==="Expiring Soon").length;
+  const atDmv = data.registrations.filter(r=>(r.note||"").indexOf("DMV") !== -1).length;
+  const onRepair = data.registrations.filter(r=>r.note==="blocked on repair" || r.blocked).length;
+  const regSub = [ atDmv ? atDmv + " at DMV" : "", onRepair ? onRepair + " blocked on repair" : "",
+                   expiring ? expiring + " expiring in ≤3 days" : "" ].filter(Boolean).join(" · ");
   const under80 = data.below90.filter(d=>d.score<80).length;
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi"><div class="kpi-label">🚫 Registrations Expired</div>
       <div class="kpi-value">${expired}</div>
-      <div class="kpi-sub">blocked on repair · ${expiring} more expiring in ≤3 days</div></div>
+      <div class="kpi-sub">${regSub}</div></div>
     <div class="kpi"><div class="kpi-label">📷 Cameras Down</div>
       <div class="kpi-value">${data.cameras.length}</div>
       <div class="kpi-sub">across 5 yards</div></div>
@@ -319,8 +323,9 @@ function renderRegistrations(){
             <option ${r.status==='Current'?'selected':''}>Current</option>
           </select>` :
         `<span class="status-badge" style="background:${r.status==='Expired'?'var(--red)':(r.status==='Current'?'var(--green)':'var(--yellow)')};">${r.status}</span>
-         ${r.blocked ? '<span style="font-size:10px;color:var(--sub);margin-left:6px;">· blocked on repair</span>' : ''}`}
+         ${(r.note || (r.blocked ? 'blocked on repair' : '')) ? `<span style="font-size:10px;color:var(--sub);margin-left:6px;">· ${r.note || 'blocked on repair'}</span>` : ''}`}
       </td>
+      <td>${editMode ? `<input class="edit-input" data-reg="${i}" data-field="note" value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="note" style="width:140px;">` : ''}</td>
       <td>${editMode ? `<button class="icon-btn" data-del-reg="${i}">🗑</button>` : ''}</td>
     </tr>
   `).join('');
