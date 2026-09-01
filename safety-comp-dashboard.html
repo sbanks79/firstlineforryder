@@ -55,7 +55,7 @@
   <div>
     <div style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">FirstLine Road Solutions — NorCal</div>
     <h1 style="font-size:26px;font-weight:700;margin:4px 0 2px;letter-spacing:-.01em;">Fleet Compliance Dashboard</h1>
-    <div style="font-size:13px;color:var(--sub);" id="subline">Source: Ed Wood's emails, Aug 15–30, 2026 · Registrations, Camera Status, Safety Scores</div>
+    <div style="font-size:13px;color:var(--sub);" id="subline">Registrations · Camera Status · Safety Scores</div>
   </div>
   <div style="display:flex; gap:8px; align-items:center;">
     <button class="btn" id="editToggle">✏️ Edit</button>
@@ -125,24 +125,12 @@
   <button class="btn" id="addSafetyBtn" style="margin-top:10px;display:none;">+ Add row</button>
 </div>
 
-<div class="panel">
-  <div class="section-header">
-    <h2 class="section-title">Source Emails from Ed Wood</h2>
-    <span class="count-badge" style="background:var(--blue);" id="logCount"></span>
-  </div>
-  <table>
-    <thead><tr><th style="width:70px;">Date</th><th>Subject</th></tr></thead>
-    <tbody id="logBody"></tbody>
-  </table>
-  <button class="btn" id="showAllLog" style="margin-top:10px;">Show all</button>
-</div>
-
 <div class="save-note">
   Registrations current as of Sep 1 · camera figures as of Aug 30 · Safety score policy: 90 minimum effective Sept 1, 2026
 </div>
 
 <script>
-// ---------- DEFAULT DATA (sourced from Ed Wood's emails, Aug 15–30, 2026) ----------
+// ---------- DEFAULT DATA ----------
 const DEFAULT_DATA = {
   registrations: [
     { asset:"FSP 45-06 FB", exp:"2026/07/31", days:-32, status:"Expired", note:"blocked on repair" },
@@ -193,39 +181,6 @@ const DEFAULT_DATA = {
     { rank:157, name:"Luis Gutierrez", opco:"College Oak", score:89 },
     { rank:156, name:"Jairo Buenrostro", opco:"Action", score:89 }
   ],
-  emailLog: [
-    { date:"Aug 30", subj:"Camera Status" },
-    { date:"Aug 30", subj:"Re: Overview Action, Ellison's and GAT (Safety Scores)" },
-    { date:"Aug 30", subj:"Re: Upcoming Training this week" },
-    { date:"Aug 29", subj:"Cameras (fleet-wide, cc'd all OpCo leads)" },
-    { date:"Aug 29", subj:"Recognition — Jeff Heron (90 days no safety events)" },
-    { date:"Aug 29", subj:"Registration (all companies)" },
-    { date:"Aug 29", subj:"Registrations" },
-    { date:"Aug 29", subj:"Yevhen — cell phone use while driving" },
-    { date:"Aug 26", subj:"DEF report request — Action HD assets below 50%" },
-    { date:"Aug 26", subj:"Update — open defect list (worn seat, broken light bar, etc.)" },
-    { date:"Aug 26", subj:"Cameras - Adjustments (3 HD trucks still need adjustment)" },
-    { date:"Aug 26", subj:"Issues — pending repair issues list" },
-    { date:"Aug 25", subj:"Minimum Acceptable Score of 90 (College Oak)" },
-    { date:"Aug 25", subj:"Minimum Acceptable Score of 90 (Action/GAT)" },
-    { date:"Aug 25", subj:"Scores 89 & Below" },
-    { date:"Aug 24", subj:"Registration" },
-    { date:"Aug 23", subj:"Safety Score Minimum — policy: 90 min effective 9/1/26" },
-    { date:"Aug 23", subj:"Re: Overview Action, Ellison's and GAT (Safety Scores)" },
-    { date:"Aug 22", subj:"Camera Health" },
-    { date:"Aug 22", subj:"Upcoming Training this week" },
-    { date:"Aug 21", subj:"Registration - Expired, Soon to be Expired" },
-    { date:"Aug 20", subj:"Registration" },
-    { date:"Aug 19", subj:"Focus Group to 90 (coaching list)" },
-    { date:"Aug 19", subj:"Re: Ray Navarro's Driving Habits (heavy speeding, 83 in 65)" },
-    { date:"Aug 18", subj:"Ray Navarro's Driving Habits — needs 1:1" },
-    { date:"Aug 17", subj:"Defensive Driving — LaupamaV avoided collision w/ deer" },
-    { date:"Aug 16", subj:"Registration/Replacement Vehicle — 4-axle truck status" },
-    { date:"Aug 16", subj:"Re: Overview Action, Ellison's and GAT (Safety Scores)" },
-    { date:"Aug 16", subj:"Re: Defective Cameras" },
-    { date:"Aug 16", subj:"Re: Defective Cameras (HD trucks, battery service trucks)" },
-    { date:"Aug 15", subj:"(thread start) Defective Cameras" }
-  ],
   repairs: [
     { asset:"ACTION-1301", shop:"Golden Gate Truck Center", repair:"Turbo", notes:"" },
     { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
@@ -245,7 +200,6 @@ const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--y
 let data = loadData();
 let editMode = false;
 let showAllSafetyRows = false;
-let showAllLogRows = false;
 
 function loadData(){
   try{
@@ -264,7 +218,7 @@ function loadData(){
 function persist(){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   document.getElementById('subline').textContent =
-    "Source: Ed Wood's emails, Aug 15–30, 2026 · Manually edited " + new Date().toLocaleString();
+    "Registrations · Camera Status · Safety Scores · Manually edited " + new Date().toLocaleString();
 }
 
 function render(){
@@ -273,7 +227,6 @@ function render(){
   renderCameras();
   renderRepairs();
   renderSafety();
-  renderLog();
 }
 
 function renderKpis(){
@@ -387,14 +340,6 @@ function renderSafety(){
   document.getElementById('addSafetyBtn').style.display = editMode ? 'inline-flex' : 'none';
 }
 
-function renderLog(){
-  const list = showAllLogRows ? data.emailLog : data.emailLog.slice(0,8);
-  document.getElementById('logCount').textContent = data.emailLog.length;
-  document.getElementById('logBody').innerHTML = list.map(e=>`
-    <tr><td class="mono" style="color:var(--sub);">${e.date}</td><td>✉️ ${e.subj}</td></tr>
-  `).join('');
-  document.getElementById('showAllLog').textContent = showAllLogRows ? '▲ Show fewer' : `▼ Show all ${data.emailLog.length}`;
-}
 
 // ---------- Event delegation for inline edits ----------
 document.addEventListener('change', (e)=>{
@@ -472,12 +417,11 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(confirm('Reset all data back to the original snapshot? This clears your saved edits on this browser.')){
     localStorage.removeItem(STORAGE_KEY);
     data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    document.getElementById('subline').textContent = "Source: Ed Wood's emails, Aug 15–30, 2026 · Registrations, Camera Status, Safety Scores";
+    document.getElementById('subline').textContent = "Registrations · Camera Status · Safety Scores";
     render();
   }
 });
 document.getElementById('showAllSafety').addEventListener('click', ()=>{ showAllSafetyRows = !showAllSafetyRows; renderSafety(); });
-document.getElementById('showAllLog').addEventListener('click', ()=>{ showAllLogRows = !showAllLogRows; renderLog(); });
 
 render();
 </script>
