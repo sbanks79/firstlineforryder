@@ -104,8 +104,9 @@
     <h2 class="section-title">Vehicles In Repair</h2>
     <span class="count-badge" style="background:var(--amber);" id="repairCount"></span>
   </div>
+  <div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.5;" id="repairSummary"></div>
   <table>
-    <thead><tr><th>Asset</th><th>Shop</th><th>Repair</th><th>Notes</th><th></th></tr></thead>
+    <thead><tr><th>Asset</th><th>Shop</th><th>Repair</th><th>Reg Due</th><th>Notes</th><th></th></tr></thead>
     <tbody id="repairBody"></tbody>
   </table>
   <button class="btn" id="addRepairBtn" style="margin-top:10px;display:none;">+ Add row</button>
@@ -185,18 +186,18 @@ const DEFAULT_DATA = {
     { asset:"ACTION-1301", shop:"Golden Gate Truck Center", repair:"Turbo", notes:"" },
     { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
     { asset:"ACTION-1320", shop:"Monarch", repair:"VGT Replacement", notes:"" },
-    { asset:"ACTION-1379", shop:"—", repair:"Smog", notes:"Due for Oct registration" },
+    { asset:"ACTION-1379", shop:"—", repair:"Smog", due:"Oct", notes:"" },
     { asset:"ACTION-1385", shop:"Pacific Truck and Tractor", repair:"VGT Replacement", notes:"" },
-    { asset:"ACTION-1391", shop:"—", repair:"Smog", notes:"Due for Sept registration · check engine light on" },
+    { asset:"ACTION-1391", shop:"—", repair:"Smog", due:"Sept", notes:"check engine light on" },
     { asset:"ACTION-4693", shop:"Pacific Truck and Tractor", repair:"Rear main seal & clutch", notes:"" },
     { asset:'ACTION-4680B "Lowboy"', shop:"—", repair:"—", notes:"At shop, waiting on parts this week" },
     { asset:'ACTION-4684B "Cozad"', shop:"—", repair:"Cable chain", notes:"Waiting on part" },
     { asset:"ACTION-4690", shop:"—", repair:"AC & under reach", notes:"Needs to be downed when 4693 gets back" },
-    { asset:"ACTION-JEEP", shop:"—", repair:"Recall", notes:"Due for Sept registration" },
+    { asset:"ACTION-JEEP", shop:"—", repair:"Recall", due:"Sept", notes:"" },
     { asset:"ELLISON'S-1173", shop:"Boardwalk", repair:"Overheating", notes:"" },
-    { asset:"GAT-1351", shop:"—", repair:"Recall", notes:"Due for Oct registration" },
-    { asset:"GAT-1354", shop:"—", repair:"Recall", notes:"Due for Sept registration" },
-    { asset:"GAT-1387", shop:"—", repair:"Smog", notes:"Due for Oct registration" }
+    { asset:"GAT-1351", shop:"—", repair:"Recall", due:"Oct", notes:"" },
+    { asset:"GAT-1354", shop:"—", repair:"Recall", due:"Sept", notes:"" },
+    { asset:"GAT-1387", shop:"—", repair:"Smog", due:"Oct", notes:"" }
   ]
 };
 
@@ -308,13 +309,27 @@ function renderCameras(){
   document.getElementById('addCamBtn').style.display = editMode ? 'inline-flex' : 'none';
 }
 
+const DUE_COLOR = { "Sept":"var(--red)", "Oct":"var(--yellow)" };
+
 function renderRepairs(){
   document.getElementById('repairCount').textContent = data.repairs.length;
+  const sept = data.repairs.filter(r=>r.due==="Sept").length;
+  const oct  = data.repairs.filter(r=>r.due==="Oct").length;
+  document.getElementById('repairSummary').innerHTML = (sept||oct)
+    ? `<b style="color:var(--red);">${sept} due for Sept registration</b> · ${oct} due for Oct · these need smog or recall work booked before the deadline, not after.`
+    : '';
   document.getElementById('repairBody').innerHTML = data.repairs.map((r,i)=>`
     <tr>
       <td class="mono" style="font-weight:600;">${editMode ? `<input class="edit-input mono" data-repair="${i}" data-field="asset" value="${r.asset.replace(/"/g,'&quot;')}">` : r.asset}</td>
       <td>${editMode ? `<input class="edit-input" data-repair="${i}" data-field="shop" value="${r.shop.replace(/"/g,'&quot;')}">` : r.shop}</td>
       <td>${editMode ? `<input class="edit-input" data-repair="${i}" data-field="repair" value="${r.repair.replace(/"/g,'&quot;')}">` : r.repair}</td>
+      <td>${editMode ? `
+          <select class="edit-select" data-repair="${i}" data-field="due">
+            <option value="" ${!r.due?'selected':''}>—</option>
+            <option ${r.due==='Sept'?'selected':''}>Sept</option>
+            <option ${r.due==='Oct'?'selected':''}>Oct</option>
+          </select>` :
+        (r.due ? `<span class="status-badge" style="background:${DUE_COLOR[r.due]||'#5a6270'};">${r.due}</span>` : '')}</td>
       <td style="color:var(--sub);font-size:12px;">${editMode ? `<input class="edit-input" data-repair="${i}" data-field="notes" value="${r.notes.replace(/"/g,'&quot;')}">` : r.notes}</td>
       <td>${editMode ? `<button class="icon-btn" data-del-repair="${i}">🗑</button>` : ''}</td>
     </tr>
