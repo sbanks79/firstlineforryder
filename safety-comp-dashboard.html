@@ -28,6 +28,9 @@
   .kpi-label{ display:flex; align-items:center; gap:8px; color:var(--sub); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
   .kpi-value{ font-size:34px; font-weight:700; color:var(--text); font-family:'JetBrains Mono',monospace; margin-top:6px; }
   .kpi-sub{ font-size:12px; color:var(--sub); margin-top:4px; }
+  .kpi-groups{ margin-top:10px; padding-top:9px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+  .kpi-group-row{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:11px; color:var(--sub); }
+  .kpi-group-score{ font-size:13px; font-weight:700; }
   .section-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
   .section-title{ font-size:16px; font-weight:700; letter-spacing:.02em; margin:0; text-transform:uppercase; }
   .count-badge{ font-size:12px; font-weight:700; padding:2px 10px; border-radius:999px; color:#0d0f11; }
@@ -153,7 +156,11 @@ const DEFAULT_DATA = {
     { asset:"GAT-1353 WL", status:"In for Repair", location:"San Jose", days:"14", severity:"red" },
     { asset:"GAT-1385 BS", status:"Waiting for Vehicle Replacement", location:"Redwood City", days:"9", severity:"red" }
   ],
-  safetySummary: { avg:96, drivers:66, priorAvg:95 },
+  safetySummary: { avg:96, drivers:66, priorAvg:95, groups:[
+    { name:"Action Road Solutions", avg:98, drivers:6 },
+    { name:"Jack James", avg:93, drivers:18 },
+    { name:"College Oak Towing", avg:98, drivers:42 }
+  ] },
   below90: [
     { name:"Triston Chapman", opco:"College Oak", score:74 },
     { name:"Chris Andrews", opco:"College Oak", score:76 },
@@ -233,9 +240,16 @@ function renderKpis(){
     <div class="kpi"><div class="kpi-label">📷 Cameras Down</div>
       <div class="kpi-value">${data.cameras.length}</div>
       <div class="kpi-sub">across 5 yards</div></div>
-    <div class="kpi"><div class="kpi-label">🛡️ Fleet Safety Score</div>
+    <div class="kpi" style="min-width:250px;"><div class="kpi-label">🛡️ NorCal Fleet Safety Score</div>
       <div class="kpi-value">${data.safetySummary.avg}</div>
-      <div class="kpi-sub">${data.safetySummary.avg >= data.safetySummary.priorAvg ? 'up from' : 'down from'} ${data.safetySummary.priorAvg} · ${data.safetySummary.drivers} drivers</div></div>
+      <div class="kpi-sub">${data.safetySummary.avg >= data.safetySummary.priorAvg ? 'up from' : 'down from'} ${data.safetySummary.priorAvg} · ${data.safetySummary.drivers} drivers</div>
+      ${(data.safetySummary.groups||[]).length ? `<div class="kpi-groups">${
+        (data.safetySummary.groups||[]).map(g=>`
+          <div class="kpi-group-row">
+            <span>${g.name}</span>
+            <span class="mono kpi-group-score" style="color:${g.avg<90?'var(--red)':'var(--text)'};">${g.avg}</span>
+          </div>`).join('')
+      }</div>` : ''}</div>
     <div class="kpi"><div class="kpi-label">⚠️ Drivers Below 90</div>
       <div class="kpi-value">${data.below90.length}</div>
       <div class="kpi-sub">${under80} of those under 80 — 90 minimum now in effect</div></div>
