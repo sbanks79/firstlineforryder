@@ -119,7 +119,7 @@
   </div>
   <div style="font-size:12px;color:var(--sub);margin-bottom:16px;" id="opcoBreakdown"></div>
   <table>
-    <thead><tr><th>Rank</th><th>Driver</th><th>OpCo</th><th>Score</th><th></th></tr></thead>
+    <thead><tr><th>Driver</th><th>OpCo</th><th>Score</th><th></th></tr></thead>
     <tbody id="safetyBody"></tbody>
   </table>
   <button class="btn" id="showAllSafety" style="margin-top:10px;">Show all</button>
@@ -127,7 +127,7 @@
 </div>
 
 <div class="save-note">
-  Registrations current as of Sep 1 · camera figures as of Aug 30 · Safety score policy: 90 minimum effective Sept 1, 2026
+  Registrations current as of Sep 1 · camera figures as of Aug 30 · Safety scores from the 9/2 export · 90 minimum in effect since Sept 1, 2026
 </div>
 
 <script>
@@ -153,34 +153,16 @@ const DEFAULT_DATA = {
     { asset:"GAT-1353 WL", status:"In for Repair", location:"San Jose", days:"14", severity:"red" },
     { asset:"GAT-1385 BS", status:"Waiting for Vehicle Replacement", location:"Redwood City", days:"9", severity:"red" }
   ],
-  safetySummary: { avg:95, drivers:181, events:185, behaviors:192, priorAvg:93 },
+  safetySummary: { avg:96, drivers:66, priorAvg:95 },
   below90: [
-    { rank:181, name:"Neev Moa", opco:"Action", score:29 },
-    { rank:180, name:"Victor Moo Yah", opco:"Action", score:30 },
-    { rank:179, name:"g767FranciscoV", opco:"Great America", score:39 },
-    { rank:178, name:"g614 Matthew Soza", opco:"Great America", score:57 },
-    { rank:177, name:"Tevita Tongi", opco:"Action", score:71 },
-    { rank:176, name:"Armando Carlin", opco:"Action", score:71 },
-    { rank:175, name:"Triston Chapman", opco:"College Oak", score:73 },
-    { rank:174, name:"Ray Navarro", opco:"Action", score:73 },
-    { rank:173, name:"Bobby Riggs", opco:"College Oak", score:74 },
-    { rank:172, name:"Chris Andrews", opco:"College Oak", score:75 },
-    { rank:171, name:"Waad Yaqoov", opco:"Great America", score:76 },
-    { rank:170, name:"e031FernandoP", opco:"Ellison's", score:80 },
-    { rank:169, name:"Yevhen Petunin", opco:"Action", score:80 },
-    { rank:168, name:"Fred Albert", opco:"Action", score:81 },
-    { rank:167, name:"Ronald Ordonez", opco:"Action", score:82 },
-    { rank:166, name:"g667ManuelA", opco:"Great America", score:82 },
-    { rank:165, name:"g733AntnioL", opco:"Great America", score:83 },
-    { rank:164, name:"Tong Luo", opco:"Action", score:84 },
-    { rank:163, name:"g738KyleG", opco:"Great America", score:85 },
-    { rank:162, name:"g673SteveS", opco:"Great America", score:85 },
-    { rank:161, name:"Osvaldo Gomez", opco:"Action", score:86 },
-    { rank:160, name:"Matthew Severin", opco:"Great America", score:86 },
-    { rank:159, name:"g679MarwanA", opco:"Great America", score:86 },
-    { rank:158, name:"E061Pablo N", opco:"Ellison's", score:88 },
-    { rank:157, name:"Luis Gutierrez", opco:"College Oak", score:89 },
-    { rank:156, name:"Jairo Buenrostro", opco:"Action", score:89 }
+    { name:"Triston Chapman", opco:"College Oak", score:74 },
+    { name:"Chris Andrews", opco:"College Oak", score:76 },
+    { name:"Adrian Fernandez", opco:"Jack James", score:76 },
+    { name:"Suniljeet Khalsa", opco:"Jack James", score:79 },
+    { name:"Bobby Riggs", opco:"College Oak", score:80 },
+    { name:"Jesus Ayala", opco:"Jack James", score:80 },
+    { name:"Ernesto Lopez", opco:"Jack James", score:80 },
+    { name:"Luis Gutierrez", opco:"College Oak", score:87 }
   ],
   repairs: [
     { asset:"ACTION-1301", shop:"Golden Gate Truck Center", repair:"PTO, oil pan leak, tire", notes:"Turbo complete" },
@@ -253,10 +235,10 @@ function renderKpis(){
       <div class="kpi-sub">across 5 yards</div></div>
     <div class="kpi"><div class="kpi-label">🛡️ Fleet Safety Score</div>
       <div class="kpi-value">${data.safetySummary.avg}</div>
-      <div class="kpi-sub">up from ${data.safetySummary.priorAvg} · ${data.safetySummary.drivers} drivers</div></div>
+      <div class="kpi-sub">${data.safetySummary.avg >= data.safetySummary.priorAvg ? 'up from' : 'down from'} ${data.safetySummary.priorAvg} · ${data.safetySummary.drivers} drivers</div></div>
     <div class="kpi"><div class="kpi-label">⚠️ Drivers Below 90</div>
       <div class="kpi-value">${data.below90.length}</div>
-      <div class="kpi-sub">${under80} of those under 80 — min. becomes 90 on 9/1</div></div>
+      <div class="kpi-sub">${under80} of those under 80 — 90 minimum now in effect</div></div>
     <div class="kpi"><div class="kpi-label">🔧 Vehicles In Repair</div>
       <div class="kpi-value">${data.repairs.length}</div>
       <div class="kpi-sub">across multiple shops</div></div>
@@ -338,7 +320,8 @@ function renderRepairs(){
 }
 
 function renderSafety(){
-  const list = showAllSafetyRows ? data.below90 : data.below90.slice(0,10);
+  const sorted = data.below90.slice().sort((a,b)=>a.score-b.score);
+  const list = showAllSafetyRows ? sorted : sorted.slice(0,10);
   document.getElementById('safetyCount').textContent = data.below90.length;
   const opcoMap = {};
   data.below90.forEach(d=>{ opcoMap[d.opco]=(opcoMap[d.opco]||0)+1; });
@@ -350,14 +333,15 @@ function renderSafety(){
     const idx = data.below90.indexOf(d);
     return `
     <tr>
-      <td class="mono" style="color:var(--sub);">${d.rank}</td>
       <td style="font-weight:600;">${editMode ? `<input class="edit-input" data-safety="${idx}" data-field="name" value="${d.name}">` : d.name}</td>
       <td style="color:var(--sub);font-size:12px;">${editMode ? `<input class="edit-input" data-safety="${idx}" data-field="opco" value="${d.opco}">` : d.opco}</td>
       <td class="mono" style="font-weight:700;color:${d.score<80?'var(--red)':'var(--yellow)'};">${editMode ? `<input class="edit-input mono" data-safety="${idx}" data-field="score" value="${d.score}">` : d.score}</td>
       <td>${editMode ? `<button class="icon-btn" data-del-safety="${idx}">🗑</button>` : ''}</td>
     </tr>`;
   }).join('');
-  document.getElementById('showAllSafety').textContent = showAllSafetyRows ? '▲ Show fewer' : `▼ Show all ${data.below90.length}`;
+  const showAllBtn = document.getElementById('showAllSafety');
+  showAllBtn.style.display = data.below90.length > 10 ? 'inline-flex' : 'none';
+  showAllBtn.textContent = showAllSafetyRows ? '▲ Show fewer' : `▼ Show all ${data.below90.length}`;
   document.getElementById('addSafetyBtn').style.display = editMode ? 'inline-flex' : 'none';
 }
 
@@ -408,8 +392,7 @@ document.getElementById('addCamBtn').addEventListener('click', ()=>{
   render();
 });
 document.getElementById('addSafetyBtn').addEventListener('click', ()=>{
-  const nextRank = data.below90.length ? Math.min(...data.below90.map(d=>d.rank))-1 : 1;
-  data.below90.push({ rank:nextRank, name:"New Driver", opco:"Action", score:0 });
+  data.below90.push({ name:"New Driver", opco:"Action", score:0 });
   render();
 });
 document.getElementById('addRepairBtn').addEventListener('click', ()=>{
