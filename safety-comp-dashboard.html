@@ -67,6 +67,11 @@
   </div>
 </div>
 
+<div id="staleNotice" class="edit-banner" style="display:none;background:#10221a;border-color:var(--green);color:var(--green);">
+  <span>This page has been updated since you last saved changes in this browser. You're now seeing the current published data.</span>
+  <button class="btn" style="border-color:var(--green);color:var(--green);" onclick="this.parentNode.style.display='none'">Dismiss</button>
+</div>
+
 <div id="editBanner" class="edit-banner" style="display:none;">
   <span>Edit mode on — click any status, day count, or name to change it. Changes save to <b>this browser only</b> — they won't appear for other people viewing this page elsewhere.</span>
 </div>
@@ -211,6 +216,10 @@ const DEFAULT_DATA = {
 };
 
 const STORAGE_KEY = "fleet_dashboard_data_v1";
+// Bump on every published data change. Saved browser edits from an older
+// version are discarded on load, so a publish always wins.
+const DATA_VERSION = "2026-09-03";
+let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
 let data = loadData();
@@ -222,22 +231,28 @@ function loadData(){
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const saved = JSON.parse(raw);
-      // fill in any sections added after this browser last saved
-      Object.keys(DEFAULT_DATA).forEach(k=>{
-        if(saved[k] === undefined) saved[k] = JSON.parse(JSON.stringify(DEFAULT_DATA[k]));
-      });
-      return saved;
+      if(saved._v === DATA_VERSION){
+        // fill in any sections added after this browser last saved
+        Object.keys(DEFAULT_DATA).forEach(k=>{
+          if(saved[k] === undefined) saved[k] = JSON.parse(JSON.stringify(DEFAULT_DATA[k]));
+        });
+        return saved;
+      }
+      localStorage.removeItem(STORAGE_KEY);
+      staleEditsDiscarded = true;
     }
   }catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_DATA));
 }
 function persist(){
+  data._v = DATA_VERSION;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   document.getElementById('subline').textContent =
     "Registrations · Camera Status · Safety Scores · Manually edited " + new Date().toLocaleString();
 }
 
 function render(){
+  if(staleEditsDiscarded) document.getElementById('staleNotice').style.display = 'flex';
   renderKpis();
   renderRegistrations();
   renderCameras();
