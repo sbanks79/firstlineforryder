@@ -135,7 +135,7 @@
 </div>
 
 <div class="save-note">
-  Registrations current as of Sep 1 · camera figures as of Aug 30 · Safety scores from the 9/2 export · 90 minimum in effect since Sept 1, 2026
+  Registrations current as of Sep 1 · camera figures as of Aug 30 · Safety scores from the 9/6 Samsara report (Aug 7 – Sep 6) · 90 minimum in effect since Sept 1, 2026
 </div>
 
 <script>
@@ -160,45 +160,44 @@ const DEFAULT_DATA = {
     { asset:"GAT-1353 WL", status:"In for Repair", location:"San Jose", days:"14", severity:"red" },
     { asset:"GAT-1385 BS", status:"Waiting for Vehicle Replacement", location:"Redwood City", days:"9", severity:"red" }
   ],
-  safetySummary: { avg:95, drivers:199, priorAvg:95, groups:[
+  safetySummary: { avg:96, drivers:200, priorAvg:95, groups:[
     { name:"Action Road Solutions", avg:95, drivers:139 },
-    { name:"Jack James", avg:93, drivers:18 },
-    { name:"College Oak Towing", avg:98, drivers:42 }
+    { name:"Jack James", avg:94, drivers:18 },
+    { name:"College Oak Towing", avg:98, drivers:43 }
   ] },
   below90: [
     { name:"Neev Moa", opco:"Action", score:33 },
-    { name:"g767FranciscoV", opco:"Action", score:44 },
-    { name:"Victor Moo Yah", opco:"Action", score:51 },
-    { name:"g614 Matthew Soza", opco:"Action", score:68 },
-    { name:"Armando Carlin", opco:"Action", score:71 },
-    { name:"Triston Chapman", opco:"College Oak", score:74 },
-    { name:"Ray Navarro", opco:"Action", score:75 },
-    { name:"Tevita Tongi", opco:"Action", score:75 },
-    { name:"Adrian Fernandez", opco:"Jack James", score:76 },
-    { name:"Chris Andrews", opco:"College Oak", score:76 },
-    { name:"Yevhen Petunin", opco:"Action", score:78 },
-    { name:"g673SteveS", opco:"Action", score:79 },
-    { name:"Suniljeet Khalsa", opco:"Jack James", score:79 },
-    { name:"Waad Yaqoov", opco:"Action", score:80 },
-    { name:"e031FernandoP", opco:"Action", score:80 },
-    { name:"Bobby Riggs", opco:"College Oak", score:80 },
-    { name:"Jesus Ayala", opco:"Jack James", score:80 },
-    { name:"Ernesto Lopez", opco:"Jack James", score:80 },
-    { name:"Fred Albert", opco:"Action", score:82 },
-    { name:"g667ManuelA", opco:"Action", score:84 },
-    { name:"Ronald Ordonez", opco:"Action", score:84 },
-    { name:"g638PioA", opco:"Action", score:85 },
-    { name:"g738KyleG", opco:"Action", score:85 },
-    { name:"Matthew Severin", opco:"Action", score:86 },
-    { name:"g733AntnioL", opco:"Action", score:87 },
-    { name:"Osvaldo Gomez", opco:"Action", score:87 },
+    { name:"Victor Moo Yah", opco:"Action", score:45 },
+    { name:"g767FranciscoV", opco:"Action", score:52 },
+    { name:"g614 Matthew Soza", opco:"Action", score:58 },
+    { name:"Armando Carlin", opco:"Action", score:70 },
+    { name:"Triston Chapman", opco:"College Oak", score:73 },
+    { name:"Jesus Ayala", opco:"Jack James", score:76 },
+    { name:"Chris Andrews", opco:"College Oak", score:78 },
+    { name:"Waad Yaqoov", opco:"Action", score:79 },
+    { name:"Filipe Langi", opco:"Action", score:79 },
+    { name:"Bobby Riggs", opco:"College Oak", score:79 },
+    { name:"Yevhen Petunin", opco:"Action", score:80 },
+    { name:"Adrian Fernandez", opco:"Jack James", score:80 },
+    { name:"Ray Navarro", opco:"Action", score:81 },
+    { name:"e031FernandoP", opco:"Action", score:82 },
+    { name:"Suniljeet Khalsa", opco:"Jack James", score:84 },
+    { name:"g673SteveS", opco:"Action", score:84 },
+    { name:"Matthew Severin", opco:"Action", score:84 },
+    { name:"Ronald Ordonez", opco:"Action", score:85 },
     { name:"Luis Gutierrez", opco:"College Oak", score:87 },
-    { name:"Filipe Langi", opco:"Action", score:88 },
+    { name:"Fred Albert", opco:"Action", score:87 },
+    { name:"g738KyleG", opco:"Action", score:87 },
+    { name:"g667ManuelA", opco:"Action", score:88 },
+    { name:"g638PioA", opco:"Action", score:88 },
+    { name:"Eddie Salazar", opco:"College Oak", score:88 },
+    { name:"g733AntnioL", opco:"Action", score:88 },
     { name:"E061Pablo N", opco:"Action", score:88 },
-    { name:"g679MarwanA", opco:"Action", score:89 }
+    { name:"Osvaldo Gomez", opco:"Action", score:88 }
   ],
   repairs: [
     { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
+    { asset:"ACTION-1318", shop:"—", repair:"Toolbox", notes:"" },
     { asset:"ACTION-1320", shop:"Monarch", repair:"VGT Replacement", notes:"" },
     { asset:"ACTION-1379", shop:"—", repair:"Smog", due:"Oct", notes:"" },
     { asset:"ACTION-1385", shop:"Pacific Truck and Tractor", repair:"VGT Replacement", notes:"" },
@@ -218,7 +217,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-03";
+const DATA_VERSION = "2026-09-06";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
