@@ -196,6 +196,7 @@ const DEFAULT_DATA = {
     { name:"Osvaldo Gomez", opco:"Action", score:88 }
   ],
   repairs: [
+    { asset:"ACTION-1301", shop:"—", repair:"—", notes:"Back from shop, issues persist" },
     { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
     { asset:"ACTION-1318", shop:"—", repair:"Toolbox", notes:"" },
     { asset:"ACTION-1320", shop:"Monarch", repair:"VGT Replacement", notes:"" },
@@ -216,7 +217,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-07";
+const DATA_VERSION = "2026-09-07b";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
