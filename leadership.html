@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leadership Portal — FirstLine Road Solutions NorCal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+  :root{
+    --bg:#15181c; --panel:#1d2126; --panel-alt:#22262c; --line:#2c3138;
+    --text:#e7e9ec; --sub:#8b929c; --red:#e6000e; --amber:#ec5c07;
+    --yellow:#ffb200; --blue:#3aa0ff; --green:#3ecf6e;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; padding:28px 24px; }
+  .mono{ font-family:'JetBrains Mono',monospace; }
+  .btn{ background:none; border:1px solid var(--line); color:var(--sub); font-size:12px; padding:6px 12px; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; font-family:inherit; }
+  .btn:hover{ color:var(--text); border-color:var(--sub); }
+  .btn.primary{ background:var(--blue); color:#0d0f11; border-color:var(--blue); font-weight:700; }
+  .btn.primary:hover{ opacity:.85; color:#0d0f11; }
+  .btn.danger{ border-color:var(--red); color:var(--red); }
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; }
+  .header-bar{ display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:24px; flex-wrap:wrap; }
+  .back-link{ display:inline-block; color:var(--sub); text-decoration:none; font-size:12px; font-weight:600; margin-bottom:18px; }
+  .back-link:hover{ color:var(--blue); }
+
+  /* tabs */
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--line); margin-bottom:22px; }
+  .tab{ background:none; border:none; border-bottom:2px solid transparent; color:var(--sub); font-family:inherit; font-size:13px; font-weight:600;
+        padding:10px 16px 11px; cursor:pointer; display:flex; align-items:center; gap:9px; margin-bottom:-1px; }
+  .tab:hover{ color:var(--text); }
+  .tab.active{ color:var(--text); border-bottom-color:var(--blue); }
+  .tab-count{ font-size:11px; font-weight:700; padding:1px 7px; border-radius:999px; background:var(--panel-alt); color:var(--sub); }
+  .tab.active .tab-count{ background:var(--blue); color:#0d0f11; }
+
+  /* KPI strip */
+  .kpi-row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:26px; }
+  .kpi{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:16px 18px; flex:1; min-width:150px; }
+  .kpi-label{ color:var(--sub); font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+  .kpi-value{ font-size:30px; font-weight:700; font-family:'JetBrains Mono',monospace; margin-top:5px; }
+  .kpi-sub{ font-size:11px; color:var(--sub); margin-top:3px; }
+
+  /* priorities */
+  .mgr-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:4px; }
+  .mgr-name{ font-size:20px; font-weight:700; margin:0; }
+  .mgr-lead{ font-size:12px; color:var(--sub); margin-top:3px; }
+  .progress-wrap{ margin:14px 0 20px; }
+  .progress-bar{ height:6px; background:var(--panel-alt); border-radius:99px; overflow:hidden; display:flex; }
+  .progress-seg{ height:100%; }
+  .progress-legend{ font-size:11px; color:var(--sub); margin-top:7px; display:flex; gap:14px; flex-wrap:wrap; }
+  .legend-dot{ width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:5px; }
+
+  .p-item{ display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--line); align-items:flex-start; }
+  .p-item:last-child{ border-bottom:none; }
+  .p-rank{ font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--sub); min-width:20px; padding-top:2px; }
+  .p-body{ flex:1; min-width:0; }
+  .p-title{ font-size:14px; font-weight:600; line-height:1.4; }
+  .p-detail{ font-size:12px; color:var(--sub); margin-top:4px; line-height:1.5; }
+  .p-title.done{ text-decoration:line-through; color:var(--sub); }
+  .status-badge{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:5px; color:#0d0f11; white-space:nowrap; text-transform:uppercase; letter-spacing:.03em; }
+  .empty{ color:var(--sub); font-size:13px; padding:26px 0; text-align:center; }
+
+  /* edit mode */
+  .edit-input, .edit-select, .edit-area{ background:var(--panel-alt); border:1px solid var(--sub); color:var(--text); font-size:13px; padding:5px 7px; border-radius:4px; width:100%; font-family:inherit; }
+  .edit-area{ resize:vertical; min-height:44px; font-size:12px; }
+  .edit-banner{ background:#2a2410; border:1px solid var(--yellow); color:var(--yellow); font-size:12px; padding:10px 14px; border-radius:8px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .icon-btn{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:14px; padding:2px 6px; }
+  .icon-btn:hover{ color:var(--text); }
+  .save-note{ font-size:11px; color:var(--sub); margin-top:22px; text-align:center; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<a class="back-link" href="index.html">&larr; Back to Call Taking Portal</a>
+
+<div class="header-bar">
+  <div>
+    <div style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">FirstLine Road Solutions — NorCal</div>
+    <h1 style="font-size:26px;font-weight:700;margin:4px 0 2px;letter-spacing:-.01em;">Leadership Portal</h1>
+    <div style="font-size:13px;color:var(--sub);" id="subline">Weekly priorities by manager</div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="btn" id="editToggle">✏️ Edit</button>
+    <button class="btn primary" id="saveBtn" style="display:none;">Save Draft</button>
+    <button class="btn danger" id="resetBtn" style="display:none;">Reset to Published</button>
+  </div>
+</div>
+
+<div id="staleNotice" class="edit-banner" style="display:none;background:#10221a;border-color:var(--green);color:var(--green);">
+  <span>This page has been updated since you last saved a draft in this browser. You are now seeing the current published priorities.</span>
+  <button class="btn" style="border-color:var(--green);color:var(--green);" onclick="this.parentNode.style.display='none'">Dismiss</button>
+</div>
+
+<div id="editBanner" class="edit-banner" style="display:none;">
+  <span><b>Draft mode.</b> Click any item to change it. Anything you save here stays in <b>this browser only</b> and your managers will not see it. To publish for everyone, send the changes over to be added to the site.</span>
+</div>
+
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="panel" id="mgrPanel"></div>
+
+<div class="save-note" id="footNote"></div>
+
+<script>
+// ---------- PUBLISHED DATA ----------
+// Seeded from the open items on the Fleet Compliance Dashboard as of Sep 8.
+// Replace these with the real weekly priorities.
+const DEFAULT_DATA = {
+  weekOf: "Week of Sep 8, 2026",
+  managers: [
+    {
+      name: "Action Road Solutions",
+      lead: "",
+      note: "Includes Action, Ellison's and Great America",
+      priorities: [
+        { title:"Get ACTION-1391 through smog before the Sept registration deadline",
+          detail:"Check engine light is on, which is an automatic OBD-II failure. Fault codes have to clear and readiness monitors reset on a drive cycle before it can even be tested. Shop time needs booking now.",
+          status:"Blocked" },
+        { title:"Close out the ACTION-4693 weight correction at DMV",
+          detail:"DMV is asking for a heavy use permit because the declared weight on file is 55,000 lbs or above. The truck is under that, so the fix is a weight correction, not an HVUT filing.",
+          status:"In progress" },
+        { title:"Diagnose ACTION-1301 after its return from Golden Gate",
+          detail:"Back from turbo, PTO, oil pan and tire work but still having issues. Establish whether this is a warranty return before booking new repair time. Its camera is also still down at 30+ days.",
+          status:"Not started" },
+        { title:"ACTION-JEEP recall ahead of Sept registration",
+          detail:"Also flagged as a low-use vehicle with its camera down 30+ days. Worth deciding whether it stays in service at all.",
+          status:"Not started" },
+        { title:"Coaching for the four drivers under 60",
+          detail:"Neev Moa 33, Victor Moo Yah 45, g767FranciscoV 52, g614 Matthew Soza 58. Neev Moa has not moved since the Aug 30 report.",
+          status:"Not started" }
+      ]
+    },
+    {
+      name: "Jack James",
+      lead: "",
+      note: "18 drivers · fleet average 94",
+      priorities: [
+        { title:"Coaching plan for the three drivers below the 90 minimum",
+          detail:"Jesus Ayala 76, Adrian Fernandez 80, Suniljeet Khalsa 84. Three of 18 drivers, the highest proportion of any location.",
+          status:"Not started" },
+        { title:"Recognise Ernesto Lopez for clearing the minimum",
+          detail:"Moved 80 to 90 between the Sept 2 and Sept 6 reports, the only driver to clear the line this period.",
+          status:"Not started" }
+      ]
+    },
+    {
+      name: "College Oak Towing",
+      lead: "",
+      note: "43 drivers · fleet average 98, highest of the three",
+      priorities: [
+        { title:"Coaching for Triston Chapman and Chris Andrews",
+          detail:"Chapman 73 and Andrews 78 are the two lowest at College Oak and both sit under 80.",
+          status:"Not started" },
+        { title:"Review Eddie Salazar's drop below the minimum",
+          detail:"Newly below 90 at 88 in the Sept 6 report. Worth catching early before it settles.",
+          status:"Not started" }
+      ]
+    }
+  ]
+};
+
+const STORAGE_KEY = "leadership_portal_v1";
+// Bump on every published change. Saved drafts from an older version are
+// discarded on load, so a publish always wins.
+const DATA_VERSION = "2026-09-08";
+const STATUSES = ["Not started", "In progress", "Blocked", "Done"];
+const STATUS_COLOR = { "Not started":"#5a6270", "In progress":"var(--blue)", "Blocked":"var(--red)", "Done":"var(--green)" };
+
+let staleDraftDiscarded = false;
+let data = loadData();
+let editMode = false;
+let activeTab = 0;
+
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const saved = JSON.parse(raw);
+      if(saved._v === DATA_VERSION) return saved;
+      localStorage.removeItem(STORAGE_KEY);
+      staleDraftDiscarded = true;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+function persist(){
+  data._v = DATA_VERSION;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+  document.getElementById('subline').textContent =
+    data.weekOf + " · draft saved " + new Date().toLocaleString();
+}
+
+function esc(v){ return String(v == null ? "" : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+function counts(m){
+  const c = { total:m.priorities.length };
+  STATUSES.forEach(function(s){ c[s] = m.priorities.filter(function(p){ return p.status === s; }).length; });
+  return c;
+}
+
+function render(){
+  if(staleDraftDiscarded) document.getElementById('staleNotice').style.display = 'flex';
+  renderKpis();
+  renderTabs();
+  renderManager();
+  document.getElementById('footNote').innerHTML =
+    esc(data.weekOf) + ' · priorities are set by leadership and published to this page.<br>' +
+    'Managers: this is the current list. Questions on any item go back to Shaun.';
+}
+
+function renderKpis(){
+  const all = data.managers.reduce(function(a,m){ return a.concat(m.priorities); }, []);
+  const done = all.filter(function(p){ return p.status === "Done"; }).length;
+  const blocked = all.filter(function(p){ return p.status === "Blocked"; }).length;
+  const active = all.filter(function(p){ return p.status === "In progress"; }).length;
+  document.getElementById('kpiRow').innerHTML =
+    '<div class="kpi"><div class="kpi-label">Total Priorities</div>' +
+      '<div class="kpi-value">' + all.length + '</div>' +
+      '<div class="kpi-sub">across ' + data.managers.length + ' managers</div></div>' +
+    '<div class="kpi"><div class="kpi-label">In Progress</div>' +
+      '<div class="kpi-value" style="color:var(--blue);">' + active + '</div>' +
+      '<div class="kpi-sub">actively being worked</div></div>' +
+    '<div class="kpi"><div class="kpi-label">Blocked</div>' +
+      '<div class="kpi-value" style="color:' + (blocked ? 'var(--red)' : 'var(--text)') + ';">' + blocked + '</div>' +
+      '<div class="kpi-sub">' + (blocked ? 'need a decision to move' : 'nothing stuck') + '</div></div>' +
+    '<div class="kpi"><div class="kpi-label">Complete</div>' +
+      '<div class="kpi-value" style="color:var(--green);">' + done + '</div>' +
+      '<div class="kpi-sub">of ' + all.length + ' this week</div></div>';
+}
+
+function renderTabs(){
+  document.getElementById('tabs').innerHTML = data.managers.map(function(m,i){
+    const open = m.priorities.filter(function(p){ return p.status !== "Done"; }).length;
+    return '<button class="tab' + (i===activeTab ? ' active' : '') + '" data-tab="' + i + '">' +
+           esc(m.name) + '<span class="tab-count">' + open + '</span></button>';
+  }).join('');
+}
+
+function renderManager(){
+  const m = data.managers[activeTab];
+  const panel = document.getElementById('mgrPanel');
+  if(!m){ panel.innerHTML = '<div class="empty">No managers set up yet.</div>'; return; }
+  const c = counts(m);
+
+  const segs = STATUSES.filter(function(s){ return c[s] > 0; }).map(function(s){
+    return '<div class="progress-seg" style="width:' + ((c[s]/c.total)*100) + '%;background:' + STATUS_COLOR[s] + ';"></div>';
+  }).join('');
+
+  const head = editMode
+    ? '<input class="edit-input" data-mgr="' + activeTab + '" data-field="name" value="' + esc(m.name) + '" style="font-size:18px;font-weight:700;margin-bottom:6px;">' +
+      '<input class="edit-input" data-mgr="' + activeTab + '" data-field="lead" value="' + esc(m.lead) + '" placeholder="Manager name" style="margin-bottom:6px;">' +
+      '<input class="edit-input" data-mgr="' + activeTab + '" data-field="note" value="' + esc(m.note) + '" placeholder="Sub-line">'
+    : '<h2 class="mgr-name">' + esc(m.name) + '</h2>' +
+      '<div class="mgr-lead">' + (m.lead ? esc(m.lead) + (m.note ? ' · ' : '') : '') + esc(m.note || '') + '</div>';
+
+  const items = c.total ? m.priorities.map(function(p,i){
+    const body = editMode
+      ? '<input class="edit-input" data-pri="' + i + '" data-field="title" value="' + esc(p.title) + '" style="margin-bottom:6px;">' +
+        '<textarea class="edit-area" data-pri="' + i + '" data-field="detail" placeholder="Detail">' + esc(p.detail) + '</textarea>'
+      : '<div class="p-title' + (p.status === 'Done' ? ' done' : '') + '">' + esc(p.title) + '</div>' +
+        (p.detail ? '<div class="p-detail">' + esc(p.detail) + '</div>' : '');
+
+    const right = editMode
+      ? '<select class="edit-select" data-pri="' + i + '" data-field="status" style="width:auto;">' +
+          STATUSES.map(function(s){ return '<option ' + (p.status===s ? 'selected' : '') + '>' + s + '</option>'; }).join('') +
+        '</select>' +
+        '<button class="icon-btn" data-up="' + i + '"' + (i===0 ? ' disabled style="opacity:.3;"' : '') + '>&uarr;</button>' +
+        '<button class="icon-btn" data-del="' + i + '">&#128465;</button>'
+      : '<span class="status-badge" style="background:' + (STATUS_COLOR[p.status] || '#5a6270') + ';">' + esc(p.status) + '</span>';
+
+    return '<div class="p-item"><div class="p-rank">' + (i+1) + '</div>' +
+           '<div class="p-body">' + body + '</div>' +
+           '<div style="display:flex;align-items:center;gap:6px;">' + right + '</div></div>';
+  }).join('') : '<div class="empty">No priorities published for this week yet.</div>';
+
+  panel.innerHTML =
+    '<div class="mgr-head"><div style="flex:1;min-width:220px;">' + head + '</div>' +
+    '<div style="text-align:right;">' +
+      '<div style="font-size:11px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;font-weight:600;">Complete</div>' +
+      '<div class="mono" style="font-size:22px;font-weight:700;color:' + ((c.Done===c.total && c.total) ? 'var(--green)' : 'var(--text)') + ';">' + c.Done + '/' + c.total + '</div>' +
+    '</div></div>' +
+    (c.total ? '<div class="progress-wrap"><div class="progress-bar">' + segs + '</div>' +
+      '<div class="progress-legend">' + STATUSES.filter(function(s){ return c[s] > 0; }).map(function(s){
+        return '<span><span class="legend-dot" style="background:' + STATUS_COLOR[s] + ';"></span>' + s + ' (' + c[s] + ')</span>';
+      }).join('') + '</div></div>' : '') +
+    items +
+    (editMode ? '<button class="btn" id="addPri" style="margin-top:14px;">+ Add priority</button>' : '');
+}
+
+// ---------- events ----------
+document.getElementById('tabs').addEventListener('click', function(e){
+  const t = e.target.closest('.tab');
+  if(t){ activeTab = +t.dataset.tab; renderTabs(); renderManager(); }
+});
+
+document.addEventListener('change', function(e){
+  const t = e.target;
+  if(t.dataset.pri !== undefined){
+    data.managers[activeTab].priorities[+t.dataset.pri][t.dataset.field] = t.value;
+    render();
+  } else if(t.dataset.mgr !== undefined){
+    data.managers[+t.dataset.mgr][t.dataset.field] = t.value;
+    render();
+  }
+});
+
+document.addEventListener('click', function(e){
+  const mgr = data.managers[activeTab];
+  if(!mgr) return;
+  const list = mgr.priorities;
+  if(e.target.dataset.del !== undefined){ list.splice(+e.target.dataset.del, 1); render(); }
+  if(e.target.dataset.up !== undefined){
+    const i = +e.target.dataset.up;
+    if(i > 0){ const tmp = list[i-1]; list[i-1] = list[i]; list[i] = tmp; render(); }
+  }
+  if(e.target.id === 'addPri'){
+    list.push({ title:"New priority", detail:"", status:"Not started" });
+    render();
+  }
+});
+
+document.getElementById('editToggle').addEventListener('click', function(){
+  editMode = true;
+  document.getElementById('editToggle').style.display = 'none';
+  document.getElementById('saveBtn').style.display = 'inline-flex';
+  document.getElementById('resetBtn').style.display = 'inline-flex';
+  document.getElementById('editBanner').style.display = 'flex';
+  render();
+});
+
+document.getElementById('saveBtn').addEventListener('click', function(){
+  persist();
+  editMode = false;
+  document.getElementById('editToggle').style.display = 'inline-flex';
+  document.getElementById('saveBtn').style.display = 'none';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('editBanner').style.display = 'none';
+  render();
+});
+
+document.getElementById('resetBtn').addEventListener('click', function(){
+  if(confirm('Discard your draft and go back to the published priorities?')){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    editMode = false;
+    document.getElementById('editToggle').style.display = 'inline-flex';
+    document.getElementById('saveBtn').style.display = 'none';
+    document.getElementById('resetBtn').style.display = 'none';
+    document.getElementById('editBanner').style.display = 'none';
+    document.getElementById('subline').textContent = "Weekly priorities by manager";
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
