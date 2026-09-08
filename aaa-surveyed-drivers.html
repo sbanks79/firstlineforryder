@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AAA Surveyed Drivers — C240 Action Towing</title>
+<style>
+:root{--navy:#1f3864;--navy2:#2e5c8a;--red:#c00000;--gold:#7f6000;--pink:#ffc7ce;--pinktx:#9c0006;--amber:#ffeb9c;--green:#e2efda;--greentx:#375623;--line:#d9d9d9}
+*{box-sizing:border-box}
+body{margin:0;padding:22px 26px;background:#f4f6f9;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a}
+.back-link{display:inline-block;color:var(--navy);text-decoration:none;font-size:12px;font-weight:600;margin-bottom:14px}
+.back-link:hover{text-decoration:underline}
+.card{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.13);padding:20px 22px 14px;max-width:1500px;margin:0 auto}
+h1{margin:0 0 4px;font-size:21px;color:var(--navy)}
+.sub{font-size:11.5px;color:#5a5a5a;font-style:italic;margin-bottom:9px;line-height:1.5}
+.stats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.chip{font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:11px;background:#eef1f6;border:1px solid #dde2ea}
+.chip.sev{background:var(--red);color:#fff;border-color:var(--red)}
+.chip.warn{background:var(--pink);color:var(--pinktx);border-color:#f3a9b4}
+.chip.ok{background:var(--green);color:var(--greentx);border-color:#c7ddb9}
+.chip.avg{background:var(--navy);color:#fff;border-color:var(--navy)}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:11px}
+input[type=search]{padding:6px 10px;font-size:12.5px;border:1px solid #ccd3dd;border-radius:5px;width:210px;font-family:inherit}
+button{padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;border:1px solid #ccd3dd;background:#fff;border-radius:5px}
+button:hover{background:#eef1f6}
+button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{background:var(--navy);color:#fff;font-weight:600;text-align:center;padding:8px 6px;font-size:11px;line-height:1.25;position:sticky;top:0;z-index:2;cursor:pointer;user-select:none}
+th.aaa{background:var(--navy2)}th.meal{background:var(--gold)}th.flag{background:var(--red)}
+th:hover{filter:brightness(1.22)}
+th:nth-child(1),th:nth-child(2),th:nth-child(3){text-align:left}
+td{padding:5px 6px;border-bottom:1px solid var(--line)}
+td.n{text-align:center;white-space:nowrap}
+td.nm{font-weight:600;white-space:nowrap}
+td.ro{color:#4a4a4a;white-space:nowrap}
+td.co{font-size:11.5px}
+td.fl{font-weight:700;text-align:center}
+tbody tr:hover{background:#f7f9fc}
+tr.c0 td.fl,tr.c0 td.co{background:var(--green);color:var(--greentx)}
+tr.c2 td.fl,tr.c2 td.co{background:var(--pink);color:var(--pinktx)}
+tr.c3 td.fl,tr.c3 td.co{background:var(--red);color:#fff;font-weight:700}
+td.p{background:var(--pink);color:var(--pinktx)}
+td.a{background:var(--amber);color:var(--gold);font-weight:600}
+td.r{background:var(--red);color:#fff;font-weight:700}
+.notes{margin-top:15px;font-size:10.5px;color:#4f4f4f;line-height:1.65}
+.notes .hd{color:var(--navy);font-weight:700;margin-bottom:3px;font-size:11px}
+.notes b{color:#2b2b2b}
+.foot{margin-top:9px;font-size:10px;color:#8a8a8a}
+@media print{
+@page{size:landscape;margin:10mm}
+body{background:#fff;padding:0}
+.card{box-shadow:none;border-radius:0;padding:0;max-width:none}
+.tools,.back-link{display:none}
+th{position:static;font-size:8pt}
+table{font-size:8.6pt}
+td.co{font-size:8.2pt}
+tr{page-break-inside:avoid}
+thead{display:table-header-group}
+.notes{font-size:7.6pt}
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<a class="back-link" href="leadership.html">&larr; Back to Leadership Portal</a>
+<div class="card">
+<h1>AAA Surveyed Drivers — C240 Action Towing</h1>
+<div class="sub">The 36 drivers with AAA survey responses in August 2026, ranked worst Overall&nbsp;% first. Missed meal periods: pay period 08/17–08/30/2026 &middot; Productivity: 4-pay-period average &middot; Safety: Samsara Aug&nbsp;07&nbsp;–&nbsp;Sep&nbsp;06&nbsp;2026</div>
+<div class="stats">
+<span class="chip">Drivers shown: 36</span>
+<span class="chip ok">11 satisfactory</span>
+<span class="chip">17 with 1 flag</span>
+<span class="chip warn">6 with 2 flags</span>
+<span class="chip sev">2 with 3+ flags — coach first</span>
+<span class="chip avg">AAA average shown: 90.9%</span>
+</div>
+<div class="tools">
+<input type="search" id="q" placeholder="Search driver…">
+<button data-f="all" class="on">All</button>
+<button data-f="flagged">Flagged only</button>
+<button data-f="3">3+ flags</button>
+<button data-f="clean">Satisfactory</button>
+<button onclick="window.print()">Print / Save PDF</button>
+</div>
+<table id="t">
+<thead><tr>
+<th>#</th><th>Driver</th><th>Role</th>
+<th class="aaa">AAA Responses</th><th class="aaa">AAA Overall %</th><th class="aaa">AAA Driver %</th><th class="aaa">AAA RT %</th><th class="aaa">AAA KMI %</th>
+<th class="meal">Missed Meal Periods</th>
+<th>Productivity (4-PP Avg)</th><th>Safety Score</th>
+<th class="flag">Flags</th><th class="flag">Coach On</th>
+</tr></thead>
+<tbody>
+<tr data-flags="1"><td class="n">1</td><td class="nm">George Riola</td><td class="ro">Driver Light Duty</td><td class="n">8</td><td class="n p">50.0%</td><td class="n p">62.5%</td><td class="n p">62.5%</td><td class="n p">62.5%</td><td class="n">Satisfactory</td><td class="n">28.7%</td><td class="n">100</td><td class="fl">1</td><td class="co">Customer service</td></tr>
+<tr data-flags="3" class="c3"><td class="n">2</td><td class="nm">Alfredo Martinez</td><td class="ro">Driver Other</td><td class="n">7</td><td class="n p">57.1%</td><td class="n p">83.3%</td><td class="n p">33.3%</td><td class="n p">66.7%</td><td class="n a">4</td><td class="n p">61.3%</td><td class="n">98</td><td class="fl">3</td><td class="co">Productivity · Meal breaks · Customer service</td></tr>
+<tr data-flags="1"><td class="n">3</td><td class="nm">Omar Flores</td><td class="ro">Driver Other</td><td class="n">6</td><td class="n p">66.7%</td><td class="n p">66.7%</td><td class="n p">50.0%</td><td class="n p">50.0%</td><td class="n">Satisfactory</td><td class="n">44.3%</td><td class="n">99</td><td class="fl">1</td><td class="co">Customer service</td></tr>
+<tr data-flags="1"><td class="n">4</td><td class="nm">Steven Castro</td><td class="ro">Driver Light Duty</td><td class="n">3</td><td class="n p">66.7%</td><td class="n p">100.0%</td><td class="n p">100.0%</td><td class="n p">100.0%</td><td class="n">Satisfactory</td><td class="n">35.2%</td><td class="n">99</td><td class="fl">1</td><td class="co">Customer service</td></tr>
+<tr data-flags="2" class="c2"><td class="n">5</td><td class="nm">Hector Quijano</td><td class="ro">Driver Other</td><td class="n">4</td><td class="n p">75.0%</td><td class="n p">50.0%</td><td class="n p">75.0%</td><td class="n p">25.0%</td><td class="n a">3</td><td class="n">45.4%</td><td class="n">100</td><td class="fl">2</td><td class="co">Meal breaks · Customer service</td></tr>
+<tr data-flags="1"><td class="n">6</td><td class="nm">Jairo Buenrostro</td><td class="ro">Driver Light Duty</td><td class="n">8</td><td class="n p">75.0%</td><td class="n p">85.7%</td><td class="n p">75.0%</td><td class="n p">62.5%</td><td class="n">Satisfactory</td><td class="n">37.5%</td><td class="n">99</td><td class="fl">1</td><td class="co">Customer service</td></tr>
+<tr data-flags="1"><td class="n">7</td><td class="nm">Tomas Delgado</td><td class="ro">Driver Light Duty</td><td class="n">4</td><td class="n p">75.0%</td><td class="n p">100.0%</td><td class="n p">50.0%</td><td class="n p">50.0%</td><td class="n">Satisfactory</td><td class="n">36.3%</td><td class="n">95</td><td class="fl">1</td><td class="co">Customer service</td></tr>
+<tr data-flags="2" class="c2"><td class="n">8</td><td class="nm">David Gusman</td><td class="ro">Driver Light Duty</td><td class="n">9</td><td class="n p">77.8%</td><td class="n p">100.0%</td><td class="n p">75.0%</td><td class="n p">62.5%</td><td class="n a">3</td><td class="n">41.7%</td><td class="n">99</td><td class="fl">2</td><td class="co">Meal breaks · Customer service</td></tr>
+<tr data-flags="2" class="c2"><td class="n">9</td><td class="nm">Dante Ordonez</td><td class="ro">Driver Light Duty</td><td class="n">5</td><td class="n">80.0%</td><td class="n">80.0%</td><td class="n">80.0%</td><td class="n">80.0%</td><td class="n a">3</td><td class="n p">55.9%</td><td class="n">90</td><td class="fl">2</td><td class="co">Productivity · Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">10</td><td class="nm">Anthony Laiafa</td><td class="ro">Driver Light Duty</td><td class="n">7</td><td class="n">85.7%</td><td class="n">100.0%</td><td class="n">83.3%</td><td class="n">100.0%</td><td class="n r">6</td><td class="n">38.9%</td><td class="n">97</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="0" class="c0"><td class="n">11</td><td class="nm">Victor Gonzales</td><td class="ro">Driver Light Duty</td><td class="n">7</td><td class="n">85.7%</td><td class="n">85.7%</td><td class="n">42.9%</td><td class="n">85.7%</td><td class="n">Satisfactory</td><td class="n">44.5%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="2" class="c2"><td class="n">12</td><td class="nm">Yevhen Petunin</td><td class="ro">Driver Other</td><td class="n">9</td><td class="n">88.9%</td><td class="n">100.0%</td><td class="n">66.7%</td><td class="n">77.8%</td><td class="n">Satisfactory</td><td class="n p">52.7%</td><td class="n r">78</td><td class="fl">2</td><td class="co">SAFETY (critical) · Productivity</td></tr>
+<tr data-flags="1"><td class="n">13</td><td class="nm">Ray Navarro</td><td class="ro">Driver Light Duty</td><td class="n">9</td><td class="n">88.9%</td><td class="n">88.9%</td><td class="n">88.9%</td><td class="n">88.9%</td><td class="n">Satisfactory</td><td class="n">38.6%</td><td class="n p">82</td><td class="fl">1</td><td class="co">Safety</td></tr>
+<tr data-flags="3" class="c3"><td class="n">14</td><td class="nm">Aniva Moa</td><td class="ro">Driver Other</td><td class="n">2</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n a">4</td><td class="n p">65.8%</td><td class="n r">25</td><td class="fl">3</td><td class="co">SAFETY (critical) · Productivity · Meal breaks</td></tr>
+<tr data-flags="2" class="c2"><td class="n">15</td><td class="nm">Sabre Potbal</td><td class="ro">Driver Light Duty</td><td class="n">12</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">83.3%</td><td class="n">81.8%</td><td class="n r">8</td><td class="n p">56.3%</td><td class="n">96</td><td class="fl">2</td><td class="co">Productivity · Meal breaks</td></tr>
+<tr data-flags="2" class="c2"><td class="n">16</td><td class="nm">Victor Moo-Yah</td><td class="ro">Driver Light Duty</td><td class="n">2</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n a">4</td><td class="n">50.0%</td><td class="n r">43</td><td class="fl">2</td><td class="co">SAFETY (critical) · Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">17</td><td class="nm">Efrain Morales</td><td class="ro">Driver Light Duty</td><td class="n">4</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n p">75.2%</td><td class="n">99</td><td class="fl">1</td><td class="co">Productivity</td></tr>
+<tr data-flags="1"><td class="n">18</td><td class="nm">German Lopez</td><td class="ro">Driver Light Duty</td><td class="n">4</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">75.0%</td><td class="n r">5</td><td class="n">48.9%</td><td class="n">92</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">19</td><td class="nm">James Hahn</td><td class="ro">Driver Light Duty</td><td class="n">10</td><td class="n">100.0%</td><td class="n">90.0%</td><td class="n">80.0%</td><td class="n">80.0%</td><td class="n a">3</td><td class="n">35.3%</td><td class="n">100</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">20</td><td class="nm">Jorge "Armando" Carlin</td><td class="ro">Driver Light Duty</td><td class="n">4</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">50.0%</td><td class="n">75.0%</td><td class="n">Satisfactory</td><td class="n">35.6%</td><td class="n r">77</td><td class="fl">1</td><td class="co">SAFETY (critical)</td></tr>
+<tr data-flags="1"><td class="n">21</td><td class="nm">Jose Bedolla</td><td class="ro">Driver Light Duty</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">0.0%</td><td class="n">0.0%</td><td class="n a">3</td><td class="n">44.1%</td><td class="n">100</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">22</td><td class="nm">Jose Mejia</td><td class="ro">Driver Other</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n a">3</td><td class="n">38.2%</td><td class="n">100</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">23</td><td class="nm">Kennie Sharpe</td><td class="ro">Driver Light Duty</td><td class="n">5</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n a">4</td><td class="n">47.8%</td><td class="n">95</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">24</td><td class="nm">Raul Pereda</td><td class="ro">Driver Light Duty</td><td class="n">5</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n p">53.5%</td><td class="n">100</td><td class="fl">1</td><td class="co">Productivity</td></tr>
+<tr data-flags="1"><td class="n">25</td><td class="nm">Victor Perez</td><td class="ro">Driver Light Duty</td><td class="n">3</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n a">4</td><td class="n">42.4%</td><td class="n">100</td><td class="fl">1</td><td class="co">Meal breaks</td></tr>
+<tr data-flags="1"><td class="n">26</td><td class="nm">William Davidson</td><td class="ro">Driver Light Duty</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">0.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n p">70.4%</td><td class="n">98</td><td class="fl">1</td><td class="co">Productivity</td></tr>
+<tr data-flags="0" class="c0"><td class="n">27</td><td class="nm">Apollo Ameperosa</td><td class="ro">Driver Light Duty</td><td class="n">7</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">37.5%</td><td class="n">98</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">28</td><td class="nm">Charles Murray</td><td class="ro">Driver Light Duty</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">38.7%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">29</td><td class="nm">Daniel Izquierdo</td><td class="ro">Driver Light Duty</td><td class="n">4</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">75.0%</td><td class="n">75.0%</td><td class="n">Satisfactory</td><td class="n">41.2%</td><td class="n">93</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">30</td><td class="nm">Eduardo Garces Maya</td><td class="ro">Driver Other</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">37.8%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">31</td><td class="nm">Jose Rueda</td><td class="ro">Driver Other</td><td class="n">2</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">50.0%</td><td class="n">50.0%</td><td class="n">Satisfactory</td><td class="n">33.4%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">32</td><td class="nm">Laupama Vili</td><td class="ro">Driver Light Duty</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">0.0%</td><td class="n">0.0%</td><td class="n">Satisfactory</td><td class="n">35.3%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">33</td><td class="nm">Oscar Renteria</td><td class="ro">Driver Other</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">39.9%</td><td class="n">91</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">34</td><td class="nm">Philip DeLa Fuente</td><td class="ro">Driver Other</td><td class="n">4</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">41.5%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">35</td><td class="nm">Salvador Linares</td><td class="ro">Driver Light Duty</td><td class="n">9</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">31.8%</td><td class="n">100</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+<tr data-flags="0" class="c0"><td class="n">36</td><td class="nm">Tyrone Mims</td><td class="ro">Driver Light Duty</td><td class="n">1</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">100.0%</td><td class="n">Satisfactory</td><td class="n">32.2%</td><td class="n">99</td><td class="fl">0</td><td class="co">Satisfactory — no coaching needed</td></tr>
+</tbody>
+</table>
+<div class="notes">
+<div class="hd">How to read this report</div>
+<div><b>Missed Meal Periods</b> — a number means the driver appeared on the 08/17–08/30/2026 meal-premium list, which is a problem to address. "Satisfactory" means they were not on the list at all.</div>
+<div><b>Flags</b> — how many of the four measures fall outside threshold: safety below 90, productivity average at or above 50%, any missed meal periods, AAA Overall&nbsp;% below 80%. Coach the highest flag counts first.</div>
+<div><b>Colour key</b> — dark red: severe (5+ missed meals, or safety below 80). Pink: outside threshold. Green: no flags.</div>
+<div><b>Scope</b> — shows 36 of the 37 surveyed drivers. Vicente "Tony" Caballero is intentionally excluded from this page but remains in the full 147-driver Coaching Report. Zack Lowell was removed from all reports — mechanic, not a driver. The AAA average above reflects only the drivers shown here.</div>
+<div><b>Data caveat</b> — "No data" for safety means the driver is absent from the Samsara export, <em>not</em> that they scored well. Several AAA percentages rest on only 1–4 responses; the response count is shown so you can weigh it.</div>
+<div><b>Note on Victor Moo-Yah</b> — his productivity displays 50.0% but the underlying value is 49.98%, just under the flag threshold, so it is not marked. His safety score of 43 is flagged.</div>
+</div>
+<div class="foot">Generated 8 September 2026 from C240_Driver_Satisfaction_August2026.xlsx · static snapshot — regenerate after the next survey or payroll cycle.</div>
+</div>
+<script>
+(function(){
+var tbl=document.getElementById('t'),tb=tbl.tBodies[0];
+var all=[].slice.call(tb.rows),mode='all',q='';
+function apply(){var s=q.toLowerCase();all.forEach(function(r){
+var f=+r.dataset.flags,name=r.cells[1].textContent.toLowerCase();
+var ok=mode==='all'||(mode==='flagged'&&f>0)||(mode==='3'&&f>=3)||(mode==='clean'&&f===0);
+r.style.display=(ok&&(!s||name.indexOf(s)>-1))?'':'none';});}
+document.getElementById('q').addEventListener('input',function(e){q=e.target.value;apply();});
+[].forEach.call(document.querySelectorAll('button[data-f]'),function(b){
+b.addEventListener('click',function(){
+[].forEach.call(document.querySelectorAll('button[data-f]'),function(x){x.classList.remove('on');});
+b.classList.add('on');mode=b.dataset.f;apply();});});
+var dir={};
+[].forEach.call(tbl.tHead.rows[0].cells,function(th,i){
+th.addEventListener('click',function(){dir[i]=!dir[i];var rows=all.slice();
+rows.sort(function(a,b){var x=a.cells[i].textContent.trim(),y=b.cells[i].textContent.trim();
+var nx=parseFloat(x.replace('%','')),ny=parseFloat(y.replace('%',''));
+var c=(!isNaN(nx)&&!isNaN(ny))?nx-ny:x.localeCompare(y);return dir[i]?-c:c;});
+rows.forEach(function(r){tb.appendChild(r);});apply();});});
+})();
+</script>
+</body>
+</html>

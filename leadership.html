@@ -59,6 +59,13 @@
   .p-title.done{ text-decoration:line-through; color:var(--sub); }
   .status-badge{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:5px; color:#0d0f11; white-space:nowrap; text-transform:uppercase; letter-spacing:.03em; }
   .empty{ color:var(--sub); font-size:13px; padding:26px 0; text-align:center; }
+  .rep-head{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:var(--sub); margin:22px 0 9px; padding-top:16px; border-top:1px solid var(--line); }
+  .rep-link{ display:flex; align-items:center; justify-content:space-between; gap:14px; padding:13px 15px; margin-bottom:8px;
+             background:var(--panel-alt); border:1px solid var(--line); border-radius:8px; text-decoration:none; color:var(--text); }
+  .rep-link:hover{ border-color:var(--blue); }
+  .rep-title{ font-size:13px; font-weight:600; }
+  .rep-note{ font-size:11px; color:var(--sub); margin-top:3px; }
+  .rep-arrow{ color:var(--blue); font-size:15px; flex-shrink:0; }
 
   /* edit mode */
   .edit-input, .edit-select, .edit-area{ background:var(--panel-alt); border:1px solid var(--sub); color:var(--text); font-size:13px; padding:5px 7px; border-radius:4px; width:100%; font-family:inherit; }
@@ -110,7 +117,11 @@
 const DEFAULT_DATA = {
   weekOf: "Week of Sep 8, 2026",
   managers: [
-    { name:"Anthony Poulos", lead:"", note:"", priorities:[] },
+    { name:"Anthony Poulos", lead:"", note:"", priorities:[], reports:[
+        { title:"AAA Surveyed Drivers — C240 Action Towing",
+          note:"36 drivers with August 2026 survey responses · meal periods, productivity, safety",
+          href:"aaa-surveyed-drivers.html" }
+      ] },
     { name:"Allen Guy", lead:"", note:"", priorities:[] },
     { name:"Jimmy Lowell", lead:"", note:"", priorities:[] },
     { name:"Paul Henry", lead:"", note:"", priorities:[] },
@@ -123,7 +134,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "leadership_portal_v1";
 // Bump on every published change. Saved drafts from an older version are
 // discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-08b";
+const DATA_VERSION = "2026-09-08c";
 const STATUSES = ["Not started", "In progress", "Blocked", "Done"];
 const STATUS_COLOR = { "Not started":"#5a6270", "In progress":"var(--blue)", "Blocked":"var(--red)", "Done":"var(--green)" };
 
@@ -198,6 +209,17 @@ function renderTabs(){
   }).join('');
 }
 
+function reportsHtml(m){
+  const reps = m.reports || [];
+  if(!reps.length) return '';
+  return '<div class="rep-head">Reports</div>' + reps.map(function(r){
+    return '<a class="rep-link" href="' + esc(r.href) + '">' +
+             '<div><div class="rep-title">' + esc(r.title) + '</div>' +
+             (r.note ? '<div class="rep-note">' + esc(r.note) + '</div>' : '') + '</div>' +
+             '<span class="rep-arrow">&rarr;</span></a>';
+  }).join('');
+}
+
 function renderManager(){
   const m = data.managers[activeTab];
   const panel = document.getElementById('mgrPanel');
@@ -246,7 +268,8 @@ function renderManager(){
         return '<span><span class="legend-dot" style="background:' + STATUS_COLOR[s] + ';"></span>' + s + ' (' + c[s] + ')</span>';
       }).join('') + '</div></div>' : '') +
     items +
-    (editMode ? '<button class="btn" id="addPri" style="margin-top:14px;">+ Add priority</button>' : '');
+    (editMode ? '<button class="btn" id="addPri" style="margin-top:14px;">+ Add priority</button>' : '') +
+    reportsHtml(m);
 }
 
 // ---------- events ----------
