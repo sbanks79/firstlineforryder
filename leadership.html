@@ -105,66 +105,25 @@
 
 <script>
 // ---------- PUBLISHED DATA ----------
-// Seeded from the open items on the Fleet Compliance Dashboard as of Sep 8.
-// Replace these with the real weekly priorities.
+// One entry per manager. Priorities are published here, not entered in the
+// browser -- see the note in the edit banner.
 const DEFAULT_DATA = {
   weekOf: "Week of Sep 8, 2026",
   managers: [
-    {
-      name: "Action Road Solutions",
-      lead: "",
-      note: "Includes Action, Ellison's and Great America",
-      priorities: [
-        { title:"Get ACTION-1391 through smog before the Sept registration deadline",
-          detail:"Check engine light is on, which is an automatic OBD-II failure. Fault codes have to clear and readiness monitors reset on a drive cycle before it can even be tested. Shop time needs booking now.",
-          status:"Blocked" },
-        { title:"Close out the ACTION-4693 weight correction at DMV",
-          detail:"DMV is asking for a heavy use permit because the declared weight on file is 55,000 lbs or above. The truck is under that, so the fix is a weight correction, not an HVUT filing.",
-          status:"In progress" },
-        { title:"Diagnose ACTION-1301 after its return from Golden Gate",
-          detail:"Back from turbo, PTO, oil pan and tire work but still having issues. Establish whether this is a warranty return before booking new repair time. Its camera is also still down at 30+ days.",
-          status:"Not started" },
-        { title:"ACTION-JEEP recall ahead of Sept registration",
-          detail:"Also flagged as a low-use vehicle with its camera down 30+ days. Worth deciding whether it stays in service at all.",
-          status:"Not started" },
-        { title:"Coaching for the four drivers under 60",
-          detail:"Neev Moa 33, Victor Moo Yah 45, g767FranciscoV 52, g614 Matthew Soza 58. Neev Moa has not moved since the Aug 30 report.",
-          status:"Not started" }
-      ]
-    },
-    {
-      name: "Jack James",
-      lead: "",
-      note: "18 drivers · fleet average 94",
-      priorities: [
-        { title:"Coaching plan for the three drivers below the 90 minimum",
-          detail:"Jesus Ayala 76, Adrian Fernandez 80, Suniljeet Khalsa 84. Three of 18 drivers, the highest proportion of any location.",
-          status:"Not started" },
-        { title:"Recognise Ernesto Lopez for clearing the minimum",
-          detail:"Moved 80 to 90 between the Sept 2 and Sept 6 reports, the only driver to clear the line this period.",
-          status:"Not started" }
-      ]
-    },
-    {
-      name: "College Oak Towing",
-      lead: "",
-      note: "43 drivers · fleet average 98, highest of the three",
-      priorities: [
-        { title:"Coaching for Triston Chapman and Chris Andrews",
-          detail:"Chapman 73 and Andrews 78 are the two lowest at College Oak and both sit under 80.",
-          status:"Not started" },
-        { title:"Review Eddie Salazar's drop below the minimum",
-          detail:"Newly below 90 at 88 in the Sept 6 report. Worth catching early before it settles.",
-          status:"Not started" }
-      ]
-    }
+    { name:"Anthony Poulos", lead:"", note:"", priorities:[] },
+    { name:"Allen Guy", lead:"", note:"", priorities:[] },
+    { name:"Jimmy Lowell", lead:"", note:"", priorities:[] },
+    { name:"Paul Henry", lead:"", note:"", priorities:[] },
+    { name:"Isaac Eaton", lead:"", note:"", priorities:[] },
+    { name:"Jeff Hall", lead:"", note:"", priorities:[] },
+    { name:"Tevita", lead:"", note:"", priorities:[] }
   ]
 };
 
 const STORAGE_KEY = "leadership_portal_v1";
 // Bump on every published change. Saved drafts from an older version are
 // discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-08";
+const DATA_VERSION = "2026-09-08b";
 const STATUSES = ["Not started", "In progress", "Blocked", "Done"];
 const STATUS_COLOR = { "Not started":"#5a6270", "In progress":"var(--blue)", "Blocked":"var(--red)", "Done":"var(--green)" };
 
