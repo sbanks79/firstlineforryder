@@ -144,17 +144,22 @@
       <table><tbody id="lossCause"></tbody></table>
       <div class="loss-sub" style="margin-top:18px;">By Entity</div>
       <table><tbody id="lossEntity"></tbody></table>
-      <div class="loss-sub" style="margin-top:18px;">By Loss Year</div>
-      <table><tbody id="lossYear"></tbody></table>
     </div>
     <div>
-      <div class="loss-sub">Largest Open Claims</div>
-      <table>
-        <thead><tr><th>File</th><th>Date</th><th>Coverage</th><th>Entity</th><th style="text-align:right;">Incurred</th></tr></thead>
-        <tbody id="lossOpen"></tbody>
-      </table>
+      <div class="loss-sub">By Loss Year</div>
+      <table><tbody id="lossYear"></tbody></table>
     </div>
   </div>
+
+  <div class="section-header" style="margin-top:24px;margin-bottom:8px;">
+    <div class="loss-sub" style="margin-bottom:0;">All Open Claims</div>
+    <span class="count-badge" style="background:var(--amber);" id="lossOpenCount"></span>
+  </div>
+  <div style="font-size:11px;color:var(--sub);margin-bottom:10px;" id="lossOpenMix"></div>
+  <table>
+    <thead><tr><th>File</th><th>Date of Loss</th><th>Coverage</th><th>Entity</th><th>Driver</th><th style="text-align:right;">Reserves</th><th style="text-align:right;">Incurred</th></tr></thead>
+    <tbody id="lossOpen"></tbody>
+  </table>
   <div class="loss-sub" style="margin-top:20px;">Drivers by Incurred &middot; with Safety Score</div>
   <table>
     <thead><tr><th>Driver</th><th>Claims</th><th>Safety</th><th style="text-align:right;">Incurred</th></tr></thead>
@@ -260,15 +265,31 @@ const DEFAULT_DATA = {
       { year:2025, files:21, amt:553970.49 },
       { year:2026, files:17, amt:150155.93 }
     ],
+    openByCause:[
+      { name:"Property Damage", n:9 }, { name:"Bodily Injury", n:6 },
+      { name:"Workers Comp", n:4 },    { name:"Other", n:1 }
+    ],
     openClaims:[
-      { file:"1470413", dol:"2024-11-12", cause:"Bodily Injury",   ent:"Jack James",    inc:263492.03 },
-      { file:"1485725", dol:"2025-04-24", cause:"Bodily Injury",   ent:"Action",        inc:202500.00 },
-      { file:"1460993", dol:"2024-07-14", cause:"Property Damage", ent:"Action",        inc:196955.16 },
-      { file:"1499370", dol:"2025-11-30", cause:"Bodily Injury",   ent:"Action",        inc:160000.00 },
-      { file:"1459383", dol:"2024-03-13", cause:"Workers Comp",    ent:"Action",        inc:158967.74 },
-      { file:"1503760", dol:"2026-02-21", cause:"Bodily Injury",   ent:"Great America", inc:120000.00 },
-      { file:"1481791", dol:"2025-04-11", cause:"Bodily Injury",   ent:"Action",        inc:89840.89 },
-      { file:"1505889", dol:"2026-03-20", cause:"Property Damage", ent:"Ellison's",     inc:8750.00 }
+      { file:"1470413", dol:"2024-11-12", cause:"Bodily Injury",   ent:"Jack James",    inc:263492.03, res:203269.81, drv:"Tony Duque" },
+      { file:"1485725", dol:"2025-04-24", cause:"Bodily Injury",   ent:"Action",        inc:202500.00, res:200510.48, drv:"Mark Duncan" },
+      { file:"1460993", dol:"2024-07-14", cause:"Bodily Injury",   ent:"Action",        inc:196955.16, res:159766.50, drv:"Jesus Ayala" },
+      { file:"1499370", dol:"2025-11-30", cause:"Bodily Injury",   ent:"Action",        inc:160000.00, res:160000.00, drv:"" },
+      { file:"1459383", dol:"2024-03-13", cause:"Workers Comp",    ent:"Action",        inc:158967.74, res:17644.17,  drv:"" },
+      { file:"1503760", dol:"2026-02-21", cause:"Bodily Injury",   ent:"Great America", inc:120000.00, res:120000.00, drv:"Xuan Olmo" },
+      { file:"1481791", dol:"2025-04-11", cause:"Bodily Injury",   ent:"Action",        inc:89840.89,  res:77175.00,  drv:"William Medina" },
+      { file:"1505889", dol:"2026-03-20", cause:"Property Damage", ent:"Ellison's",     inc:8750.00,   res:8750.00,   drv:"Pablo Torres" },
+      { file:"1514077", dol:"2026-07-18", cause:"Property Damage", ent:"Action",        inc:6000.00,   res:6000.00,   drv:"Richard Dean Henderson" },
+      { file:"1516232", dol:"2026-06-21", cause:"Property Damage", ent:"Action",        inc:0, res:0, drv:"Jesus De La Rosa" },
+      { file:"1515446", dol:"2026-07-16", cause:"Property Damage", ent:"Action",        inc:0, res:0, drv:"Mark Duncan" },
+      { file:"1514614", dol:"2026-07-26", cause:"Workers Comp",    ent:"Action",        inc:0, res:0, drv:"Alexis Villanueva Pulido" },
+      { file:"1513005", dol:"2026-07-01", cause:"Property Damage", ent:"Ellison's",     inc:0, res:0, drv:"Jose Salazaar" },
+      { file:"1512197", dol:"2026-05-29", cause:"Other",           ent:"Ellison's",     inc:0, res:0, drv:"" },
+      { file:"1511254", dol:"2025-09-03", cause:"Workers Comp",    ent:"Jack James",    inc:0, res:0, drv:"Nathan Bryant" },
+      { file:"1511218", dol:"2026-06-01", cause:"Property Damage", ent:"Jack James",    inc:0, res:0, drv:"Jonathan Owens" },
+      { file:"1511148", dol:"2026-06-01", cause:"Workers Comp",    ent:"Jack James",    inc:0, res:0, drv:"Jonathan Owens" },
+      { file:"1510601", dol:"2026-04-29", cause:"Property Damage", ent:"Action",        inc:0, res:0, drv:"" },
+      { file:"1507470", dol:"2026-04-11", cause:"Property Damage", ent:"Action",        inc:0, res:0, drv:"Jose Diaz Alvarado" },
+      { file:"1506101", dol:"2026-03-14", cause:"Property Damage", ent:"Action",        inc:0, res:0, drv:"" }
     ],
     drivers:[
       { name:"(not named)",             files:10, amt:327436.50, safety:null },
@@ -511,12 +532,23 @@ function renderLossRuns(){
     return barRow(x.year, x.files, x.amt, maxY, 'var(--yellow)', true);
   }).join('');
 
+  document.getElementById('lossOpenCount').textContent = L.openClaims.length;
+  document.getElementById('lossOpenMix').innerHTML =
+    L.openByCause.map(function(x){
+      return '<span class="dot" style="background:' + causeColor(x.name) + ';"></span>' + x.name + ' (' + x.n + ')';
+    }).join(' &nbsp; ') +
+    ' &nbsp;&middot;&nbsp; ' + L.openClaims.filter(function(c){ return c.inc === 0; }).length +
+    ' carry no reserve yet, all opened since March 2026';
+
   document.getElementById('lossOpen').innerHTML = L.openClaims.map(function(c){
+    const zero = (c.inc === 0);
     return '<tr><td class="mono" style="font-weight:600;">' + c.file + '</td>' +
       '<td class="mono" style="color:var(--sub);">' + c.dol + '</td>' +
       '<td><span class="dot" style="background:' + causeColor(c.cause) + ';"></span>' + c.cause + '</td>' +
       '<td style="color:var(--sub);font-size:12px;">' + c.ent + '</td>' +
-      '<td class="amt">' + usd(c.inc) + '</td></tr>';
+      '<td style="font-size:12px;' + (c.drv ? '' : 'color:var(--sub);') + '">' + (c.drv || 'not named') + '</td>' +
+      '<td class="amt"' + (zero ? ' style="color:var(--sub);font-weight:400;"' : '') + '>' + (zero ? '&mdash;' : usd(c.res)) + '</td>' +
+      '<td class="amt"' + (zero ? ' style="color:var(--sub);font-weight:400;"' : '') + '>' + (zero ? '&mdash;' : usd(c.inc)) + '</td></tr>';
   }).join('');
 
   document.getElementById('lossDrivers').innerHTML = L.drivers.map(function(d){
