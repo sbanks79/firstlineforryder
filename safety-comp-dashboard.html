@@ -46,6 +46,9 @@
   .row-actions{ display:flex; gap:4px; }
   .icon-btn{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:14px; padding:2px 6px; }
   .icon-btn:hover{ color:var(--text); }
+  .filters{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+  .btn.filt.on{ background:var(--blue); color:#0d0f11; border-color:var(--blue); font-weight:700; }
+  .empty-note{ color:var(--sub); font-size:13px; padding:22px 0; text-align:center; }
   .loss-tiles{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
   .loss-tile{ background:var(--panel-alt); border:1px solid var(--line); border-radius:8px; padding:13px 16px; flex:1; min-width:150px; }
   .loss-tile .lab{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--sub); font-weight:700; }
@@ -157,7 +160,7 @@
   </div>
   <div style="font-size:11px;color:var(--sub);margin-bottom:10px;" id="lossOpenMix"></div>
   <table>
-    <thead><tr><th>File</th><th>Date of Loss</th><th>Coverage</th><th>Entity</th><th>Driver</th><th style="text-align:right;">Reserves</th><th style="text-align:right;">Incurred</th></tr></thead>
+    <thead><tr><th>File</th><th>Date of Loss</th><th>Coverage</th><th>Entity</th><th>Driver</th><th>Safety</th><th style="text-align:right;">Reserves</th><th style="text-align:right;">Incurred</th></tr></thead>
     <tbody id="lossOpen"></tbody>
   </table>
   <div class="loss-sub" style="margin-top:20px;">Drivers by Incurred &middot; with Safety Score</div>
@@ -170,14 +173,25 @@
 
 <div class="panel" style="margin-bottom:20px;">
   <div class="section-header">
-    <h2 class="section-title">Safety Scores — Below 90 Minimum</h2>
+    <h2 class="section-title">Safety Scores — Full Roster</h2>
     <span class="count-badge" style="background:var(--yellow);" id="safetyCount"></span>
   </div>
-  <div style="font-size:12px;color:var(--sub);margin-bottom:16px;" id="opcoBreakdown"></div>
+  <div style="font-size:12px;color:var(--sub);margin-bottom:14px;" id="opcoBreakdown"></div>
+  <div class="filters">
+    <input type="search" id="safetySearch" class="edit-input" placeholder="Search driver…" style="width:190px;">
+    <button class="btn filt on" data-filt="below90">Below 90</button>
+    <button class="btn filt" data-filt="under80">Under 80</button>
+    <button class="btn filt" data-filt="all">All 200</button>
+    <span style="width:10px;"></span>
+    <button class="btn filt" data-filt="Action RS">Action RS</button>
+    <button class="btn filt" data-filt="Jack James">Jack James</button>
+    <button class="btn filt" data-filt="College Oak">College Oak</button>
+  </div>
   <table>
-    <thead><tr><th>Driver</th><th>OpCo</th><th>Score</th><th></th></tr></thead>
+    <thead><tr><th>Driver</th><th>Unit</th><th>Score</th><th></th></tr></thead>
     <tbody id="safetyBody"></tbody>
   </table>
+  <div id="safetyEmpty" class="empty-note" style="display:none;">No drivers match that filter.</div>
   <button class="btn" id="showAllSafety" style="margin-top:10px;">Show all</button>
   <button class="btn" id="addSafetyBtn" style="margin-top:10px;display:none;">+ Add row</button>
 </div>
@@ -213,35 +227,209 @@ const DEFAULT_DATA = {
     { name:"Jack James", avg:94, drivers:18 },
     { name:"College Oak Towing", avg:98, drivers:43 }
   ] },
-  below90: [
-    { name:"Neev Moa", opco:"Action", score:33 },
-    { name:"Victor Moo Yah", opco:"Action", score:45 },
-    { name:"g767FranciscoV", opco:"Action", score:52 },
-    { name:"g614 Matthew Soza", opco:"Action", score:58 },
-    { name:"Armando Carlin", opco:"Action", score:70 },
-    { name:"Triston Chapman", opco:"College Oak", score:73 },
-    { name:"Jesus Ayala", opco:"Jack James", score:76 },
-    { name:"Chris Andrews", opco:"College Oak", score:78 },
-    { name:"Waad Yaqoov", opco:"Action", score:79 },
-    { name:"Filipe Langi", opco:"Action", score:79 },
-    { name:"Bobby Riggs", opco:"College Oak", score:79 },
-    { name:"Yevhen Petunin", opco:"Action", score:80 },
-    { name:"Adrian Fernandez", opco:"Jack James", score:80 },
-    { name:"Ray Navarro", opco:"Action", score:81 },
-    { name:"e031FernandoP", opco:"Action", score:82 },
-    { name:"Suniljeet Khalsa", opco:"Jack James", score:84 },
-    { name:"g673SteveS", opco:"Action", score:84 },
-    { name:"Matthew Severin", opco:"Action", score:84 },
-    { name:"Ronald Ordonez", opco:"Action", score:85 },
-    { name:"Luis Gutierrez", opco:"College Oak", score:87 },
-    { name:"Fred Albert", opco:"Action", score:87 },
-    { name:"g738KyleG", opco:"Action", score:87 },
-    { name:"g667ManuelA", opco:"Action", score:88 },
-    { name:"g638PioA", opco:"Action", score:88 },
-    { name:"Eddie Salazar", opco:"College Oak", score:88 },
-    { name:"g733AntnioL", opco:"Action", score:88 },
-    { name:"E061Pablo N", opco:"Action", score:88 },
-    { name:"Osvaldo Gomez", opco:"Action", score:88 }
+  // Full roster, Samsara 9/6 report (Aug 7 - Sep 6), ranks 1-200.
+  // u = operating unit; Action / Great America / Ellison's roll up to Action Road Solutions.
+  drivers: [
+    { n:"Neev Moa", u:"Action", s:33 },
+    { n:"Victor Moo Yah", u:"Action", s:45 },
+    { n:"g767FranciscoV", u:"Great America", s:52 },
+    { n:"g614 Matthew Soza", u:"Great America", s:58 },
+    { n:"Armando Carlin", u:"Action", s:70 },
+    { n:"Triston Chapman", u:"College Oak", s:73 },
+    { n:"Jesus Ayala", u:"Jack James", s:76 },
+    { n:"Chris Andrews", u:"College Oak", s:78 },
+    { n:"Waad Yaqoov", u:"Great America", s:79 },
+    { n:"Filipe Langi", u:"Action", s:79 },
+    { n:"Bobby Riggs", u:"College Oak", s:79 },
+    { n:"Yevhen Petunin", u:"Action", s:80 },
+    { n:"Adrian Fernandez", u:"Jack James", s:80 },
+    { n:"Ray Navarro", u:"Action", s:81 },
+    { n:"e031FernandoP", u:"Ellison's", s:82 },
+    { n:"Suniljeet Khalsa", u:"Jack James", s:84 },
+    { n:"g673SteveS", u:"Great America", s:84 },
+    { n:"Matthew Severin", u:"Great America", s:84 },
+    { n:"Ronald Ordonez", u:"Action", s:85 },
+    { n:"Luis Gutierrez", u:"College Oak", s:87 },
+    { n:"Fred Albert", u:"Action", s:87 },
+    { n:"g738KyleG", u:"Great America", s:87 },
+    { n:"g667ManuelA", u:"Great America", s:88 },
+    { n:"g638PioA", u:"Great America", s:88 },
+    { n:"Eddie Salazar", u:"College Oak", s:88 },
+    { n:"g733AntnioL", u:"Great America", s:88 },
+    { n:"E061Pablo N", u:"Ellison's", s:88 },
+    { n:"Osvaldo Gomez", u:"Action", s:88 },
+    { n:"e028alexisV", u:"Ellison's", s:90 },
+    { n:"Pedro Contreras", u:"Jack James", s:90 },
+    { n:"Jerardo Chan Yah", u:"Action", s:90 },
+    { n:"Ernesto Lopez", u:"Jack James", s:90 },
+    { n:"Lenard Wilson", u:"Action", s:90 },
+    { n:"e068DanielG", u:"Ellison's", s:91 },
+    { n:"Saul Aguilar", u:"Action", s:91 },
+    { n:"Eliberto Martinez", u:"Jack James", s:91 },
+    { n:"Anga Tenisi", u:"Action", s:92 },
+    { n:"Dante Ordonez", u:"Action", s:92 },
+    { n:"Oscar Renteria", u:"Action", s:92 },
+    { n:"Tevita Tongi", u:"Action", s:92 },
+    { n:"Daniel Izquierdo", u:"Action", s:93 },
+    { n:"German Lopez", u:"Action", s:93 },
+    { n:"e022CristianC", u:"Ellison's", s:93 },
+    { n:"g666JesseC", u:"Great America", s:93 },
+    { n:"Kennie Sharpe", u:"Action", s:95 },
+    { n:"g702LazaroG", u:"Great America", s:95 },
+    { n:"g64GabrielV", u:"Great America", s:95 },
+    { n:"Tomy Del Gato", u:"Action", s:95 },
+    { n:"Patrick Rodrigues", u:"Jack James", s:95 },
+    { n:"Sabir Potbal", u:"Action", s:96 },
+    { n:"Milo Pedro", u:"College Oak", s:96 },
+    { n:"g636JustinS", u:"Great America", s:96 },
+    { n:"Eric Diaz", u:"Action", s:96 },
+    { n:"Anthony Laiafa", u:"Action", s:97 },
+    { n:"g631DaveD", u:"Great America", s:97 },
+    { n:"g61BJ", u:"Great America", s:98 },
+    { n:"Apollo Ameperosa", u:"Action", s:98 },
+    { n:"e074MarcosH", u:"Ellison's", s:98 },
+    { n:"Armel Cuculista-Perez", u:"Jack James", s:98 },
+    { n:"Will Davidson", u:"Action", s:98 },
+    { n:"Junior Martinez", u:"Action", s:98 },
+    { n:"Jose Valencia", u:"Jack James", s:98 },
+    { n:"e011MannyM", u:"Ellison's", s:98 },
+    { n:"Steve Eades", u:"Action", s:98 },
+    { n:"Tong Luo", u:"Action", s:98 },
+    { n:"g724PerryA", u:"Great America", s:99 },
+    { n:"g679MarwanA", u:"Great America", s:99 },
+    { n:"Tyrone Mims", u:"Action", s:99 },
+    { n:"Mike McCarr", u:"College Oak", s:99 },
+    { n:"James Morris", u:"College Oak", s:99 },
+    { n:"Nicanor Islas", u:"College Oak", s:99 },
+    { n:"e033JordanM", u:"Ellison's", s:99 },
+    { n:"Jonathan Barba-Jaimes", u:"College Oak", s:99 },
+    { n:"Jason Strawn", u:"College Oak", s:99 },
+    { n:"Steven Castro", u:"Action", s:99 },
+    { n:"David Guzman", u:"Action", s:99 },
+    { n:"Efrain Morales", u:"Action", s:99 },
+    { n:"g646SteveP", u:"Great America", s:99 },
+    { n:"Omar Flores", u:"Action", s:99 },
+    { n:"Tony Duque", u:"Jack James", s:99 },
+    { n:"Juan Pelayo", u:"Jack James", s:99 },
+    { n:"Lenton Gaines", u:"Jack James", s:99 },
+    { n:"Oswaldo Menjivar", u:"Action", s:99 },
+    { n:"Julian Satizabal", u:"Action", s:99 },
+    { n:"g625JulianC", u:"Great America", s:99 },
+    { n:"e018EnriqueS", u:"Ellison's", s:99 },
+    { n:"Terry Warford", u:"College Oak", s:100 },
+    { n:"Tillman Sylva", u:"College Oak", s:100 },
+    { n:"Jairo Buenrostro", u:"Action", s:100 },
+    { n:"g627BrandonP", u:"Great America", s:100 },
+    { n:"Nathan Welch", u:"College Oak", s:100 },
+    { n:"Junior Chavez", u:"College Oak", s:100 },
+    { n:"Charles Murray", u:"Action", s:100 },
+    { n:"Brian Schoemig", u:"College Oak", s:100 },
+    { n:"g751AdrianG", u:"Great America", s:100 },
+    { n:"g694PaulB", u:"Great America", s:100 },
+    { n:"Andrew Brannon", u:"College Oak", s:100 },
+    { n:"Steven Brandt", u:"College Oak", s:100 },
+    { n:"George (Mike) Riola", u:"Action", s:100 },
+    { n:"e021SerjioF", u:"Ellison's", s:100 },
+    { n:"James Hahn", u:"Action", s:100 },
+    { n:"e034JoseR", u:"Ellison's", s:100 },
+    { n:"Ruby Solorzano", u:"College Oak", s:100 },
+    { n:"Hector Quijano", u:"Action", s:100 },
+    { n:"Tony Caballero", u:"Action", s:100 },
+    { n:"g641JelC", u:"Great America", s:100 },
+    { n:"e026Donald H", u:"Ellison's", s:100 },
+    { n:"Ron Breedlove", u:"College Oak", s:100 },
+    { n:"Angel Carlin", u:"Action", s:100 },
+    { n:"e088SilverioH", u:"Ellison's", s:100 },
+    { n:"Alex Morales", u:"Jack James", s:100 },
+    { n:"g752MatthewP", u:"Great America", s:100 },
+    { n:"e024JoseM", u:"Ellison's", s:100 },
+    { n:"e030Jose S", u:"Ellison's", s:100 },
+    { n:"Larry Hall", u:"Action", s:100 },
+    { n:"g732RichardA", u:"Great America", s:100 },
+    { n:"Jesus De La Rosa", u:"Action", s:100 },
+    { n:"Jeromie King", u:"College Oak", s:100 },
+    { n:"g687CarloS", u:"Great America", s:100 },
+    { n:"Luis Cevallos", u:"Action", s:100 },
+    { n:"Derick Brown", u:"College Oak", s:100 },
+    { n:"Victor Perez", u:"Action", s:100 },
+    { n:"Alfonso Hernandez", u:"Jack James", s:100 },
+    { n:"Johnathan Carroll", u:"College Oak", s:100 },
+    { n:"e029Laupama Vili", u:"Ellison's", s:100 },
+    { n:"e076JesusS", u:"Ellison's", s:100 },
+    { n:"e019ErnestT", u:"Ellison's", s:100 },
+    { n:"Victor Gonzalez", u:"Action", s:100 },
+    { n:"Sedrick Clark", u:"College Oak", s:100 },
+    { n:"Salvador Linares", u:"Action", s:100 },
+    { n:"Tom Ulrich", u:"College Oak", s:100 },
+    { n:"Jeff Heron", u:"Action", s:100 },
+    { n:"Victor Garcia", u:"Jack James", s:100 },
+    { n:"e059EduardoG", u:"Ellison's", s:100 },
+    { n:"Henry Navarro", u:"College Oak", s:100 },
+    { n:"Paul Henry", u:"College Oak", s:100 },
+    { n:"Sirmichael Aquino", u:"College Oak", s:100 },
+    { n:"John Herrera", u:"Jack James", s:100 },
+    { n:"Raul Pereda", u:"Action", s:100 },
+    { n:"g696MarkD", u:"Great America", s:100 },
+    { n:"e020SteveS", u:"Ellison's", s:100 },
+    { n:"e063GustavoB", u:"Ellison's", s:100 },
+    { n:"g688FelixZ", u:"Great America", s:100 },
+    { n:"Theodore Barnes", u:"College Oak", s:100 },
+    { n:"710 Kenthy Chhin", u:"Action", s:100 },
+    { n:"Jr Del Fuente", u:"Action", s:100 },
+    { n:"e014HansW", u:"Ellison's", s:100 },
+    { n:"James Thomas", u:"College Oak", s:100 },
+    { n:"Armando Sandoval", u:"College Oak", s:100 },
+    { n:"Jose Bedolla", u:"Action", s:100 },
+    { n:"g728JordanG", u:"Great America", s:100 },
+    { n:"Jesse Medina", u:"Jack James", s:100 },
+    { n:"Jose Herrera", u:"Action", s:100 },
+    { n:"Ron Watkins", u:"Action", s:100 },
+    { n:"g620 Robin Acevedo", u:"Great America", s:100 },
+    { n:"E025Aldo N", u:"Ellison's", s:100 },
+    { n:"Isaac Eaton", u:"College Oak", s:100 },
+    { n:"Donald Cosby", u:"College Oak", s:100 },
+    { n:"Ken Clark", u:"College Oak", s:100 },
+    { n:"Nicholas Ingle", u:"College Oak", s:100 },
+    { n:"e036VincentC", u:"Ellison's", s:100 },
+    { n:"Richard Baiden", u:"College Oak", s:100 },
+    { n:"e003JefferyT", u:"Ellison's", s:100 },
+    { n:"Chris Hagen", u:"College Oak", s:100 },
+    { n:"Tim Skaggs", u:"Action", s:100 },
+    { n:"Darnel Rogan", u:"Action", s:100 },
+    { n:"Kevin Alvarado", u:"Action", s:100 },
+    { n:"e052CianoM", u:"Ellison's", s:100 },
+    { n:"e104TevitaL", u:"Ellison's", s:100 },
+    { n:"Carlos Arriaza", u:"Action", s:100 },
+    { n:"Clifton Salmer", u:"Action", s:100 },
+    { n:"g663FelipeR", u:"Great America", s:100 },
+    { n:"Jorge Al Faro", u:"Action", s:100 },
+    { n:"e016 MartinG", u:"Ellison's", s:100 },
+    { n:"Javier Arguello", u:"Action", s:100 },
+    { n:"e047DavidL", u:"Ellison's", s:100 },
+    { n:"Elfido De Leon", u:"Action", s:100 },
+    { n:"g610CoyerK", u:"Great America", s:100 },
+    { n:"e035VictorM", u:"Ellison's", s:100 },
+    { n:"e015keilyR", u:"Ellison's", s:100 },
+    { n:"Zack Lowell", u:"Action", s:100 },
+    { n:"Jonathan Wieneke", u:"College Oak", s:100 },
+    { n:"e032RobertoV", u:"Ellison's", s:100 },
+    { n:"Tim Post", u:"College Oak", s:100 },
+    { n:"e087CarlosN", u:"Ellison's", s:100 },
+    { n:"Douglas Nelson", u:"College Oak", s:100 },
+    { n:"Dewayne Franklin", u:"College Oak", s:100 },
+    { n:"g692DennisG", u:"Great America", s:100 },
+    { n:"Alain Morec", u:"Jack James", s:100 },
+    { n:"Marcos Romero", u:"Great America", s:100 },
+    { n:"Jesus Castro", u:"Action", s:100 },
+    { n:"g655AngelJ", u:"Great America", s:100 },
+    { n:"Juan Mandon (Mech/Yard)", u:"Action", s:100 },
+    { n:"Anthony Poulos", u:"Action", s:100 },
+    { n:"g637JaysonC", u:"Great America", s:100 },
+    { n:"Jimmy Lowell", u:"Action", s:100 },
+    { n:"g646JulioP", u:"Great America", s:100 },
+    { n:"Ricky Little-Mechanic", u:"College Oak", s:100 },
+    { n:"e023MarkH", u:"Ellison's", s:100 },
+    { n:"Ivan Coulter-Mechanic", u:"College Oak", s:100 }
   ],
   lossRuns: {
     asOf:"Loss runs as of Sep 8, 2026 · losses Mar 2024 – Jul 2026",
@@ -333,13 +521,15 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-08";
+const DATA_VERSION = "2026-09-08b";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
 let data = loadData();
 let editMode = false;
 let showAllSafetyRows = false;
+let safetyFilter = 'below90';
+let safetyQuery = '';
 
 function loadData(){
   try{
@@ -383,7 +573,8 @@ function renderKpis(){
   const onRepair = data.registrations.filter(r=>r.note==="blocked on repair" || r.blocked).length;
   const regSub = [ atDmv ? atDmv + " at DMV" : "", onRepair ? onRepair + " blocked on repair" : "",
                    expiring ? expiring + " expiring in ≤3 days" : "" ].filter(Boolean).join(" · ");
-  const under80 = data.below90.filter(d=>d.score<80).length;
+  const below90 = data.drivers.filter(d=>d.s<90).length;
+  const under80 = data.drivers.filter(d=>d.s<80).length;
   document.getElementById('kpiRow').innerHTML = `
     <div class="kpi"><div class="kpi-label">🚫 Registrations Expired</div>
       <div class="kpi-value">${expired}</div>
@@ -402,7 +593,7 @@ function renderKpis(){
           </div>`).join('')
       }</div>` : ''}</div>
     <div class="kpi"><div class="kpi-label">⚠️ Drivers Below 90</div>
-      <div class="kpi-value">${data.below90.length}</div>
+      <div class="kpi-value">${below90}</div>
       <div class="kpi-sub">${under80} of those under 80 — 90 minimum now in effect</div></div>
     <div class="kpi"><div class="kpi-label">🔧 Vehicles In Repair</div>
       <div class="kpi-value">${data.repairs.length}</div>
@@ -504,6 +695,21 @@ function barRow(label, lines, amt, max, color, mono){
     '<td class="amt">' + usd(amt) + '</td></tr>';
 }
 
+// Claim-file driver names that differ from the Samsara roster name.
+// Deliberate list -- no fuzzy matching, so a near-miss stays a dash.
+const DRIVER_ALIAS = {
+  "keily rodriguez villalta": "e015keilyR",
+  "alexis villanueva pulido": "e028alexisV"
+};
+
+function driverScore(name){
+  if(!name) return null;
+  const key = name.trim().toLowerCase();
+  const target = (DRIVER_ALIAS[key] || name).trim().toLowerCase();
+  const hit = (data.drivers || []).filter(function(d){ return d.n.toLowerCase() === target; })[0];
+  return hit ? hit.s : null;
+}
+
 function renderLossRuns(){
   const L = data.lossRuns;
   if(!L) return;
@@ -542,23 +748,26 @@ function renderLossRuns(){
 
   document.getElementById('lossOpen').innerHTML = L.openClaims.map(function(c){
     const zero = (c.inc === 0);
+    const sc = driverScore(c.drv);
     return '<tr><td class="mono" style="font-weight:600;">' + c.file + '</td>' +
       '<td class="mono" style="color:var(--sub);">' + c.dol + '</td>' +
       '<td><span class="dot" style="background:' + causeColor(c.cause) + ';"></span>' + c.cause + '</td>' +
       '<td style="color:var(--sub);font-size:12px;">' + c.ent + '</td>' +
       '<td style="font-size:12px;' + (c.drv ? '' : 'color:var(--sub);') + '">' + (c.drv || 'not named') + '</td>' +
+      '<td class="mono" style="font-weight:700;color:' + (sc === null ? 'var(--sub)' : scoreColor(sc)) + ';">' +
+        (sc === null ? '&mdash;' : sc) + '</td>' +
       '<td class="amt"' + (zero ? ' style="color:var(--sub);font-weight:400;"' : '') + '>' + (zero ? '&mdash;' : usd(c.res)) + '</td>' +
       '<td class="amt"' + (zero ? ' style="color:var(--sub);font-weight:400;"' : '') + '>' + (zero ? '&mdash;' : usd(c.inc)) + '</td></tr>';
   }).join('');
 
   document.getElementById('lossDrivers').innerHTML = L.drivers.map(function(d){
-    const flag = (d.safety !== null && d.safety < 90);
+    const sc = driverScore(d.name);
+    const flag = (sc !== null && sc < 90);
     return '<tr><td style="font-weight:600;' + (flag ? 'color:var(--red);' : '') + '">' + d.name +
         (flag ? ' <span style="font-size:10px;font-weight:700;">&#9664; below 90</span>' : '') + '</td>' +
       '<td style="color:var(--sub);">' + d.files + '</td>' +
-      '<td class="mono" style="font-weight:700;color:' +
-        (d.safety === null ? 'var(--sub)' : d.safety < 90 ? 'var(--red)' : 'var(--text)') + ';">' +
-        (d.safety === null ? '&mdash;' : d.safety) + '</td>' +
+      '<td class="mono" style="font-weight:700;color:' + (sc === null ? 'var(--sub)' : scoreColor(sc)) + ';">' +
+        (sc === null ? '&mdash;' : sc) + '</td>' +
       '<td class="amt">' + usd(d.amt) + '</td></tr>';
   }).join('');
 
@@ -570,29 +779,62 @@ function renderLossRuns(){
     '<b>Safety</b> is the 9/6 Samsara score where the name matches confidently. A dash means the driver is absent from that export, not that they scored well.';
 }
 
+// Action, Great America and Ellison's roll up to Action Road Solutions.
+const UNIT_LOC = { "Action":"Action RS", "Great America":"Action RS", "Ellison's":"Action RS",
+                   "Jack James":"Jack James", "College Oak":"College Oak" };
+function scoreColor(s){ return s < 80 ? 'var(--red)' : s < 90 ? 'var(--yellow)' : 'var(--green)'; }
+
+function safetyMatches(d){
+  if(safetyQuery && d.n.toLowerCase().indexOf(safetyQuery) === -1) return false;
+  if(safetyFilter === 'all') return true;
+  if(safetyFilter === 'below90') return d.s < 90;
+  if(safetyFilter === 'under80') return d.s < 80;
+  return UNIT_LOC[d.u] === safetyFilter;
+}
+
 function renderSafety(){
-  const sorted = data.below90.slice().sort((a,b)=>a.score-b.score);
-  const list = showAllSafetyRows ? sorted : sorted.slice(0,10);
-  document.getElementById('safetyCount').textContent = data.below90.length;
-  const opcoMap = {};
-  data.below90.forEach(d=>{ opcoMap[d.opco]=(opcoMap[d.opco]||0)+1; });
-  const opcoEntries = Object.entries(opcoMap).sort((a,b)=>b[1]-a[1]);
+  const all = data.drivers || [];
+  const below = all.filter(d => d.s < 90);
+  document.getElementById('safetyCount').textContent = below.length + " below 90";
+
+  const locMap = {};
+  all.forEach(d => {
+    const L = UNIT_LOC[d.u] || d.u;
+    if(!locMap[L]) locMap[L] = { n:0, below:0 };
+    locMap[L].n++; if(d.s < 90) locMap[L].below++;
+  });
   document.getElementById('opcoBreakdown').innerHTML =
-    '<span style="color:var(--text);font-weight:700;">By OpCo: </span>' +
-    opcoEntries.map(([o,n])=>`<span class="mono">${o} (${n})</span>`).join(' · ');
-  document.getElementById('safetyBody').innerHTML = list.map((d)=>{
-    const idx = data.below90.indexOf(d);
-    return `
-    <tr>
-      <td style="font-weight:600;">${editMode ? `<input class="edit-input" data-safety="${idx}" data-field="name" value="${d.name}">` : d.name}</td>
-      <td style="color:var(--sub);font-size:12px;">${editMode ? `<input class="edit-input" data-safety="${idx}" data-field="opco" value="${d.opco}">` : d.opco}</td>
-      <td class="mono" style="font-weight:700;color:${d.score<80?'var(--red)':'var(--yellow)'};">${editMode ? `<input class="edit-input mono" data-safety="${idx}" data-field="score" value="${d.score}">` : d.score}</td>
-      <td>${editMode ? `<button class="icon-btn" data-del-safety="${idx}">🗑</button>` : ''}</td>
-    </tr>`;
+    '<span style="color:var(--text);font-weight:700;">Roster: </span>' +
+    Object.keys(locMap).sort((a,b) => locMap[b].n - locMap[a].n).map(function(L){
+      return '<span class="mono">' + L + ' ' + locMap[L].n +
+             ' <span style="color:var(--red);">(' + locMap[L].below + ' below 90)</span></span>';
+    }).join(' · ');
+
+  const matched = all.filter(safetyMatches).sort((a,b) => a.s - b.s || a.n.localeCompare(b.n));
+  const list = showAllSafetyRows ? matched : matched.slice(0, 15);
+
+  document.getElementById('safetyBody').innerHTML = list.map(function(d){
+    const idx = all.indexOf(d);
+    return '<tr>' +
+      '<td style="font-weight:600;">' + (editMode
+        ? '<input class="edit-input" data-safety="' + idx + '" data-field="n" value="' + d.n.replace(/"/g,'&quot;') + '">'
+        : d.n) + '</td>' +
+      '<td style="color:var(--sub);font-size:12px;">' + (editMode
+        ? '<input class="edit-input" data-safety="' + idx + '" data-field="u" value="' + d.u.replace(/"/g,'&quot;') + '">'
+        : d.u) + '</td>' +
+      '<td class="mono" style="font-weight:700;color:' + scoreColor(d.s) + ';">' + (editMode
+        ? '<input class="edit-input mono" data-safety="' + idx + '" data-field="s" value="' + d.s + '">'
+        : d.s) + '</td>' +
+      '<td>' + (editMode ? '<button class="icon-btn" data-del-safety="' + idx + '">&#128465;</button>' : '') + '</td>' +
+    '</tr>';
   }).join('');
+
+  document.getElementById('safetyEmpty').style.display = matched.length ? 'none' : 'block';
   const showAllBtn = document.getElementById('showAllSafety');
-  showAllBtn.style.display = data.below90.length > 10 ? 'inline-flex' : 'none';
-  showAllBtn.textContent = showAllSafetyRows ? '▲ Show fewer' : `▼ Show all ${data.below90.length}`;
+  showAllBtn.style.display = matched.length > 15 ? 'inline-flex' : 'none';
+  showAllBtn.textContent = showAllSafetyRows
+    ? '▲ Show fewer'
+    : '▼ Show all ' + matched.length;
   document.getElementById('addSafetyBtn').style.display = editMode ? 'inline-flex' : 'none';
 }
 
@@ -610,7 +852,7 @@ document.addEventListener('change', (e)=>{
     render();
   } else if(t.dataset.safety !== undefined){
     const i = +t.dataset.safety, f = t.dataset.field;
-    data.below90[i][f] = (f==='score') ? Number(t.value) : t.value;
+    data.drivers[i][f] = (f==='s') ? Number(t.value) : t.value;
     render();
   } else if(t.dataset.repair !== undefined){
     const i = +t.dataset.repair, f = t.dataset.field;
@@ -627,7 +869,7 @@ document.addEventListener('click', (e)=>{
     data.cameras.splice(+e.target.dataset.delCam, 1); render();
   }
   if(e.target.dataset.delSafety !== undefined){
-    data.below90.splice(+e.target.dataset.delSafety, 1); render();
+    data.drivers.splice(+e.target.dataset.delSafety, 1); render();
   }
   if(e.target.dataset.delRepair !== undefined){
     data.repairs.splice(+e.target.dataset.delRepair, 1); render();
@@ -643,7 +885,7 @@ document.getElementById('addCamBtn').addEventListener('click', ()=>{
   render();
 });
 document.getElementById('addSafetyBtn').addEventListener('click', ()=>{
-  data.below90.push({ name:"New Driver", opco:"Action", score:0 });
+  data.drivers.push({ n:"New Driver", u:"Action", s:0 });
   render();
 });
 document.getElementById('addRepairBtn').addEventListener('click', ()=>{
@@ -677,6 +919,19 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
   }
 });
 document.getElementById('showAllSafety').addEventListener('click', ()=>{ showAllSafetyRows = !showAllSafetyRows; renderSafety(); });
+document.querySelectorAll('button.filt').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('button.filt').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    safetyFilter = b.dataset.filt;
+    showAllSafetyRows = false;
+    renderSafety();
+  });
+});
+document.getElementById('safetySearch').addEventListener('input', function(e){
+  safetyQuery = e.target.value.trim().toLowerCase();
+  renderSafety();
+});
 
 render();
 </script>
