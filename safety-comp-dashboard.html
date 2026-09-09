@@ -46,6 +46,17 @@
   .row-actions{ display:flex; gap:4px; }
   .icon-btn{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:14px; padding:2px 6px; }
   .icon-btn:hover{ color:var(--text); }
+  .loss-tiles{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .loss-tile{ background:var(--panel-alt); border:1px solid var(--line); border-radius:8px; padding:13px 16px; flex:1; min-width:150px; }
+  .loss-tile .lab{ font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--sub); font-weight:700; }
+  .loss-tile .val{ font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; margin-top:5px; }
+  .loss-tile .note{ font-size:11px; color:var(--sub); margin-top:3px; }
+  .loss-grid{ display:grid; grid-template-columns:1fr 1.25fr; gap:26px; }
+  @media (max-width:900px){ .loss-grid{ grid-template-columns:1fr; } }
+  .loss-sub{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:var(--sub); margin-bottom:7px; }
+  .bar-cell{ position:relative; }
+  .bar{ height:4px; border-radius:99px; background:var(--blue); margin-top:5px; }
+  .amt{ font-family:'JetBrains Mono',monospace; text-align:right; white-space:nowrap; font-weight:600; }
   .back-link{ display:inline-block; color:var(--sub); text-decoration:none; font-size:12px; font-weight:600; margin-bottom:18px; }
   .back-link:hover{ color:var(--blue); }
 </style>
@@ -118,6 +129,38 @@
     <tbody id="repairBody"></tbody>
   </table>
   <button class="btn" id="addRepairBtn" style="margin-top:10px;display:none;">+ Add row</button>
+</div>
+
+<div class="panel" style="margin-bottom:20px;">
+  <div class="section-header">
+    <h2 class="section-title">Insurance Loss Runs</h2>
+    <span class="count-badge" style="background:var(--red);" id="lossBadge"></span>
+  </div>
+  <div style="font-size:11px;color:var(--sub);margin-bottom:14px;line-height:1.5;" id="lossAsOf"></div>
+  <div class="loss-tiles" id="lossTiles"></div>
+  <div class="loss-grid">
+    <div>
+      <div class="loss-sub">By Coverage</div>
+      <table><tbody id="lossCause"></tbody></table>
+      <div class="loss-sub" style="margin-top:18px;">By Entity</div>
+      <table><tbody id="lossEntity"></tbody></table>
+      <div class="loss-sub" style="margin-top:18px;">By Loss Year</div>
+      <table><tbody id="lossYear"></tbody></table>
+    </div>
+    <div>
+      <div class="loss-sub">Largest Open Claims</div>
+      <table>
+        <thead><tr><th>File</th><th>Date</th><th>Coverage</th><th>Entity</th><th style="text-align:right;">Incurred</th></tr></thead>
+        <tbody id="lossOpen"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="loss-sub" style="margin-top:20px;">Drivers by Incurred &middot; with Safety Score</div>
+  <table>
+    <thead><tr><th>Driver</th><th>Claims</th><th>Safety</th><th style="text-align:right;">Incurred</th></tr></thead>
+    <tbody id="lossDrivers"></tbody>
+  </table>
+  <div style="font-size:11px;color:var(--sub);margin-top:14px;line-height:1.6;" id="lossNotes"></div>
 </div>
 
 <div class="panel" style="margin-bottom:20px;">
@@ -195,6 +238,58 @@ const DEFAULT_DATA = {
     { name:"E061Pablo N", opco:"Action", score:88 },
     { name:"Osvaldo Gomez", opco:"Action", score:88 }
   ],
+  lossRuns: {
+    asOf:"Loss runs as of Sep 8, 2026 · losses Mar 2024 – Jul 2026",
+    incurred:1326874.82, reserves:955165.96, paid:296332.86,
+    openFiles:20, totalFiles:39, openIncurred:1206505.82,
+    legacyAL:548195.20, legacyWC:403125.52, unnamedAmt:327436.50,
+    byCause:[
+      { name:"Bodily Injury",   lines:10, amt:988117.47 },
+      { name:"Workers Comp",    lines:10, amt:170886.50 },
+      { name:"Property Damage", lines:24, amt:166003.85 },
+      { name:"Other",           lines:2,  amt:1867.00 }
+    ],
+    byEntity:[
+      { name:"Action",        lines:34, amt:930166.38 },
+      { name:"Jack James",    lines:5,  amt:264508.44 },
+      { name:"Great America", lines:2,  amt:120000.00 },
+      { name:"Ellison's",     lines:5,  amt:12200.00 }
+    ],
+    byYear:[
+      { year:2024, files:8,  amt:622748.40 },
+      { year:2025, files:21, amt:553970.49 },
+      { year:2026, files:17, amt:150155.93 }
+    ],
+    openClaims:[
+      { file:"1470413", dol:"2024-11-12", cause:"Bodily Injury",   ent:"Jack James",    inc:263492.03 },
+      { file:"1485725", dol:"2025-04-24", cause:"Bodily Injury",   ent:"Action",        inc:202500.00 },
+      { file:"1460993", dol:"2024-07-14", cause:"Property Damage", ent:"Action",        inc:196955.16 },
+      { file:"1499370", dol:"2025-11-30", cause:"Bodily Injury",   ent:"Action",        inc:160000.00 },
+      { file:"1459383", dol:"2024-03-13", cause:"Workers Comp",    ent:"Action",        inc:158967.74 },
+      { file:"1503760", dol:"2026-02-21", cause:"Bodily Injury",   ent:"Great America", inc:120000.00 },
+      { file:"1481791", dol:"2025-04-11", cause:"Bodily Injury",   ent:"Action",        inc:89840.89 },
+      { file:"1505889", dol:"2026-03-20", cause:"Property Damage", ent:"Ellison's",     inc:8750.00 }
+    ],
+    drivers:[
+      { name:"(not named)",             files:10, amt:327436.50, safety:null },
+      { name:"Tony Duque",              files:1,  amt:263492.03, safety:99 },
+      { name:"Mark Duncan",             files:2,  amt:202500.00, safety:null },
+      { name:"Jesus Ayala",             files:1,  amt:196955.16, safety:76 },
+      { name:"Xuan Olmo",               files:1,  amt:120000.00, safety:null },
+      { name:"William Medina",          files:1,  amt:89840.89,  safety:null },
+      { name:"Tyrone Mims",             files:1,  amt:46468.93,  safety:99 },
+      { name:"Juan Lemus",              files:1,  amt:21638.17,  safety:null },
+      { name:"Jose Esparza",            files:1,  amt:13366.00,  safety:null },
+      { name:"Lenard Wilson",           files:1,  amt:11955.93,  safety:90 },
+      { name:"Pablo Torres",            files:1,  amt:8750.00,   safety:null },
+      { name:"Jordan Martinez",         files:1,  amt:6073.00,   safety:null },
+      { name:"Richard Dean Henderson",  files:1,  amt:6000.00,   safety:null },
+      { name:"Tracy Koehler",           files:1,  amt:5250.00,   safety:null },
+      { name:"Keily Rodriguez Villalta",files:1,  amt:3450.00,   safety:null },
+      { name:"Juan Ramirez",            files:1,  amt:1867.00,   safety:null },
+      { name:"Jeliezer Calso",          files:1,  amt:1831.21,   safety:null }
+    ]
+  },
   repairs: [
     { asset:"ACTION-1301", shop:"—", repair:"—", notes:"Back from shop, issues persist" },
     { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
@@ -217,7 +312,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-07b";
+const DATA_VERSION = "2026-09-08";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
@@ -256,6 +351,7 @@ function render(){
   renderRegistrations();
   renderCameras();
   renderRepairs();
+  renderLossRuns();
   renderSafety();
 }
 
@@ -365,6 +461,81 @@ function renderRepairs(){
     </tr>
   `).join('');
   document.getElementById('addRepairBtn').style.display = editMode ? 'inline-flex' : 'none';
+}
+
+function usd(v){ return "$" + Math.round(v).toLocaleString("en-US"); }
+
+function lossTile(lab, val, note, color){
+  return '<div class="loss-tile"><div class="lab">' + lab + '</div>' +
+    '<div class="val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</div>' +
+    '<div class="note">' + note + '</div></div>';
+}
+
+function causeColor(c){
+  return c === "Bodily Injury" ? 'var(--red)' : c === "Workers Comp" ? 'var(--amber)' : 'var(--blue)';
+}
+
+function barRow(label, lines, amt, max, color, mono){
+  return '<tr><td class="bar-cell' + (mono ? ' mono' : '') + '">' + label +
+    '<div class="bar" style="width:' + Math.max(2, (amt / max) * 100) + '%;' +
+    (color ? 'background:' + color + ';' : '') + '"></div></td>' +
+    '<td style="color:var(--sub);white-space:nowrap;">' + lines + ' lines</td>' +
+    '<td class="amt">' + usd(amt) + '</td></tr>';
+}
+
+function renderLossRuns(){
+  const L = data.lossRuns;
+  if(!L) return;
+  document.getElementById('lossBadge').textContent = usd(L.incurred + L.legacyAL + L.legacyWC);
+  document.getElementById('lossAsOf').textContent = L.asOf;
+
+  document.getElementById('lossTiles').innerHTML =
+    lossTile("Outstanding Reserves", usd(L.reserves), "drives the renewal", "var(--red)") +
+    lossTile("Total Incurred", usd(L.incurred), L.totalFiles + " claim files, current book", "") +
+    lossTile("Paid to Date", usd(L.paid), "already out the door", "") +
+    lossTile("Open Claims", L.openFiles + " of " + L.totalFiles, usd(L.openIncurred) + " incurred", "var(--amber)") +
+    lossTile("Legacy Claims", usd(L.legacyAL + L.legacyWC), "prior carriers, AL + WC", "");
+
+  const maxC = Math.max.apply(null, L.byCause.map(function(x){ return x.amt; }));
+  document.getElementById('lossCause').innerHTML = L.byCause.map(function(x){
+    return barRow(x.name, x.lines, x.amt, maxC, causeColor(x.name), false);
+  }).join('');
+
+  const maxE = Math.max.apply(null, L.byEntity.map(function(x){ return x.amt; }));
+  document.getElementById('lossEntity').innerHTML = L.byEntity.map(function(x){
+    return barRow(x.name, x.lines, x.amt, maxE, '', false);
+  }).join('');
+
+  const maxY = Math.max.apply(null, L.byYear.map(function(x){ return x.amt; }));
+  document.getElementById('lossYear').innerHTML = L.byYear.map(function(x){
+    return barRow(x.year, x.files, x.amt, maxY, 'var(--yellow)', true);
+  }).join('');
+
+  document.getElementById('lossOpen').innerHTML = L.openClaims.map(function(c){
+    return '<tr><td class="mono" style="font-weight:600;">' + c.file + '</td>' +
+      '<td class="mono" style="color:var(--sub);">' + c.dol + '</td>' +
+      '<td><span class="dot" style="background:' + causeColor(c.cause) + ';"></span>' + c.cause + '</td>' +
+      '<td style="color:var(--sub);font-size:12px;">' + c.ent + '</td>' +
+      '<td class="amt">' + usd(c.inc) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('lossDrivers').innerHTML = L.drivers.map(function(d){
+    const flag = (d.safety !== null && d.safety < 90);
+    return '<tr><td style="font-weight:600;' + (flag ? 'color:var(--red);' : '') + '">' + d.name +
+        (flag ? ' <span style="font-size:10px;font-weight:700;">&#9664; below 90</span>' : '') + '</td>' +
+      '<td style="color:var(--sub);">' + d.files + '</td>' +
+      '<td class="mono" style="font-weight:700;color:' +
+        (d.safety === null ? 'var(--sub)' : d.safety < 90 ? 'var(--red)' : 'var(--text)') + ';">' +
+        (d.safety === null ? '&mdash;' : d.safety) + '</td>' +
+      '<td class="amt">' + usd(d.amt) + '</td></tr>';
+  }).join('');
+
+  document.getElementById('lossNotes').innerHTML =
+    '<b>Aggregate view.</b> Claimant names and accident descriptions stay in the source file and are not published here.<br>' +
+    '<b>Known gaps:</b> one prior-carrier claim holds its paid amount as text in the spreadsheet, so roughly $57,141 is missing from every total above. ' +
+    'One file is recorded as reported 488 days after its loss date, and one loss date looks like a year typo. ' +
+    'Ten coverage lines carry no driver name, ' + usd(L.unnamedAmt) + ' between them.<br>' +
+    '<b>Safety</b> is the 9/6 Samsara score where the name matches confidently. A dash means the driver is absent from that export, not that they scored well.';
 }
 
 function renderSafety(){
