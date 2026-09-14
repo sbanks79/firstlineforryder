@@ -500,7 +500,7 @@ const DEFAULT_DATA = {
     ]
   },
   repairs: [
-    { asset:"ACTION-1301", shop:"—", repair:"—", notes:"Back from shop, issues persist" },
+    { asset:"ACTION-1301", shop:"Redwood City", repair:"High pressure sensor", notes:"VGT & turbo done at the dealership" },
     { asset:"ACTION-1315", shop:"Tec-SF", repair:"Turbo", notes:"" },
     { asset:"ACTION-1318", shop:"—", repair:"Toolbox", notes:"" },
     { asset:"ACTION-1320", shop:"Monarch", repair:"VGT Replacement", notes:"" },
@@ -521,7 +521,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-14";
+const DATA_VERSION = "2026-09-14b";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
