@@ -206,7 +206,6 @@ const DEFAULT_DATA = {
   registrations: [
     { asset:"FSP 45-06 FB", exp:"2026/07/31", days:-32, status:"Expired", note:"blocked on repair" },
     { asset:"GAT-102", exp:"2026/07/31", days:-32, status:"Expired", note:"blocked on repair" },
-    { asset:"ACTION-4693 HD", exp:"2026/08/30", days:-2, status:"Expired", note:"DMV — weight correction, under 55k" },
     { asset:"ACTION-4684", exp:"2026/08/30", days:-2, status:"Expired", note:"in process at DMV" }
   ],
   cameras: [
@@ -523,7 +522,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-14c";
+const DATA_VERSION = "2026-09-14d";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
