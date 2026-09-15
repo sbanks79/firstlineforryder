@@ -124,7 +124,10 @@
 <div class="panel" style="margin-bottom:20px;">
   <div class="section-header">
     <h2 class="section-title">Vehicles In Repair</h2>
-    <span class="count-badge" style="background:var(--amber);" id="repairCount"></span>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="action-hd-maintenance.html" style="color:var(--blue);text-decoration:none;font-size:11px;font-weight:600;">Action HD Maintenance &rarr;</a>
+      <span class="count-badge" style="background:var(--amber);" id="repairCount"></span>
+    </div>
   </div>
   <div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.5;" id="repairSummary"></div>
   <table>
@@ -522,7 +525,7 @@ const DEFAULT_DATA = {
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-14d";
+const DATA_VERSION = "2026-09-15";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
