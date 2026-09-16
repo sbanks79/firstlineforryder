@@ -109,7 +109,8 @@
 // One row per item. A unit with several items appears several times.
 const ITEMS = [
   { unit:"4680",        item:"Turbo actuator",                       cat:"Mechanical",  status:"Open" },
-  { unit:"4683",        item:"Passenger blind spot mirror",          cat:"DOT / Safety", status:"Open" },
+  { unit:"4683",        item:"Passenger blind spot mirror",          cat:"DOT / Safety", status:"Part ordered",
+    note:"Mirror ordered — still need to get it in" },
   { unit:"4683",        item:"Clutch brake",                         cat:"Mechanical",  status:"Open" },
   { unit:"4684",        item:"Still has issues after Coast Counties", cat:"Mechanical", status:"Needs diagnosis",
     note:"Was at Coast Counties; problem not resolved" },
@@ -127,7 +128,8 @@ const ITEMS = [
 const CAT_COLOR = { "DOT / Safety":"var(--red)", "Mechanical":"var(--blue)",
                     "Service":"var(--yellow)", "Billing":"var(--amber)", "—":"#5a6270" };
 const STATUS_COLOR = { "Open":"var(--amber)", "Needs diagnosis":"var(--red)",
-                       "Due":"var(--yellow)", "Review":"var(--blue)", "Clear":"var(--green)" };
+                       "Part ordered":"var(--yellow)", "Due":"var(--yellow)",
+                       "Review":"var(--blue)", "Clear":"var(--green)" };
 
 let mode = 'all', query = '';
 
