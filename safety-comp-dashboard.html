@@ -47,7 +47,7 @@
   .icon-btn{ background:none; border:none; color:var(--sub); cursor:pointer; font-size:14px; padding:2px 6px; }
   .icon-btn:hover{ color:var(--text); }
   .filters{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
-  .btn.filt.on{ background:var(--blue); color:#0d0f11; border-color:var(--blue); font-weight:700; }
+  .btn.filt.on, .btn.dfilt.on{ background:var(--blue); color:#0d0f11; border-color:var(--blue); font-weight:700; }
   .empty-note{ color:var(--sub); font-size:13px; padding:22px 0; text-align:center; }
   .loss-tiles{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
   .loss-tile{ background:var(--panel-alt); border:1px solid var(--line); border-radius:8px; padding:13px 16px; flex:1; min-width:150px; }
@@ -62,6 +62,21 @@
   .amt{ font-family:'JetBrains Mono',monospace; text-align:right; white-space:nowrap; font-weight:600; }
   .back-link{ display:inline-block; color:var(--sub); text-decoration:none; font-size:12px; font-weight:600; margin-bottom:18px; }
   .back-link:hover{ color:var(--blue); }
+  .dvir-check{ width:17px; height:17px; accent-color:var(--green); cursor:pointer; }
+  tr.dvir-done td{ opacity:.45; }
+  tr.dvir-done td.dvir-issue{ text-decoration:line-through; }
+  .dvir-print-title{ display:none; }
+  @media print{
+    body.print-dvir{ background:#fff; color:#000; padding:0; }
+    body.print-dvir > *:not(#dvirPanel){ display:none !important; }
+    body.print-dvir #dvirPanel{ display:block !important; background:#fff; border:0; padding:0; }
+    body.print-dvir .no-print{ display:none !important; }
+    body.print-dvir .dvir-print-title{ display:block; font-size:12px; margin-bottom:8px; }
+    body.print-dvir th, body.print-dvir td{ color:#000 !important; border-color:#bbb; font-size:11px; }
+    body.print-dvir tr.dvir-done td{ opacity:1; }
+    body.print-dvir tr{ break-inside:avoid; }
+    body.print-dvir .section-title{ color:#000; }
+  }
 </style>
 </head>
 <body>
@@ -135,6 +150,30 @@
     <tbody id="repairBody"></tbody>
   </table>
   <button class="btn" id="addRepairBtn" style="margin-top:10px;display:none;">+ Add row</button>
+</div>
+
+<div class="panel" style="margin-bottom:20px;" id="dvirPanel">
+  <div class="section-header">
+    <h2 class="section-title">DVIR Defects — Last Week</h2>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" class="no-print">
+      <button class="btn" id="dvirPrint">⬇ Checklist PDF / Print</button>
+      <button class="btn" id="dvirCsv">⬇ Excel</button>
+      <span class="count-badge" style="background:var(--amber);" id="dvirCount"></span>
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.5;" id="dvirSummary"></div>
+  <div class="filters no-print" id="dvirFilters">
+    <button class="btn dfilt on" data-dfilt="all">All</button>
+    <button class="btn dfilt" data-dfilt="Action">Action</button>
+    <button class="btn dfilt" data-dfilt="Great America">Great America</button>
+    <button class="btn dfilt" data-dfilt="Ellison's">Ellison's</button>
+    <button class="btn dfilt" data-dfilt="open">Not checked off</button>
+  </div>
+  <table>
+    <thead><tr><th style="width:34px;">Fixed</th><th>Vehicle</th><th>Issue</th><th>Reported</th><th>Drivers</th></tr></thead>
+    <tbody id="dvirBody"></tbody>
+  </table>
+  <div class="no-print" style="font-size:11px;color:var(--sub);margin-top:10px;">Check-offs save in this browser only. The PDF and Excel downloads include whatever is checked.</div>
 </div>
 
 <div class="panel" style="margin-bottom:20px;">
@@ -533,6 +572,33 @@ const DEFAULT_DATA = {
   ]
 };
 
+// ---------- DVIR DEFECTS ----------
+// Samsara DVIRs Sep 14-20, 2026 (324 inspections). One row per vehicle + defect;
+// n = how many inspections reported it. None were marked resolved in the export.
+const DVIR_WEEK = "Sep 14 – 20, 2026";
+const DVIR_ISSUES = [
+    { co:"Action", veh:"ACTION-4683 (H/D Tractor)", cat:"Boom Components", note:"Fifth wheel adjustment", first:"09-14", last:"09-16", n:3, drv:["Ronald Ordonez"] },
+    { co:"Action", veh:"ACTION-1317 FB", cat:"Tires / Rims", note:"Passenger front tire halfway deflated", first:"09-14", last:"09-20", n:8, drv:["Victor Gonzalez", "Apollo Ameperosa", "Jesus De La Rosa"] },
+    { co:"Action", veh:"ACTION-1347 WL", cat:"Dollies Tie Downs", note:"No dolly tire", first:"09-14", last:"09-17", n:6, drv:["Steven Castro", "Victor Moo Yah"] },
+    { co:"Action", veh:"ACTION-1303 FB", cat:"Floor Jack", note:"Broken wheel", first:"09-14", last:"09-19", n:9, drv:["Tyrone Mims", "Sabir Potbal", "Jose Bedolla", "Neev Moa"] },
+    { co:"Action", veh:"ACTION-1318 FB", cat:"Fresh Body Damage (rear)", note:"David took 1318 out last night", first:"09-14", last:"09-20", n:7, drv:["Jesus De La Rosa", "Kennie Sharpe", "Yevhen Petunin"] },
+    { co:"Action", veh:"ACTION-1374 BS", cat:"Fresh Body Damage (rear)", note:"Fresh damage", first:"09-15", last:"09-20", n:6, drv:["Clifton Salmer", "Jesus Castro"] },
+    { co:"Action", veh:"ACTION-1309 FB", cat:"Winch / Cable", note:"Winch leaking oil", first:"09-15", last:"09-18", n:3, drv:["Hector Quijano"] },
+    { co:"Action", veh:"ACTION-1337 WL", cat:"Lights - Brake/Markers", note:"Broken light bar", first:"09-15", last:"09-18", n:3, drv:["Dante Ordonez"] },
+    { co:"Action", veh:"ACTION-4660 HD (50 Ton Rotator Under-Reach)", cat:"Lights, Front", note:"Dim headlights", first:"09-17", last:"09-17", n:1, drv:["Larry Hall"], unsafe:true },
+    { co:"Ellison's", veh:"ELLISON'S-1115-FB NEW", cat:"Tires / Rims", note:"Split", first:"09-14", last:"09-20", n:10, drv:["e028alexisV", "e029Laupama Vili", "e059EduardoG"] },
+    { co:"Ellison's", veh:"ELLISON'S-1191 BS", cat:"Engine Hoses/Belts (all)", note:"Check engine light won't go off", first:"09-14", last:"09-20", n:5, drv:["e036VincentC", "e018EnriqueS"] },
+    { co:"Ellison's", veh:"ELLISON'S 1110 FB", cat:"Windshield Defects", note:"Chip", first:"09-14", last:"09-19", n:6, drv:["e029Laupama Vili", "e021SerjioF"] },
+    { co:"Ellison's", veh:"ELLISON'S 1139 WL", cat:"Fresh Body Damage (rear)", note:"Damage to driver side rear tire and wheel", first:"09-15", last:"09-19", n:5, drv:["e063GustavoB"] },
+    { co:"Great America", veh:"GAT-201", cat:"Tow Lights (Drag)", note:"Reported, no detail given", first:"09-14", last:"09-18", n:3, drv:["g636JustinS"] },
+    { co:"Great America", veh:"GAT-1319 FB", cat:"Safety Glasses", note:"None available", first:"09-15", last:"09-19", n:5, drv:["g687CarloS", "g696MarkD", "g752MatthewP"] },
+    { co:"Great America", veh:"GAT-56", cat:"Emergency Lights", note:"Communication box won't let the lights turn on", first:"09-15", last:"09-15", n:1, drv:["g641JelC"] },
+    { co:"Great America", veh:"GAT-1390-BS", cat:"Emergency Lights", note:"Beacon lights not working", first:"09-15", last:"09-16", n:2, drv:["g610CoyerK"] },
+    // Reported directly on 9/21, not in the Samsara DVIR export.
+    { co:"Action", veh:"ACTION-1338 WL", cat:"Lights - Brake/Markers", note:"Broken light bar", first:"09-21", last:"09-21", n:0, drv:[], manual:true },
+    { co:"Action", veh:"ACTION-1338 WL", cat:"Glass / Windows", note:"Broken back window", first:"09-21", last:"09-21", n:0, drv:[], manual:true }
+];
+
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
@@ -577,6 +643,7 @@ function render(){
   renderRegistrations();
   renderCameras();
   renderRepairs();
+  renderDvir();
   renderLossRuns();
   renderSafety();
 }
@@ -688,6 +755,79 @@ function renderRepairs(){
     </tr>
   `).join('');
   document.getElementById('addRepairBtn').style.display = editMode ? 'inline-flex' : 'none';
+}
+
+// DVIR check-offs live under their own key so a data publish doesn't wipe them.
+const DVIR_KEY = "fleet_dvir_checked_v1";
+let dvirFilter = 'all';
+function dvirId(d){ return d.veh + '|' + d.cat + '|' + d.note; }
+function loadDvirChecked(){
+  try{ return JSON.parse(localStorage.getItem(DVIR_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveDvirChecked(c){
+  try{ localStorage.setItem(DVIR_KEY, JSON.stringify(c)); }catch(e){}
+}
+let dvirChecked = loadDvirChecked();
+
+// unsafe first, then most-reported
+function dvirSorted(){
+  return DVIR_ISSUES.slice().sort(function(a,b){
+    return (b.unsafe?1:0) - (a.unsafe?1:0) || b.n - a.n || a.veh.localeCompare(b.veh);
+  });
+}
+function dvirWhen(d){
+  const f = d.first.replace('-','/'), l = d.last.replace('-','/');
+  if(d.manual) return f + ' · reported directly';
+  return (f === l ? f : f + ' – ' + l) + ' · ' + d.n + (d.n === 1 ? ' report' : ' reports');
+}
+
+function renderDvir(){
+  const done = DVIR_ISSUES.filter(function(d){ return dvirChecked[dvirId(d)]; }).length;
+  const open = DVIR_ISSUES.length - done;
+  const unsafe = DVIR_ISSUES.filter(function(d){ return d.unsafe; }).length;
+  const repeat = DVIR_ISSUES.filter(function(d){ return d.n >= 5; }).length;
+  document.getElementById('dvirCount').textContent = open + " open";
+  document.getElementById('dvirSummary').innerHTML =
+    '<span class="dvir-print-title"><b>DVIR Defect Checklist</b> · ' + DVIR_WEEK + ' · printed ' + new Date().toLocaleDateString() + '</span>' +
+    DVIR_WEEK + ' · ' + DVIR_ISSUES.filter(function(d){ return !d.manual; }).length +
+    ' issues across 324 inspections, none marked resolved in Samsara' +
+    (DVIR_ISSUES.some(function(d){ return d.manual; })
+      ? ', plus ' + DVIR_ISSUES.filter(function(d){ return d.manual; }).length + ' reported directly. ' : '. ') +
+    (unsafe ? '<b style="color:var(--red);">' + unsafe + ' marked unsafe.</b> ' : '') +
+    '<b style="color:var(--amber);">' + repeat + ' reported 5+ times</b>, so those trucks kept going out with the defect. ' +
+    done + ' checked off.';
+
+  const rows = dvirSorted().filter(function(d){
+    if(dvirFilter === 'all') return true;
+    if(dvirFilter === 'open') return !dvirChecked[dvirId(d)];
+    return d.co === dvirFilter;
+  });
+  document.getElementById('dvirBody').innerHTML = rows.map(function(d){
+    const id = dvirId(d), on = !!dvirChecked[id];
+    return '<tr class="' + (on ? 'dvir-done' : '') + '">' +
+      '<td><input type="checkbox" class="dvir-check" data-dvir="' + id.replace(/"/g,'&quot;') + '"' + (on ? ' checked' : '') + '></td>' +
+      '<td class="mono" style="font-weight:600;font-size:12px;">' + d.veh +
+        '<div style="font-family:Inter,sans-serif;font-weight:400;font-size:11px;color:var(--sub);">' + d.co + '</div></td>' +
+      '<td class="dvir-issue">' + (d.unsafe ? '<span class="status-badge" style="background:var(--red);margin-right:6px;">UNSAFE</span>' : '') +
+        '<b>' + d.note + '</b><div style="font-size:11px;color:var(--sub);">' + d.cat + '</div></td>' +
+      '<td class="mono" style="font-size:12px;white-space:nowrap;color:' + (d.n >= 5 ? 'var(--amber)' : 'var(--text)') + ';">' + dvirWhen(d) + '</td>' +
+      '<td style="font-size:12px;color:var(--sub);">' + (d.drv.join(', ') || '&mdash;') + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function csvCell(v){ v = String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g,'""') + '"' : v; }
+function downloadDvirCsv(){
+  const head = ['Fixed','Company','Vehicle','Issue','Category','Unsafe','First Reported','Last Reported','Times Reported','Drivers'];
+  const lines = [head.join(',')].concat(dvirSorted().map(function(d){
+    return [dvirChecked[dvirId(d)] ? '☑' : '☐', d.co, d.veh, d.note, d.cat, d.unsafe ? 'YES' : '',
+            '2026-' + d.first, '2026-' + d.last, d.manual ? 'reported directly' : d.n, d.drv.join('; ')].map(csvCell).join(',');
+  }));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type:'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'DVIR_checklist_Sep14-20_2026.csv';
+  document.body.appendChild(a); a.click(); a.remove();
 }
 
 function usd(v){ return "$" + Math.round(v).toLocaleString("en-US"); }
@@ -859,6 +999,13 @@ function renderSafety(){
 // ---------- Event delegation for inline edits ----------
 document.addEventListener('change', (e)=>{
   const t = e.target;
+  if(t.dataset.dvir !== undefined){
+    if(t.checked) dvirChecked[t.dataset.dvir] = new Date().toISOString();
+    else delete dvirChecked[t.dataset.dvir];
+    saveDvirChecked(dvirChecked);
+    renderDvir();
+    return;
+  }
   if(t.dataset.reg !== undefined){
     const i = +t.dataset.reg, f = t.dataset.field;
     data.registrations[i][f] = (f==='days') ? Number(t.value) : t.value;
@@ -934,6 +1081,23 @@ document.getElementById('resetBtn').addEventListener('click', ()=>{
     document.getElementById('subline').textContent = "Registrations · Camera Status · Safety Scores";
     render();
   }
+});
+document.getElementById('dvirCsv').addEventListener('click', downloadDvirCsv);
+document.getElementById('dvirPrint').addEventListener('click', function(){
+  const prevFilter = dvirFilter;
+  dvirFilter = 'all'; renderDvir();          // the printed checklist always lists every issue
+  document.body.classList.add('print-dvir');
+  window.print();
+  document.body.classList.remove('print-dvir');
+  dvirFilter = prevFilter; renderDvir();
+});
+document.querySelectorAll('button.dfilt').forEach(function(b){
+  b.addEventListener('click', function(){
+    document.querySelectorAll('button.dfilt').forEach(function(x){ x.classList.remove('on'); });
+    b.classList.add('on');
+    dvirFilter = b.dataset.dfilt;
+    renderDvir();
+  });
 });
 document.getElementById('showAllSafety').addEventListener('click', ()=>{ showAllSafetyRows = !showAllSafetyRows; renderSafety(); });
 document.querySelectorAll('button.filt').forEach(function(b){
