@@ -24,11 +24,16 @@
   .btn.primary:hover{ opacity:.85; color:#0d0f11; }
   .btn.danger{ border-color:var(--red); color:var(--red); }
   .panel{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px; }
-  .kpi{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:18px 20px; flex:1; min-width:200px; }
-  .kpi-label{ display:flex; align-items:center; gap:8px; color:var(--sub); font-size:12px; text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
-  .kpi-value{ font-size:34px; font-weight:700; color:var(--text); font-family:'JetBrains Mono',monospace; margin-top:6px; }
-  .kpi-sub{ font-size:12px; color:var(--sub); margin-top:4px; }
-  .kpi-groups{ margin-top:10px; padding-top:9px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
+  html{ scroll-behavior:smooth; }
+  .panel[id]{ scroll-margin-top:16px; }
+  .kpi{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; flex:1; min-width:150px; display:block; color:inherit; text-decoration:none; cursor:pointer; transition:border-color .15s, background .15s; }
+  .kpi:hover{ border-color:var(--blue); background:var(--panel-alt); }
+  .kpi:hover .kpi-label::after{ content:"→"; margin-left:auto; color:var(--blue); }
+  .kpi-wide{ min-width:200px; }
+  .kpi-label{ display:flex; align-items:center; gap:6px; color:var(--sub); font-size:10.5px; text-transform:uppercase; letter-spacing:.05em; font-weight:600; }
+  .kpi-value{ font-size:26px; font-weight:700; color:var(--text); font-family:'JetBrains Mono',monospace; margin-top:4px; }
+  .kpi-sub{ font-size:11px; color:var(--sub); margin-top:3px; line-height:1.35; }
+  .kpi-groups{ margin-top:8px; padding-top:7px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:4px; }
   .kpi-group-row{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:11px; color:var(--sub); }
   .kpi-group-score{ font-size:13px; font-weight:700; }
   .section-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
@@ -105,10 +110,10 @@
   <span>Edit mode on — click any status, day count, or name to change it. Changes save to <b>this browser only</b> — they won't appear for other people viewing this page elsewhere.</span>
 </div>
 
-<div style="display:flex; gap:14px; flex-wrap:wrap; margin-bottom:28px;" id="kpiRow"></div>
+<div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start; margin-bottom:24px;" id="kpiRow"></div>
 
 <div class="grid-2">
-  <div class="panel">
+  <div class="panel" id="regPanel">
     <div class="section-header">
       <h2 class="section-title">Registrations — Expired / Expiring</h2>
       <span class="count-badge" style="background:var(--red);" id="regCount"></span>
@@ -123,7 +128,7 @@
     <button class="btn" id="addRegBtn" style="margin-top:10px;display:none;">+ Add row</button>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="camPanel">
     <div class="section-header">
       <h2 class="section-title">Camera Status</h2>
       <span class="count-badge" style="background:var(--amber);" id="camCount"></span>
@@ -136,7 +141,7 @@
   </div>
 </div>
 
-<div class="panel" style="margin-bottom:20px;">
+<div class="panel" id="repairPanel" style="margin-bottom:20px;">
   <div class="section-header">
     <h2 class="section-title">Vehicles In Repair</h2>
     <div style="display:flex;align-items:center;gap:12px;">
@@ -176,7 +181,7 @@
   <div class="no-print" style="font-size:11px;color:var(--sub);margin-top:10px;">Check-offs save in this browser only. The PDF and Excel downloads include whatever is checked.</div>
 </div>
 
-<div class="panel" style="margin-bottom:20px;">
+<div class="panel" id="lossPanel" style="margin-bottom:20px;">
   <div class="section-header">
     <h2 class="section-title">Insurance Loss Runs</h2>
     <span class="count-badge" style="background:var(--red);" id="lossBadge"></span>
@@ -213,7 +218,7 @@
   <div style="font-size:11px;color:var(--sub);margin-top:14px;line-height:1.6;" id="lossNotes"></div>
 </div>
 
-<div class="panel" style="margin-bottom:20px;">
+<div class="panel" id="safetyPanel" style="margin-bottom:20px;">
   <div class="section-header">
     <h2 class="section-title">Safety Scores — Full Roster</h2>
     <span class="count-badge" style="background:var(--yellow);" id="safetyCount"></span>
@@ -657,14 +662,26 @@ function renderKpis(){
                    expiring ? expiring + " expiring in ≤3 days" : "" ].filter(Boolean).join(" · ");
   const below90 = data.drivers.filter(d=>d.s<90).length;
   const under80 = data.drivers.filter(d=>d.s<80).length;
+  const dvirOpen = DVIR_ISSUES.filter(d=>!dvirChecked[dvirId(d)]);
+  const dvirUnsafe = dvirOpen.filter(d=>d.unsafe).length;
+  const L = data.lossRuns;
   document.getElementById('kpiRow').innerHTML = `
-    <div class="kpi"><div class="kpi-label">🚫 Registrations Expired</div>
+    <a class="kpi" href="#regPanel"><div class="kpi-label">🚫 Registrations Expired</div>
       <div class="kpi-value">${expired}</div>
-      <div class="kpi-sub">${regSub}</div></div>
-    <div class="kpi"><div class="kpi-label">📷 Cameras Down</div>
+      <div class="kpi-sub">${regSub}</div></a>
+    <a class="kpi" href="#camPanel"><div class="kpi-label">📷 Cameras Down</div>
       <div class="kpi-value">${data.cameras.length}</div>
-      <div class="kpi-sub">across 5 yards</div></div>
-    <div class="kpi" style="min-width:250px;"><div class="kpi-label">🛡️ NorCal Fleet Safety Score</div>
+      <div class="kpi-sub">across 5 yards</div></a>
+    <a class="kpi" href="#repairPanel"><div class="kpi-label">🔧 Vehicles In Repair</div>
+      <div class="kpi-value">${data.repairs.length}</div>
+      <div class="kpi-sub">across multiple shops</div></a>
+    <a class="kpi" href="#dvirPanel"><div class="kpi-label">📋 DVIR Defects Open</div>
+      <div class="kpi-value">${dvirOpen.length}</div>
+      <div class="kpi-sub">${dvirUnsafe ? `<span style="color:var(--red);">${dvirUnsafe} unsafe</span> · ` : ''}${DVIR_ISSUES.length - dvirOpen.length} checked off</div></a>
+    ${L ? `<a class="kpi" href="#lossPanel"><div class="kpi-label">📄 Open Claims</div>
+      <div class="kpi-value">${L.openFiles}</div>
+      <div class="kpi-sub">${usd(L.reserves)} in reserves</div></a>` : ''}
+    <a class="kpi kpi-wide" href="#safetyPanel"><div class="kpi-label">🛡️ NorCal Fleet Safety Score</div>
       <div class="kpi-value">${data.safetySummary.avg}</div>
       <div class="kpi-sub">${data.safetySummary.avg >= data.safetySummary.priorAvg ? 'up from' : 'down from'} ${data.safetySummary.priorAvg} · ${data.safetySummary.drivers} drivers, 4 companies</div>
       ${(data.safetySummary.groups||[]).length ? `<div class="kpi-groups">${
@@ -673,13 +690,10 @@ function renderKpis(){
             <span>${g.name}</span>
             <span class="mono kpi-group-score" style="color:${g.avg<90?'var(--red)':'var(--text)'};">${g.avg}</span>
           </div>`).join('')
-      }</div>` : ''}</div>
-    <div class="kpi"><div class="kpi-label">⚠️ Drivers Below 90</div>
+      }</div>` : ''}</a>
+    <a class="kpi" href="#safetyPanel"><div class="kpi-label">⚠️ Drivers Below 90</div>
       <div class="kpi-value">${below90}</div>
-      <div class="kpi-sub">${under80} of those under 80 — 90 minimum now in effect</div></div>
-    <div class="kpi"><div class="kpi-label">🔧 Vehicles In Repair</div>
-      <div class="kpi-value">${data.repairs.length}</div>
-      <div class="kpi-sub">across multiple shops</div></div>
+      <div class="kpi-sub">${under80} of those under 80 — 90 minimum now in effect</div></a>
   `;
 }
 
@@ -1004,6 +1018,7 @@ document.addEventListener('change', (e)=>{
     else delete dvirChecked[t.dataset.dvir];
     saveDvirChecked(dvirChecked);
     renderDvir();
+    renderKpis();
     return;
   }
   if(t.dataset.reg !== undefined){
