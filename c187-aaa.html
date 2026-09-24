@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C187 Great America Towing — Driver Satisfaction Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#13233A;--ink2:#4A5A70;--line:#D9DEE6;--paper:#F4F6F9;--card:#FFFFFF;--tow:#1F5C99;--light:#D98A00;--good:#2E7D4F;--warn:#C77C0E;--bad:#B3261E;--ts:#2E7D4F;--s:#8CC49B;--n:#C9CED6;--d:#E59A8F;--td:#B3261E}
+*{box-sizing:border-box}
+body{margin:0;font-family:Barlow,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--paper);font-size:15px;line-height:1.45}
+a{color:var(--tow)}
+.wrap{max-width:1240px;margin:0 auto;padding:18px 20px 60px}
+.back{display:inline-block;font-weight:600;text-decoration:none;margin-bottom:10px}
+header.top{background:var(--ink);color:#fff;border-radius:10px;padding:22px 24px;display:flex;flex-wrap:wrap;gap:18px;justify-content:space-between;align-items:flex-end}
+header.top h1{font-family:"Barlow Condensed",Barlow,sans-serif;font-size:34px;line-height:1.05;margin:0 0 6px;letter-spacing:.2px}
+header.top p{margin:0;color:#C8D3E2;font-size:14px;max-width:70ch}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button,.btn{font:inherit;font-weight:600;font-size:14px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px;border-radius:6px;cursor:pointer}
+header .btn{background:transparent;color:#fff;border-color:#3D5170}
+header .btn:hover{background:#22385A}
+button:focus-visible,.btn:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #6FA8FF;outline-offset:2px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.kpi .v{font-family:"Barlow Condensed",sans-serif;font-size:36px;font-weight:700;line-height:1}
+.kpi .l{color:var(--ink2);font-size:13px;margin-top:4px}
+.kpi.soft .v{color:var(--bad)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+section.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-top:16px}
+section.card h2{font-family:"Barlow Condensed",sans-serif;font-size:24px;margin:0;line-height:1.1}
+section.card .sub{color:var(--ink2);font-size:14px;margin:2px 0 14px}
+.note{font-size:13px;color:var(--ink2);margin-top:10px}
+/* bar chart */
+.metric{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center;margin:10px 0}
+.metric .name{font-weight:600;font-size:14px}
+.bars .b{position:relative;height:20px;background:#EEF1F5;border-radius:3px;margin:3px 0}
+.bars .b span{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.bars{padding-right:58px}
+.bars .b em{position:absolute;right:-56px;top:0;font-style:normal;font-size:13px;font-weight:700;line-height:20px}
+.bars .b .goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+/* tier boxes */
+.vpp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.vpp div{border:1px solid var(--line);border-left:5px solid var(--good);border-radius:6px;padding:10px 12px;font-size:14px}
+.vpp div.risk{border-left-color:var(--warn)}
+.vpp strong{font-family:"Barlow Condensed",sans-serif;font-size:22px;display:block}
+/* distribution */
+.dist{display:grid;grid-template-columns:120px 1fr 44px;gap:10px;align-items:center;margin:8px 0;font-size:14px}
+.stack{display:flex;height:22px;border-radius:3px;overflow:hidden;background:#EEF1F5}
+.stack i{display:block;height:100%}
+/* lift */
+.liftbig{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.liftbig .v{font-family:"Barlow Condensed",sans-serif;font-size:44px;font-weight:700;line-height:1}
+.liftbig .arrow{color:var(--ink2);font-size:22px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:700;font-size:13px;color:var(--ink2);background:#F8F9FB;position:sticky;top:0;cursor:pointer;white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;max-height:560px;overflow-y:auto;border:1px solid var(--line);border-radius:6px}
+.dn{background:none;border:none;padding:0;color:var(--tow);font-weight:600;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-size:14px;text-align:left}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.t-TOP{background:#DDF0E3;color:#1D5A37}.t-HIGH{background:#E3EEF9;color:#1F4E80}.t-AVERAGE{background:#EEF0F3;color:#3E4A5A}
+.t-BELOW{background:#FFF1D6;color:#7A4B00}.t-NEEDS{background:#FFE2CC;color:#8A3B00}.t-CRITICAL{background:#FAD9D6;color:#8E1B14}
+.p100{color:var(--good);font-weight:700}.plow{color:var(--bad);font-weight:700}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+select{font:inherit;font-size:14px;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:#fff}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:none}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+/* attention */
+.att{border-left:4px solid var(--bad);background:#FFF8F7;border-radius:4px;padding:10px 12px;margin:10px 0}
+.att.amber{border-left-color:var(--warn);background:#FFFBF2}
+.att h3{margin:0 0 4px;font-size:16px}
+.att p{margin:4px 0;font-size:14px}
+.quote{font-style:italic;color:#33415A}
+.tag{display:inline-block;font-size:11px;font-weight:700;background:#EEF1F5;color:#3E4A5A;border-radius:3px;padding:1px 6px;margin:0 4px 2px 0}
+.tag.bad{background:#FAD9D6;color:#8E1B14}
+/* modal */
+dialog{border:none;border-radius:10px;padding:0;max-width:860px;width:calc(100% - 24px);max-height:88vh}
+dialog::backdrop{background:rgba(19,35,58,.55)}
+.mh{background:var(--ink);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;position:sticky;top:0}
+.mh h2{margin:0;font-family:"Barlow Condensed",sans-serif;font-size:28px}
+.mh .x{background:transparent;color:#fff;border-color:#3D5170}
+.mb{padding:16px 20px}
+.mk{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:600px){.mk{grid-template-columns:repeat(2,1fr)}.metric{grid-template-columns:90px 1fr}.dist{grid-template-columns:90px 1fr 40px}}
+.mk div{border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.mk b{font-family:"Barlow Condensed",sans-serif;font-size:26px;display:block;line-height:1}
+.mk span{font-size:12px;color:var(--ink2)}
+.resp{border-bottom:1px solid var(--line);padding:10px 0;font-size:14px}
+.resp .meta{color:var(--ink2);font-size:13px}
+.sc{display:inline-block;min-width:26px;text-align:center;font-size:11px;font-weight:700;border-radius:3px;padding:1px 4px;margin-right:3px;color:#fff}
+.sc.TS{background:var(--ts)}.sc.S{background:#5FA273}.sc.N{background:#8A93A0}.sc.D{background:#D9776B}.sc.TD{background:var(--td)}.sc.NA{background:#C9CED6;color:#3E4A5A}
+.foot{margin-top:24px;font-size:12px;color:var(--ink2)}
+@media print{
+  body{background:#fff}.actions,.filters,.back,.noprint{display:none!important}
+  header.top{background:#fff;color:var(--ink);border:1px solid var(--line)}header.top p{color:var(--ink2)}
+  section.card{break-inside:avoid}.tablewrap{max-height:none;overflow:visible}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="back" href="index.html">← Back to Call Taking Portal</a>
+<header class="top">
+  <div>
+    <h1>C187 Great America Towing — Driver Satisfaction</h1>
+    <p>AAA member surveys, August 2026 (Aug 1 – Aug 31). Click any driver name for a full profile. Source: C187_Driver_Satisfaction_August2026.xlsx</p>
+  </div>
+  <div class="actions">
+    <button class="btn" onclick="dlAll()">⬇ All Responses (CSV)</button>
+    <button class="btn" onclick="dlDrivers()">⬇ Driver Summary (CSV)</button>
+    <button class="btn" onclick="dlIssues()">⬇ Issues Report (CSV)</button>
+    <button class="btn" onclick="window.print()">🖨 Print</button>
+  </div>
+</header>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid2">
+  <section class="card">
+    <h2>Top-Box % by Metric</h2>
+    <div class="sub">Tow vs Light Service. Black tick = contract goal on Overall (Tow 87%, Light 90%).</div>
+    <div class="legend"><span><i class="sw" style="background:var(--tow)"></i>Tow</span><span><i class="sw" style="background:var(--light)"></i>Light Service</span></div>
+    <div id="metricChart"></div>
+    <div class="vpp" id="vpp"></div>
+    <div class="note">Top-Box = % of scored responses rated "Totally satisfied". Excludes canceled calls and AAA/Unknown/DLY driver rows. VPP tiers here are a read on this survey export; the bonus report uses Qualtrics "Overall – Including Cancel", so the official number can differ.</div>
+  </section>
+  <section class="card">
+    <h2>Overall Satisfaction Lift</h2>
+    <div class="sub">If every "Satisfied" became "Totally Satisfied"</div>
+    <div id="lift"></div>
+    <div class="note">Neutral and dissatisfied responses are excluded from the lift math. Scoreable rows only, matching the Overall Sat Lift tab in the C187 workbook.</div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Response Distribution</h2>
+  <div class="sub">All 4 metrics, scoreable responses</div>
+  <div class="legend" style="margin-bottom:6px"><span><i class="sw" style="background:var(--ts)"></i>Totally satisfied</span><span><i class="sw" style="background:var(--s)"></i>Satisfied</span><span><i class="sw" style="background:var(--n)"></i>Neither</span><span><i class="sw" style="background:var(--d)"></i>Dissatisfied</span><span><i class="sw" style="background:var(--td)"></i>Totally dissatisfied</span></div>
+  <div id="dist"></div>
+</section>
+
+<section class="card">
+  <h2>Needs Attention</h2>
+  <div class="sub">Low-overall calls, conduct complaints, and the drivers where the most points are on the table</div>
+  <div id="attention"></div>
+</section>
+
+<section class="card">
+  <h2>Driver Ranker</h2>
+  <div class="sub">Sorted by Overall %, then responses. Click a column to re-sort.</div>
+  <div class="filters">
+    <div class="seg" role="group" aria-label="Service type" id="segType">
+      <button data-v="all" aria-pressed="true">All service types</button><button data-v="Tow" aria-pressed="false">Tow</button><button data-v="Light" aria-pressed="false">Light Service</button>
+    </div>
+    <select id="minResp" aria-label="Minimum responses"><option value="1">1+ responses</option><option value="3">3+ responses</option><option value="5">5+ responses</option><option value="8">8+ responses</option></select>
+    <select id="tierSel" aria-label="Tier"><option value="">All tiers</option></select>
+    <button onclick="dlView()">⬇ Export This View</button>
+    <button onclick="resetView()">Reset</button>
+  </div>
+  <div class="tablewrap"><table id="ranker"></table></div>
+  <div class="note" id="tierDefs"></div>
+</section>
+
+<div class="foot">Built from the AAA survey export for C187 Great America Towing. Low sample: each survey moves the facility Overall % about 2.3 points. Tiers use the workbook's Driver Ranker definitions on Overall %.</div>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlgTitle"><div class="mh"><div><h2 id="dlgTitle"></h2><div id="dlgSub" style="color:#C8D3E2;font-size:14px"></div></div><button class="btn x" onclick="dlg.close()">Close</button></div><div class="mb" id="dlgBody"></div></dialog>
+
+<script>
+const DATA = [{"id": "918208", "n": "918208", "c": "8118547", "sd": "2026-08-03", "dc": "2026-08-03", "cm": "", "o": "TS", "d": "", "rt": "", "k": "", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921106", "n": "921106", "c": "8118102", "sd": "2026-08-03", "dc": "2026-08-06", "cm": "The wait time was extremely to long waiting to get a driver assigned. Once finally assigned took almost another hour", "o": "S", "d": "S", "rt": "D", "k": "S", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat", "RT Issue", "Wait Time"]}, {"id": "917424", "n": "917424", "c": "8130132", "sd": "2026-08-03", "dc": "2026-08-07", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921106", "n": "921106", "c": "8145073", "sd": "2026-08-05", "dc": "2026-08-09", "cm": "", "o": "S", "d": "", "rt": "", "k": "", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "916511", "n": "916511", "c": "8145450", "sd": "2026-08-05", "dc": "2026-08-06", "cm": "Great service. Thank you!", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "904155", "n": "Ernest Teschera", "c": "8152647", "sd": "2026-08-05", "dc": "2026-08-06", "cm": "I was left waiting for 2 hours with no update on when the tow truck will arrive . Even after a driver was assigned and said he would be there by 5 minutes it took the driver 45 minutes to show up . I got dropped off at 7.15 while the original call telling me to be with my car was at 3.45pm This is unacceptable- when we pay for the service the least expectation is timely update and reasonable time of service", "o": "D", "d": "TS", "rt": "TD", "k": "TD", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Low Overall", "RT Issue", "Wait Time"]}, {"id": "921410", "n": "921410", "c": "8158694", "sd": "2026-08-06", "dc": "2026-08-07", "cm": "", "o": "TS", "d": "TS", "rt": "S", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "921410", "n": "921410", "c": "8174294", "sd": "2026-08-07", "dc": "2026-08-10", "cm": "It was the best", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "918922", "n": "918922", "c": "8169723", "sd": "2026-08-07", "dc": "2026-08-08", "cm": "Driver arrived very soon and is very courteous and professional. He took care of my new car extremely carefully and efficiently. Much appreciated his help!", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "922344", "n": "922344", "c": "8165995", "sd": "2026-08-07", "dc": "2026-08-07", "cm": "Took a while to get a driver assigned. Should be given an option to speak with a representative or use the website form to start the process.", "o": "S", "d": "TS", "rt": "S", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "912967", "n": "Mark Duncan", "c": "8165341", "sd": "2026-08-07", "dc": "2026-08-10", "cm": "", "o": "TS", "d": "TS", "rt": "N", "k": "S", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "916032", "n": "916032", "c": "8173430", "sd": "2026-08-07", "dc": "2026-08-08", "cm": "I was reassigned drivers 3 times without notice.", "o": "S", "d": "TS", "rt": "S", "k": "TD", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Conflicting Info", "Partial Sat"]}, {"id": "916032", "n": "916032", "c": "8184449", "sd": "2026-08-08", "dc": "2026-08-10", "cm": "Over heat", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "916032", "n": "916032", "c": "8177618", "sd": "2026-08-08", "dc": "2026-08-08", "cm": "Very friendly, helpful, and courteous of time. They came right away!", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "916032", "n": "916032", "c": "8176291", "sd": "2026-08-08", "dc": "2026-08-08", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921410", "n": "921410", "c": "8197462", "sd": "2026-08-10", "dc": "2026-08-11", "cm": "Fantastic service", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921410", "n": "921410", "c": "8199254", "sd": "2026-08-10", "dc": "2026-08-11", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "911001", "n": "Steven Smolt", "c": "8217340", "sd": "2026-08-11", "dc": "2026-08-12", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "918922", "n": "918922", "c": "8217058", "sd": "2026-08-11", "dc": "2026-08-12", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921410", "n": "921410", "c": "8214873", "sd": "2026-08-11", "dc": "2026-08-15", "cm": "Very easy, did not wait long the tow truck is available right away within 20 minutes. The driver was very nice and respectful. Highly recommended.", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "916032", "n": "916032", "c": "8224055", "sd": "2026-08-12", "dc": "2026-08-13", "cm": "It was great service , the driver was very nice he got here and jumped rite to it. No problems , he kno exactly what to do and he got it sone. Over all very satifyed with AAA AND THERE DRIVER¹SERVICE WAS GREAT", "o": "TS", "d": "S", "rt": "TS", "k": "S", "t": "Tow", "cl": "P2", "x": "N", "tg": ["Partial Sat"]}, {"id": "921410", "n": "921410", "c": "8226893", "sd": "2026-08-12", "dc": "2026-08-14", "cm": "The driver who came to tow my car was absolutely terrific, every step of the way.", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "904848", "n": "Pio Artadi", "c": "8238623", "sd": "2026-08-13", "dc": "2026-08-14", "cm": "Driver named Pio was polite, efficient and capable. My vehicle was inoperable so he towed me to the Ford dealership on Capitol Avenue Auto Row for repair services which was near my home in San Jose, CA. I was extremely pleased with his service. I hope that all drivers for AAA are as kind as he is.", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "912967", "n": "Mark Duncan", "c": "8242992", "sd": "2026-08-14", "dc": "2026-08-14", "cm": "", "o": "TS", "d": "", "rt": "", "k": "", "t": "Tow", "cl": "XX", "x": "Y", "tg": []}, {"id": "921106", "n": "921106", "c": "8256128", "sd": "2026-08-15", "dc": "2026-08-16", "cm": "This my 2nd time every time my suv got trouble and I can’t drive to dealer it’s show of my dashboard not to drive it I’m very satisfied coz they help me a lot to bring my suv to the dealer that’s why I see to it that my aaa card is always active .", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921410", "n": "921410", "c": "8298488", "sd": "2026-08-19", "dc": "2026-08-24", "cm": "The driver was professional. He loaded up the car quickly, and he unloaded the car quickly, his expertise is obvious.", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "904848", "n": "Pio Artadi", "c": "8298720", "sd": "2026-08-19", "dc": "2026-08-20", "cm": "", "o": "TS", "d": "S", "rt": "S", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "921410", "n": "921410", "c": "8301556", "sd": "2026-08-19", "dc": "2026-08-20", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "918208", "n": "918208", "c": "8313973", "sd": "2026-08-20", "dc": "2026-08-26", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "923580", "n": "923580", "c": "8311926", "sd": "2026-08-20", "dc": "2026-08-21", "cm": "The driver was professional, pleasant and very nice.", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "903978", "n": "903978", "c": "8310803", "sd": "2026-08-20", "dc": "2026-08-21", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "911254", "n": "Marcus Hernandez", "c": "8306496", "sd": "2026-08-20", "dc": "2026-08-20", "cm": "Very satisfied knowing that there’s someone you can depend on incase of emergencies. Thanks.", "o": "TS", "d": "TS", "rt": "S", "k": "S", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "911001", "n": "Steven Smolt", "c": "8328424", "sd": "2026-08-22", "dc": "2026-08-26", "cm": "", "o": "TS", "d": "TS", "rt": "S", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "912967", "n": "Mark Duncan", "c": "8336114", "sd": "2026-08-22", "dc": "2026-08-23", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "923580", "n": "923580", "c": "8326457", "sd": "2026-08-22", "dc": "2026-08-25", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "911001", "n": "Steven Smolt", "c": "8347858", "sd": "2026-08-24", "dc": "2026-08-25", "cm": "", "o": "N", "d": "", "rt": "", "k": "", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Neutral"]}, {"id": "918922", "n": "918922", "c": "8356488", "sd": "2026-08-24", "dc": "2026-08-25", "cm": "I wish there was a modify service request tab rather than having to cancel and reenter a new request when an error in the type of request was made.", "o": "TS", "d": "TS", "rt": "TS", "k": "S", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "918922", "n": "918922", "c": "8351131", "sd": "2026-08-24", "dc": "2026-08-25", "cm": "Very pleased the driver very pleasant and respectful, explained everything he was d👏🏽😊", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "911001", "n": "Steven Smolt", "c": "8364711", "sd": "2026-08-25", "dc": "2026-08-27", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "912967", "n": "Mark Duncan", "c": "8380106", "sd": "2026-08-27", "dc": "2026-08-27", "cm": "The wait was a little long before it was dispatched but the driver made up for it by calling and saying I will be right there", "o": "TS", "d": "TS", "rt": "S", "k": "S", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat", "Wait Time"]}, {"id": "AAA", "n": "AAA", "c": "8391459", "sd": "2026-08-28", "dc": "2026-08-28", "cm": "I didn't get what I was looking for and I don't understand why and I'm still waiting to see how this works out", "o": "N", "d": "", "rt": "", "k": "", "t": "Tow", "cl": "XX", "x": "Y", "tg": ["Neutral"]}, {"id": "916511", "n": "916511", "c": "8403710", "sd": "2026-08-29", "dc": "2026-08-30", "cm": "Great driver but I get roadside with my insurance so AAA not worth the money", "o": "TS", "d": "TS", "rt": "S", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat"]}, {"id": "912967", "n": "Mark Duncan", "c": "8417365", "sd": "2026-08-30", "dc": "2026-09-03", "cm": "", "o": "TS", "d": "TS", "rt": "D", "k": "S", "t": "Tow", "cl": "P1", "x": "N", "tg": ["Partial Sat", "RT Issue"]}, {"id": "921410", "n": "921410", "c": "8422990", "sd": "2026-08-31", "dc": "2026-09-01", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "921410", "n": "921410", "c": "8425323", "sd": "2026-08-31", "dc": "2026-09-01", "cm": "I have been a member for over 65 years. What more can I say?", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}, {"id": "903978", "n": "903978", "c": "8430545", "sd": "2026-08-31", "dc": "2026-09-01", "cm": "", "o": "TS", "d": "TS", "rt": "TS", "k": "TS", "t": "Tow", "cl": "P1", "x": "N", "tg": []}];
+const EXCL = new Set(['AAA','Unknown','DLY']);
+const LBL = {TS:'Totally satisfied',S:'Satisfied',N:'Neither',D:'Dissatisfied',TD:'Totally dissatisfied','':'N/A'};
+const METRICS = [['o','Overall'],['d','Driver'],['rt','Response Time'],['k','Kept Informed']];
+const TIERS = [['TOP PERFORMER',1],['HIGH PERFORMER',.9],['AVERAGE',.87],['BELOW AVERAGE',.86],['NEEDS ATTENTION',.85],['CRITICAL',0]];
+const GOAL = {Tow:.87, Light:.90};
+const VPP = {Tow:[[.87,'Level 1'],[.86,'Level 2'],[.85,'Level 3']], Light:[[.90,'Level 1'],[.89,'Level 2'],[.88,'Level 3']]};
+const scored = DATA.filter(r => r.x==='N' && !EXCL.has(r.id));
+const pct = v => v==null||isNaN(v) ? '—' : (Math.round(v*1000)/10).toFixed(1)+'%';
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function tb(rows, m){const s=rows.filter(r=>r[m]); return s.length? s.filter(r=>r[m]==='TS').length/s.length : null;}
+function nOf(rows,m){return rows.filter(r=>r[m]).length;}
+function tierOf(p){for(const [t,min] of TIERS) if(p>=min-1e-9) return t; return 'CRITICAL';}
+function tierPill(t){return `<span class="pill t-${t.split(' ')[0]}">${t}</span>`;}
+function pcls(v){return v==null?'':v>=0.9999?'p100':v<.85?'plow':'';}
+function vppLevel(type,p){for(const [min,l] of VPP[type]) if(p>=min-1e-9) return l; return 'No tier';}
+
+// KPIs
+(function(){
+  const k = document.getElementById('kpis');
+  const items = METRICS.map(([m,l])=>{const v=tb(scored,m); return `<div class="kpi ${m==='rt'?'soft':''}"><div class="v">${pct(v)}</div><div class="l">${l} top-box · n=${nOf(scored,m)}</div></div>`;});
+  items.unshift(`<div class="kpi"><div class="v">${DATA.length}</div><div class="l">Surveys (${scored.length} scoreable, ${DATA.length-scored.length} canceled/AAA/unknown)</div></div>`);
+  k.innerHTML = items.join('');
+})();
+
+// Metric chart
+(function(){
+  const tow = scored.filter(r=>r.t==='Tow'), lt = scored.filter(r=>r.t==='Light');
+  let h='';
+  for(const [m,l] of METRICS){
+    const a=tb(tow,m), b=tb(lt,m);
+    h+=`<div class="metric"><div class="name">${l}</div><div class="bars">
+      <div class="b" title="Tow ${pct(a)} (n=${nOf(tow,m)})"><span style="width:${(a??0)*100}%;background:var(--tow)"></span>${m==='o'?`<i class="goal" style="left:${GOAL.Tow*100}%"></i>`:''}<em>${pct(a)}</em></div>
+      <div class="b" title="Light ${pct(b)} (n=${nOf(lt,m)})"><span style="width:${(b??0)*100}%;background:var(--light)"></span>${m==='o'?`<i class="goal" style="left:${GOAL.Light*100}%"></i>`:''}<em>${pct(b)}</em></div>
+    </div></div>`;
+  }
+  document.getElementById('metricChart').innerHTML=h;
+  // VPP cushion: how many more non-top-box surveys before dropping a level
+  const box = (type, rows) => {
+    if(!rows.length) return `<div class="risk"><strong>${type==='Light'?'Light':'Tow'} · no surveys</strong>This export has no ${type==='Light'?'Light Service':'Tow'} responses. Re-pull the Qualtrics export with ${type==='Light'?'Light Service':'Tow'} included before using it for VPP or bonus.</div>`;
+    const n=rows.length, ts=rows.filter(r=>r.o==='TS').length, p=ts/n, lvl=vppLevel(type,p);
+    let miss=0; while(miss<n && vppLevel(type,(ts-miss)/n)===lvl) miss++;
+    const after = vppLevel(type,(ts-miss)/n);
+    let up=0; while(ts+up<n && vppLevel(type,(ts+up)/n)===lvl) up++;
+    const upTxt = (lvl!=='Level 1' && ts+up<=n) ? ` Converting ${up} of the ${n-ts} non-top-box survey${n-ts===1?'':'s'} would make it ${vppLevel(type,(ts+up)/n)}.` : '';
+    // how many more perfect surveys to reach the next level up
+    const risk = miss<=1;
+    return `<div class="${risk?'risk':''}"><strong>${type==='Light'?'Light':'Tow'} ${pct(p)} · ${lvl}</strong>
+      ${ts} of ${n} top-box. Goal ${Math.round(GOAL[type]*100)}%.<br>${lvl==='No tier'?'Below all VPP levels.':`${miss} more non-top-box survey${miss===1?'':'s'} ${miss===1?'drops':'drop'} this to ${after==='No tier'?'no tier':after}.`}${upTxt}</div>`;
+  };
+  document.getElementById('vpp').innerHTML = box('Tow',tow)+box('Light',lt);
+})();
+
+// Lift
+(function(){
+  const ts=scored.filter(r=>r.o==='TS').length, s=scored.filter(r=>r.o==='S').length, n=ts+s;
+  const cur=ts/n;
+  const drv = driverStats(scored).filter(d=>d.liftS>0).sort((a,b)=>b.liftS-a.liftS||b.n-a.n);
+  let h=`<div class="liftbig"><span class="v">${pct(cur)}</span><span class="arrow">→</span><span class="v" style="color:var(--good)">100.0%</span><span style="font-weight:700;color:var(--good)">+${pct(1-cur)}</span></div>
+  <div class="note" style="margin-top:4px">${ts} totally satisfied + ${s} satisfied = ${n} responses. Those ${s} "Satisfied" surveys are the whole gap.</div>
+  <h3 style="margin:16px 0 6px;font-size:16px">Where the ${s} "Satisfied" surveys sit</h3>
+  <table><thead><tr><th>Driver</th><th class="num">Sat</th><th class="num">Current</th><th class="num">Potential lift</th></tr></thead><tbody>`;
+  for(const d of drv) h+=`<tr><td><button class="dn" onclick="openDriver('${d.id}')">${esc(d.name)}</button></td><td class="num">${d.liftS}</td><td class="num">${pct(d.liftCur)}</td><td class="num"><b>+${pct(1-d.liftCur)}</b></td></tr>`;
+  h+='</tbody></table>';
+  document.getElementById('lift').innerHTML=h;
+})();
+
+// Distribution
+(function(){
+  const cols={TS:'var(--ts)',S:'var(--s)',N:'var(--n)',D:'var(--d)',TD:'var(--td)'};
+  let h='';
+  for(const [m,l] of METRICS){
+    const rs=scored.filter(r=>r[m]); const n=rs.length;
+    const seg=['TS','S','N','D','TD'].map(k=>{const c=rs.filter(r=>r[m]===k).length; return c?`<i style="width:${c/n*100}%;background:${cols[k]}" title="${LBL[k]}: ${c} (${pct(c/n)})"></i>`:''}).join('');
+    const bad=rs.filter(r=>r[m]==='D'||r[m]==='TD').length;
+    h+=`<div class="dist"><div style="font-weight:600">${l}</div><div class="stack">${seg}</div><div class="num" title="Dissatisfied + totally dissatisfied" style="text-align:right;color:${bad?'var(--bad)':'var(--ink2)'};font-weight:700">${bad}✕</div></div>`;
+  }
+  h+='<div class="note">✕ = dissatisfied or totally dissatisfied count. Hover a segment for exact counts.</div>';
+  document.getElementById('dist').innerHTML=h;
+})();
+
+function driverStats(rows){
+  const m={};
+  for(const r of rows){ (m[r.id] ||= {id:r.id,name:r.n,rows:[]}).rows.push(r); }
+  return Object.values(m).map(d=>{
+    const o=tb(d.rows,'o');
+    const ts=d.rows.filter(r=>r.o==='TS').length, s=d.rows.filter(r=>r.o==='S').length;
+    return {...d, n:d.rows.length, o, dr:tb(d.rows,'d'), rt:tb(d.rows,'rt'), k:tb(d.rows,'k'), tier:tierOf(o??0),
+      tow:d.rows.filter(r=>r.t==='Tow').length, light:d.rows.filter(r=>r.t==='Light').length,
+      liftS:s, liftCur:(ts+s)?ts/(ts+s):null, issues:d.rows.filter(r=>r.tg.some(t=>t!=='Partial Sat')).length};
+  });
+}
+
+// Needs attention
+(function(){
+  const hard = ['Low Overall','Inappropriate Conduct','Battery Upsell','No Driver / Refused Service','Conflicting Info'];
+  const calls = DATA.filter(r=>r.tg.some(t=>hard.includes(t)) || r.o==='D' || r.o==='TD')
+    .sort((a,b)=>(b.tg.includes('Inappropriate Conduct')-a.tg.includes('Inappropriate Conduct')) || (b.tg.includes('Battery Upsell')-a.tg.includes('Battery Upsell')) || b.sd.localeCompare(a.sd));
+  let h='';
+  for(const r of calls){
+    const who = EXCL.has(r.id) ? `<b>${esc(r.n)}</b> (no driver attached)` : `<button class="dn" onclick="openDriver('${r.id}')">${esc(r.n)}</button>`;
+    h+=`<div class="att"><h3>Call ${esc(r.c)} · ${who} · ${r.t} · ${r.sd}</h3>
+      <p>${r.tg.map(t=>`<span class="tag ${hard.includes(t)?'bad':''}">${esc(t)}</span>`).join('')} ${scoreChips(r)}</p>
+      ${r.cm?`<p class="quote">"${esc(r.cm)}"</p>`:''}</div>`;
+  }
+  // Soft drivers: CRITICAL tier with 5+ responses
+  const soft = driverStats(scored).filter(d=>d.n>=5 && d.o<.87).sort((a,b)=>b.n-a.n);
+  if(soft.length){
+    h+=`<h3 style="margin:18px 0 6px;font-size:16px">Drivers below 87% Overall on 5+ responses</h3><div class="tablewrap" style="max-height:none"><table><thead><tr><th>Driver</th><th class="num">Resp</th><th class="num">Overall</th><th class="num">RT</th><th>Tier</th><th class="num">Flagged calls</th></tr></thead><tbody>`;
+    for(const d of soft) h+=`<tr><td><button class="dn" onclick="openDriver('${d.id}')">${esc(d.name)}</button></td><td class="num">${d.n}</td><td class="num ${pcls(d.o)}">${pct(d.o)}</td><td class="num ${pcls(d.rt)}">${pct(d.rt)}</td><td>${tierPill(d.tier)}</td><td class="num">${d.issues}</td></tr>`;
+    h+='</tbody></table></div>';
+  }
+  document.getElementById('attention').innerHTML=h;
+})();
+
+function scoreChips(r){return METRICS.map(([m,l])=>`<span class="sc ${r[m]||'NA'}" title="${l}: ${LBL[r[m]]}">${{o:'OV',d:'DR',rt:'RT',k:'KMI'}[m]}</span>`).join('');}
+
+// Ranker
+let view={type:'all',min:1,tier:'',sort:'o',dir:-1};
+document.getElementById('tierSel').innerHTML+=TIERS.map(([t])=>`<option>${t}</option>`).join('');
+document.getElementById('tierDefs').innerHTML='Tiers on Overall %: '+TIERS.map(([t,m],i)=>`${t} ${i===0?'100%':i===TIERS.length-1?'below 85.0%':pct(m)+'+'}`).join(' · ');
+['Tow','Light'].forEach(ty=>{if(!scored.some(r=>r.t===ty)){const b=document.querySelector(`#segType button[data-v="${ty}"]`);b.disabled=true;b.title='No surveys of this type in this export';b.style.opacity=.45;}});
+document.querySelectorAll('#segType button').forEach(b=>b.onclick=()=>{view.type=b.dataset.v;document.querySelectorAll('#segType button').forEach(x=>x.setAttribute('aria-pressed',x===b));drawRanker();});
+document.getElementById('minResp').onchange=e=>{view.min=+e.target.value;drawRanker();};
+document.getElementById('tierSel').onchange=e=>{view.tier=e.target.value;drawRanker();};
+function currentRows(){
+  const rows = view.type==='all'?scored:scored.filter(r=>r.t===view.type);
+  let d=driverStats(rows).filter(x=>x.n>=view.min && (!view.tier||x.tier===view.tier));
+  const k=view.sort;
+  d.sort((a,b)=>{const va=a[k],vb=b[k]; if(typeof va==='string') return view.dir*va.localeCompare(vb); return view.dir*((va??-1)-(vb??-1)) || (b.n-a.n);});
+  return d;
+}
+function drawRanker(){
+  const d=currentRows();
+  const cols=[['#',null],['Driver','name'],['Responses','n'],['Overall %','o'],['Driver %','dr'],['RT %','rt'],['KMI %','k'],['Tier','o'],['Tow / Light',null]];
+  let h='<thead><tr>'+cols.map(([l,k])=>`<th class="${['Responses','Overall %','Driver %','RT %','KMI %'].includes(l)?'num':''}" ${k?`onclick="sortBy('${k}')"`:''}>${l}${view.sort===k&&l!=='Tier'?(view.dir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
+  d.forEach((x,i)=>{h+=`<tr><td>${i+1}</td><td><button class="dn" onclick="openDriver('${x.id}')">${esc(x.name)}</button></td><td class="num">${x.n}</td>
+    <td class="num ${pcls(x.o)}">${pct(x.o)}</td><td class="num ${pcls(x.dr)}">${pct(x.dr)}</td><td class="num ${pcls(x.rt)}">${pct(x.rt)}</td><td class="num ${pcls(x.k)}">${pct(x.k)}</td>
+    <td>${tierPill(x.tier)}</td><td>${x.tow} / ${x.light}</td></tr>`;});
+  if(!d.length) h+='<tr><td colspan="9">No drivers match these filters. Lower the minimum responses or clear the tier.</td></tr>';
+  document.getElementById('ranker').innerHTML=h+'</tbody>';
+}
+function sortBy(k){ if(view.sort===k) view.dir*=-1; else {view.sort=k; view.dir=k==='name'?1:-1;} drawRanker(); }
+function resetView(){view={type:'all',min:1,tier:'',sort:'o',dir:-1};document.getElementById('minResp').value='1';document.getElementById('tierSel').value='';document.querySelectorAll('#segType button').forEach(x=>x.setAttribute('aria-pressed',x.dataset.v==='all'));drawRanker();}
+drawRanker();
+
+// Driver profile
+const dlg=document.getElementById('dlg');
+function openDriver(id){
+  const all=DATA.filter(r=>r.id===id), sc=scored.filter(r=>r.id===id);
+  const s=driverStats(sc)[0]; const name=all[0].n;
+  const rank = driverStats(scored).sort((a,b)=>(b.o-a.o)||(b.n-a.n)).findIndex(x=>x.id===id)+1;
+  document.getElementById('dlgTitle').textContent=name;
+  document.getElementById('dlgSub').textContent=`Driver ID ${id} · ${all.length} surveys (${sc.length} scoreable) · Rank ${rank} of ${driverStats(scored).length}`;
+  let h='';
+  if(s){
+    h+=`<p>${tierPill(s.tier)}</p><div class="mk">${[['o','Overall'],['dr','Driver'],['rt','Response Time'],['k','Kept Informed']].map(([k,l])=>`<div><b class="${pcls(s[k])}">${pct(s[k])}</b><span>${l}</span></div>`).join('')}</div>`;
+    const split=['Tow','Light'].map(t=>{const r=sc.filter(x=>x.t===t); return r.length?`<tr><td>${t==='Light'?'Light Service':'Tow'}</td><td class="num">${r.length}</td>${METRICS.map(([m])=>`<td class="num ${pcls(tb(r,m))}">${pct(tb(r,m))}</td>`).join('')}</tr>`:''}).join('');
+    h+=`<table style="margin-bottom:12px"><thead><tr><th>Type</th><th class="num">Resp</th><th class="num">Overall</th><th class="num">Driver</th><th class="num">RT</th><th class="num">KMI</th></tr></thead><tbody>${split}</tbody></table>`;
+    if(s.liftS) h+=`<p class="note">Lift: ${s.liftS} "Satisfied" Overall survey${s.liftS>1?'s':''}. Converting ${s.liftS>1?'them':'it'} takes this driver from ${pct(s.liftCur)} to 100% on the lift math.</p>`;
+  }
+  h+='<h3 style="margin:14px 0 4px;font-size:16px">Every survey</h3>';
+  for(const r of [...all].sort((a,b)=>b.sd.localeCompare(a.sd))){
+    h+=`<div class="resp"><div class="meta">${r.sd} · Call ${esc(r.c)} · ${r.t==='Light'?'Light Service':'Tow'}${r.x==='Y'?' · canceled (not scored)':''}</div>
+      <div style="margin:4px 0">${scoreChips(r)} ${r.tg.map(t=>`<span class="tag ${t!=='Partial Sat'?'bad':''}">${esc(t)}</span>`).join('')}</div>
+      ${r.cm?`<div class="quote">"${esc(r.cm)}"</div>`:''}</div>`;
+  }
+  document.getElementById('dlgBody').innerHTML=h;
+  dlg.showModal();
+}
+dlg.addEventListener('click',e=>{if(e.target===dlg) dlg.close();});
+
+// CSV
+function csv(name, header, rows){
+  const q=v=>{v=v==null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+  const blob=new Blob(['\ufeff'+[header,...rows].map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+}
+const P=v=>v==null?'':(Math.round(v*1000)/10).toFixed(1);
+function dlAll(){csv('C187_All_Responses.csv',['Driver ID','Driver Name','Call ID','Service Date','Date Completed','Type','Overall','Driver','RT','KMI','Canceled','Clear','Issue Tags','Comment'],DATA.map(r=>[r.id,r.n,r.c,r.sd,r.dc,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.x,r.cl,r.tg.join('; '),r.cm]));}
+function driverRows(d){return d.map(x=>[x.id,x.name,x.n,x.tow,x.light,P(x.o),P(x.dr),P(x.rt),P(x.k),x.tier,x.liftS]);}
+const DH=['Driver ID','Name','Responses','Tow','Light','Overall %','Driver %','RT %','KMI %','Tier','Satisfied (lift) count'];
+function dlDrivers(){csv('C187_Driver_Summary.csv',DH,driverRows(driverStats(scored).sort((a,b)=>(b.o-a.o)||(b.n-a.n))));}
+function dlView(){csv(`C187_Driver_Ranker_${view.type}_${view.min}plus${view.tier?'_'+view.tier.replace(/ /g,'_'):''}.csv`,DH,driverRows(currentRows()));}
+function dlIssues(){csv('C187_Issues_Report.csv',['Issue Tags','Call ID','Driver ID','Driver Name','Service Date','Type','Overall','Driver','RT','KMI','Comment'],DATA.filter(r=>r.tg.length).map(r=>[r.tg.join('; '),r.c,r.id,r.n,r.sd,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.cm]));}
+</script>
+</body>
+</html>
