@@ -189,7 +189,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
     <button class="btn" onclick="document.getElementById('file').click()">⬆ Upload surveys</button>
     <button class="btn" onclick="dlData()">💾 Download data file</button>
     <button class="btn" onclick="dlAll()">⬇ Responses (CSV)</button>
-    <button class="btn" onclick="dlDrivers()">⬇ Driver Summary (CSV)</button>
+    <button class="btn" onclick="dlDrivers()">⬇ Driver Summary (Excel)</button>
     <button class="btn" onclick="dlIssues()">⬇ Issues (CSV)</button>
     <button class="btn" onclick="window.print()">🖨 Print</button>
   </div>
@@ -228,7 +228,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   <div class="filters">
     <select id="minResp" aria-label="Minimum responses"><option value="1">1+ responses</option><option value="3">3+ responses</option><option value="5">5+ responses</option><option value="8">8+ responses</option></select>
     <select id="tierSel" aria-label="Tier"><option value="">All tiers</option></select>
-    <button onclick="dlView()">⬇ Export This View</button>
+    <button onclick="dlView()">⬇ Export This View (Excel)</button>
   </div>
   <div class="tablewrap"><table id="ranker"></table></div>
   <div class="note" id="tierDefs"></div>
@@ -692,12 +692,60 @@ function csv(name,header,rows){
 const P=v=>v==null?'':(Math.round(v*1000)/10).toFixed(1);
 const tag=()=>`${F.from||'all'}_to_${F.to||'all'}`;
 function dlAll(){csv(`${FAC_CODE}_Responses_${tag()}.csv`,['Driver ID','Driver Name','Call ID','Service Date','Date Completed','Type','Overall','Driver','RT','KMI','Canceled','Cause','Issue Tags','Comment'],filtered(true).map(r=>[r.id,r.n,r.c,r.sd,r.dc,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.x,r.cause,r.tg.join('; '),r.cm]));}
-const DH=['Driver ID','Name','Responses','Tow','Light','Overall %','Driver %','RT %','KMI %','Tier','Driver-caused','Dispatch-caused','Satisfied (lift)'];
-const dRows=d=>d.map(x=>[x.id,x.name,x.n,x.tow,x.light,P(x.o),P(x.dr),P(x.rt),P(x.k),x.tier,x.cDrv,x.cDisp,x.liftS]);
-function dlDrivers(){csv(`${FAC_CODE}_Driver_Summary_${tag()}.csv`,DH,dRows(driverStats(filtered()).sort((a,b)=>(b.o-a.o)||(b.n-a.n))));}
 function dlDriver(id){const rs=DB.rows.filter(r=>r.id===id&&inRange(r)&&(F.type==='all'||r.t===F.type)); const nm=((rs[0]||{}).n||id).replace(/[^\w]+/g,'_');
   csv(`${FAC_CODE}_${nm}_${tag()}.csv`,['Call ID','Service Date','Date Completed','Type','Overall','Driver','RT','KMI','Canceled','Cause','Issue Tags','Comment'],rs.map(r=>[r.c,r.sd,r.dc,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.x,r.cause,r.tg.join('; '),r.cm]));}
-function dlView(){csv(`${FAC_CODE}_Driver_Ranker_${tag()}.csv`,DH,dRows(currentRows()));}
+// ---------- formatted Excel export for the driver ranker
+function loadExcelJS(){
+  if(window.ExcelJS) return Promise.resolve();
+  return new Promise((res,rej)=>{const sc=document.createElement('script'); sc.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'; sc.onload=res; sc.onerror=()=>rej(new Error('Could not load the Excel library. Check the internet connection and try again.')); document.head.appendChild(sc);});
+}
+async function rankerWorkbook(list,title){
+  await loadExcelJS();
+  const wb=new ExcelJS.Workbook(); wb.creator='FirstLine';
+  const ws=wb.addWorksheet('Driver Ranker',{views:[{state:'frozen',ySplit:4,xSplit:3}],pageSetup:{orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0}});
+  const C=[['Rank',8],['Driver ID',12],['Driver',28],['Responses',13],['Tow',9],['Light',9],['Overall %',12],['Driver %',12],['RT %',10],['KMI %',10],['Tier',20],['Near-miss',12],['Lift (Overall pts)',13],['Driver-caused',12],['Dispatch-caused',12]];
+  const N=C.length, argb=h=>'FF'+h.replace('#','').toUpperCase();
+  const thin={style:'thin',color:{argb:'FFD9DEE6'}}, box={top:thin,left:thin,bottom:thin,right:thin};
+  C.forEach(([,w],i)=>ws.getColumn(i+1).width=w);
+  const fac=$('facTitle').textContent.replace(' — Driver Satisfaction','');
+  ws.mergeCells(1,1,1,N); Object.assign(ws.getCell(1,1),{value:`${fac} — ${title}`}); ws.getCell(1,1).font={bold:true,size:16,color:{argb:'FF13233A'}}; ws.getRow(1).height=26;
+  const scope=`${F.driver||'All drivers'} · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'Call dates':'Survey dates'} ${fmtD(F.from)} – ${fmtD(F.to)} · Min ${view.min} response${view.min>1?'s':''}${view.tier?' · Tier: '+view.tier:''} · Scoreable surveys only (canceled and AAA/Unknown left out) · Created ${new Date().toLocaleString('en-US',{month:'numeric',day:'numeric',year:'2-digit',hour:'numeric',minute:'2-digit'})}`;
+  ws.mergeCells(2,1,2,N); ws.getCell(2,1).value=scope; ws.getCell(2,1).font={italic:true,size:10,color:{argb:'FF4A5A70'}};
+  const hr=ws.getRow(4); hr.values=C.map(c=>c[0]); hr.height=32;
+  hr.eachCell(c=>{c.font={bold:true,color:{argb:'FFFFFFFF'}}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF13233A'}}; c.alignment={horizontal:'center',vertical:'middle',wrapText:true}; c.border=box;});
+  list.forEach((x,i)=>{
+    const r=ws.getRow(5+i);
+    const num=v=>/^\d+$/.test(String(v))?+v:v;
+    r.values=[i+1,num(x.id),num(x.name),x.n,x.tow,x.light,x.o,x.dr,x.rt,x.k,x.tier,x.liftS,x.lift||0,x.cDrv,x.cDisp];
+    const zebra=i%2?'FFF4F6F9':'FFFFFFFF';
+    r.eachCell({includeEmpty:true},(c,col)=>{c.border=box; c.alignment={vertical:'middle',horizontal:col===3?'left':'center'}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:zebra}};});
+    for(let col=7;col<=10;col++){ const c=r.getCell(col), v=c.value;
+      if(v==null){c.value='—'; continue;}
+      c.numFmt='0.0%'; c.font={bold:true,color:{argb:'FFFFFFFF'}}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:argb(TIER_CLR[tierOf(v)])}}; }
+    const t=r.getCell(11); t.font={bold:true,color:{argb:'FFFFFFFF'}}; t.fill={type:'pattern',pattern:'solid',fgColor:{argb:argb(TIER_CLR[x.tier])}};
+    r.getCell(13).numFmt='+0.0%;-0.0%;""';
+    [12,14,15].forEach(col=>r.getCell(col).numFmt='0;-0;""');
+    if(x.cDrv) r.getCell(14).font={bold:true,color:{argb:'FFB3261E'}};
+    r.getCell(3).font={bold:true}; r.getCell(3).alignment={vertical:'middle',horizontal:'left'};
+  });
+  const last=4+list.length;
+  ws.autoFilter={from:{row:4,column:1},to:{row:Math.max(last,4),column:N}};
+  let k=last+2;
+  ws.getCell(k,2).value='Tier key (Overall %)'; ws.getCell(k,2).font={bold:true};
+  TIERS.forEach(([t,m],i)=>{ const c=ws.getCell(k+1+i,2); ws.mergeCells(k+1+i,2,k+1+i,3);
+    c.value=`${t}   ${i===0?'100%':i===TIERS.length-1?'below 85.0%':pct(m)+' and up'}`;
+    c.font={bold:true,color:{argb:'FFFFFFFF'}}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:argb(TIER_CLR[t])}}; });
+  k+=TIERS.length+2;
+  ['Near-miss = Overall rated "Satisfied" instead of "Totally satisfied".','Lift = Overall points gained if those near-misses became "Totally satisfied".','Driver-caused / Dispatch-caused = surveys sorted by who caused the miss (from scores and comment wording).'].forEach((t,i)=>{ws.getCell(k+i,2).value=t; ws.getCell(k+i,2).font={size:10,color:{argb:'FF4A5A70'}};});
+  return wb;
+}
+async function saveWorkbook(wb,name){
+  const buf=await wb.xlsx.writeBuffer();
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'})); a.download=name; document.body.appendChild(a); a.click(); a.remove();
+}
+async function dlRanker(list,title,name){ try{ await saveWorkbook(await rankerWorkbook(list,title),name); }catch(e){ alert(e.message); } }
+function dlDrivers(){ dlRanker(driverStats(filtered()).sort((a,b)=>(b.o-a.o)||(b.n-a.n)),'Driver Summary',`${FAC_CODE}_Driver_Summary_${tag()}.xlsx`); }
+function dlView(){ dlRanker(currentRows(),'Driver Ranker',`${FAC_CODE}_Driver_Ranker_${tag()}.xlsx`); }
 function dlIssues(){csv(`${FAC_CODE}_Issues_${tag()}.csv`,['Cause','Issue Tags','Call ID','Driver ID','Driver Name','Service Date','Date Completed','Type','Overall','Driver','RT','KMI','Comment'],filtered(true).filter(r=>r.cause).map(r=>[r.cause,r.tg.join('; '),r.c,r.id,r.n,r.sd,r.dc,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.cm]));}
 function dlData(){
   if(!DB.rows.length){alert('Upload survey data first.');return;}
