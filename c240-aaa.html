@@ -323,7 +323,18 @@ function causeOf(r){
   const disp = DISPATCH_RX.test(cm) || ((LOW.has(r.rt)||LOW.has(r.k)) && r.d==='TS');
   return drv&&disp?'Both':drv?'Driver':disp?'Dispatch':'Unclear';
 }
-function enrich(r){ r.tg=tagsOf(r); r.cause=causeOf(r); return r; }
+// Driver roster (c240-drivers.csv) names drivers that come through the survey export as a bare number.
+const ROSTER_FILE = 'c240-drivers.csv';
+let ROSTER = {};
+async function loadRoster(){
+  try{
+    const res=await fetch(ROSTER_FILE,{cache:'no-store'}); if(!res.ok) return;
+    const aoa=XLSX.utils.sheet_to_json(XLSX.read((await res.text()).replace(/^﻿/,''),{type:'string',raw:true}).Sheets.Sheet1,{header:1,raw:false,defval:''});
+    for(const [id,n] of aoa.slice(1)){ const k=String(id).trim(); if(k&&String(n).trim()) ROSTER[k]=String(n).trim(); }
+  }catch(e){ console.warn('Driver roster not loaded',e); }
+}
+function applyRoster(r){ if(ROSTER[r.id] && (!r.n || r.n===r.id)) r.n=ROSTER[r.id]; return r; }
+function enrich(r){ applyRoster(r); r.tg=tagsOf(r); r.cause=causeOf(r); return r; }
 
 // ---------- parsing uploads
 const ANS = {'totally satisfied':'TS','satisfied':'S','neither satisfied nor dissatisfied':'N','neither':'N','dissatisfied':'D','totally dissatisfied':'TD'};
@@ -390,6 +401,7 @@ function clearPending(){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
 function readPending(){ try{ const s=localStorage.getItem(LS_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
 let pending=false, lastMerge=null;
 async function boot(){
+  await loadRoster();
   let server=null;
   try{
     const res=await fetch(DATA_FILE,{cache:'no-store'});
