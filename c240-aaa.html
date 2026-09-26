@@ -211,6 +211,19 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 </section>
 
 <section class="card">
+  <h2>Driver Ranker</h2>
+  <div class="sub">Current filter. Sorted by Overall %, then responses. Click a column to re-sort.</div>
+  <div class="filters">
+    <select id="minResp" aria-label="Minimum responses"><option value="1">1+ responses</option><option value="3">3+ responses</option><option value="5">5+ responses</option><option value="8">8+ responses</option></select>
+    <select id="tierSel" aria-label="Tier"><option value="">All tiers</option></select>
+    <button onclick="dlView()">⬇ Export This View</button>
+  </div>
+  <div class="tablewrap"><table id="ranker"></table></div>
+  <div class="note" id="tierDefs"></div>
+  <div class="note">Click any row to open that driver. Near-miss = Overall "Satisfied" (not Totally). Lift = Overall points gained if those became Totally satisfied.</div>
+</section>
+
+<section class="card">
   <h2>Overall Satisfaction Lift</h2>
   <div class="sub">If every "Satisfied" became "Totally Satisfied"</div>
   <div id="lift"></div>
@@ -237,18 +250,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   <div id="attention"></div>
 </section>
 
-<section class="card">
-  <h2>Driver Ranker</h2>
-  <div class="sub">Current filter. Sorted by Overall %, then responses. Click a column to re-sort.</div>
-  <div class="filters">
-    <select id="minResp" aria-label="Minimum responses"><option value="1">1+ responses</option><option value="3">3+ responses</option><option value="5">5+ responses</option><option value="8">8+ responses</option></select>
-    <select id="tierSel" aria-label="Tier"><option value="">All tiers</option></select>
-    <button onclick="dlView()">⬇ Export This View</button>
-  </div>
-  <div class="tablewrap"><table id="ranker"></table></div>
-  <div class="note" id="tierDefs"></div>
-  <div class="note">Click any row to open that driver. Near-miss = Overall "Satisfied" (not Totally). Lift = Overall points gained if those became Totally satisfied.</div>
-</section>
+
 
 <section class="card">
   <h2>Every Survey in This Filter</h2>
