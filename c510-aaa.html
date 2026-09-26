@@ -497,7 +497,7 @@ function initFilters(){
   $('dataLine').textContent = DB.rows.length ? `${DB.rows.length} surveys on file · calls ${fmtD(sd[0])} – ${fmtD(sd[sd.length-1])} · latest survey completed ${fmtD(dc[dc.length-1])} · data updated ${DB.updated?new Date(DB.updated).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}):'—'}` : 'No survey data loaded yet.';
   if(DB.facility) { const m=DB.facility.match(/^(C\d+)\s*-?\s*(.*)$/); $('facTitle').textContent=`${m?m[1]+' '+m[2]:DB.facility} — Overall Satisfaction by Driver`; document.title=$('facTitle').textContent+' Dashboard'; }
 }
-const PRESETS=[['3','Last 3 days of data'],['7','Last 7'],['14','Last 14'],['30','Last 30'],['mtd','Month to date'],['pm','Prior month'],['90','Last 90'],['all','All data']];
+const PRESETS=[['3','Last 3 days of data'],['7','Last 7'],['14','Last 14'],['30','Last 30'],['mtd','Month to date'],['pm','Prior month'],['90','Last 90'],['180','Last 180'],['all','All data']];
 function applyPreset(p,doRender=true){
   F.preset=p; const b=dataBounds(); if(!b.max){ if(doRender) render(); return; }
   if(p==='all'){F.from=b.min;F.to=b.max;}
