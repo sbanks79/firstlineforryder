@@ -219,7 +219,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   <h2>VPP Tier by Month</h2>
   <div class="sub">Station level by calendar month of service date. Ignores the driver and date filters, because VPP pays on the whole month.</div>
   <div class="tablewrap" style="max-height:none"><table class="vpptbl" id="vppTbl"></table></div>
-  <div class="note">Thresholds — Tow: L1 87%+, L2 86%, L3 85%. Light: L1 90%+, L2 89%, L3 88%. Scored on this export's Overall top-box. The bonus report uses Qualtrics "Overall – Including Cancel", so the official number can differ. The current month is still filling in; late surveys keep arriving for days after the call.</div>
+  <div class="note">Thresholds — Tow: L1 87%+, L2 86%, L3 85%. Light: L1 90%+, L2 89%, L3 88%. Counts <b>every</b> survey with an Overall answer, including canceled calls and surveys marked AAA, Unknown or DLY (like AAA's "Overall – Including Cancel"). The current month is still filling in; late surveys keep arriving for days after the call.</div>
 </section>
 
 <section class="card">
@@ -553,7 +553,8 @@ function cushion(type,ts,n){
   return s;
 }
 function renderVpp(){
-  const rows=DB.rows.filter(r=>isScoreable(r)&&r.sd);
+  // VPP counts every survey: canceled calls and AAA/Unknown/DLY included, like AAA's "Overall – Including Cancel".
+  const rows=DB.rows.filter(r=>r.sd);
   const months=[...new Set(rows.map(r=>r.sd.slice(0,7)))].sort().reverse();
   const cur=months[0];
   let h=`<thead><tr><th>Month</th><th>Tow n</th><th>Tow Overall</th><th>Tow VPP</th><th>Light n</th><th>Light Overall</th><th>Light VPP</th><th class="mtd">Cushion (current month)</th></tr></thead><tbody>`;
