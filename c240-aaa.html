@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>C240 Action Towing &amp; Road Service — Driver Satisfaction Dashboard</title>
+<title>C240 Action Towing &amp; Road Service — Overall Satisfaction by Driver Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -197,7 +197,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 <a class="back" href="https://firstlineroadwest.com/index.html">← Back to Call Taking Portal</a>
 <header class="top">
   <div>
-    <h1 id="facTitle">C240 Action Towing &amp; Road Service — Driver Satisfaction</h1>
+    <h1 id="facTitle">C240 Action Towing &amp; Road Service — Overall Satisfaction by Driver</h1>
     <p>AAA member surveys. Filter by driver and dates; every section below follows the filter. Click any driver name for a full profile and a printable coaching sheet.</p>
     <div class="dataline" id="dataLine">No survey data loaded yet.</div>
   </div>
@@ -495,7 +495,7 @@ function initFilters(){
   if(F.preset) applyPreset(F.preset,false);
   const sd=DB.rows.map(r=>r.sd).filter(Boolean).sort(), dc=DB.rows.map(r=>r.dc).filter(Boolean).sort();
   $('dataLine').textContent = DB.rows.length ? `${DB.rows.length} surveys on file · calls ${fmtD(sd[0])} – ${fmtD(sd[sd.length-1])} · latest survey completed ${fmtD(dc[dc.length-1])} · data updated ${DB.updated?new Date(DB.updated).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}):'—'}` : 'No survey data loaded yet.';
-  if(DB.facility) { const m=DB.facility.match(/^(C\d+)\s*-?\s*(.*)$/); $('facTitle').textContent=`${m?m[1]+' '+m[2]:DB.facility} — Driver Satisfaction`; document.title=$('facTitle').textContent+' Dashboard'; }
+  if(DB.facility) { const m=DB.facility.match(/^(C\d+)\s*-?\s*(.*)$/); $('facTitle').textContent=`${m?m[1]+' '+m[2]:DB.facility} — Overall Satisfaction by Driver`; document.title=$('facTitle').textContent+' Dashboard'; }
 }
 const PRESETS=[['3','Last 3 days of data'],['7','Last 7'],['14','Last 14'],['30','Last 30'],['mtd','Month to date'],['pm','Prior month'],['90','Last 90'],['all','All data']];
 function applyPreset(p,doRender=true){
@@ -684,7 +684,7 @@ $('coachBtn').onclick=()=>printCoach(dlgId);
 function printCoach(id){
   const inF=DB.rows.filter(r=>r.id===id&&inRange(r)&&(F.type==='all'||r.t===F.type)&&isScoreable(r));
   const s=driverStats(inF)[0]; const name=(DB.rows.find(r=>r.id===id)||{}).n||id;
-  const fac=$('facTitle').textContent.replace(' — Driver Satisfaction','');
+  const fac=$('facTitle').textContent.replace(' — Overall Satisfaction by Driver','');
   const bad=inF.filter(r=>r.cause==='Driver'||r.cause==='Both'||BAD.has(r.o));
   const disp=inF.filter(r=>r.cause==='Dispatch');
   const good=inF.filter(r=>r.o==='TS'&&r.cm&&r.cm.length>12&&!r.cause).slice(-4);
@@ -736,7 +736,7 @@ async function rankerWorkbook(list,title){
   const N=C.length, argb=h=>'FF'+h.replace('#','').toUpperCase();
   const thin={style:'thin',color:{argb:'FFD9DEE6'}}, box={top:thin,left:thin,bottom:thin,right:thin};
   C.forEach(([,w],i)=>ws.getColumn(i+1).width=w);
-  const fac=$('facTitle').textContent.replace(' — Driver Satisfaction','');
+  const fac=$('facTitle').textContent.replace(' — Overall Satisfaction by Driver','');
   ws.mergeCells(1,1,1,N); Object.assign(ws.getCell(1,1),{value:`${fac} — ${title}`}); ws.getCell(1,1).font={bold:true,size:16,color:{argb:'FF13233A'}}; ws.getRow(1).height=26;
   const scope=`${F.driver||'All drivers'} · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'Call dates':'Survey dates'} ${fmtD(F.from)} – ${fmtD(F.to)} · Min ${view.min} response${view.min>1?'s':''}${view.tier?' · Tier: '+view.tier:''} · Scoreable surveys only (canceled and AAA/Unknown left out) · Created ${new Date().toLocaleString('en-US',{month:'numeric',day:'numeric',year:'2-digit',hour:'numeric',minute:'2-digit'})}`;
   ws.mergeCells(2,1,2,N); ws.getCell(2,1).value=scope; ws.getCell(2,1).font={italic:true,size:10,color:{argb:'FF4A5A70'}};
