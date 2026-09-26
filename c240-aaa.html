@@ -210,19 +210,11 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   <div class="note">Thresholds — Tow: L1 87%+, L2 86%, L3 85%. Light: L1 90%+, L2 89%, L3 88%. Scored on this export's Overall top-box. The bonus report uses Qualtrics "Overall – Including Cancel", so the official number can differ. The current month is still filling in; late surveys keep arriving for days after the call.</div>
 </section>
 
-<div class="grid2">
-  <section class="card">
-    <h2>Top-Box % by Metric</h2>
-    <div class="sub">Tow vs Light Service for the current filter. Black tick = contract goal on Overall.</div>
-    <div class="legend"><span><i class="sw" style="background:var(--tow)"></i>Tow</span><span><i class="sw" style="background:var(--light)"></i>Light Service</span></div>
-    <div id="metricChart"></div>
-  </section>
-  <section class="card">
-    <h2>Overall Satisfaction Lift</h2>
-    <div class="sub">If every "Satisfied" became "Totally Satisfied"</div>
-    <div id="lift"></div>
-  </section>
-</div>
+<section class="card">
+  <h2>Overall Satisfaction Lift</h2>
+  <div class="sub">If every "Satisfied" became "Totally Satisfied"</div>
+  <div id="lift"></div>
+</section>
 
 <section class="card">
   <h2>Dispatch vs Driver</h2>
@@ -520,7 +512,7 @@ function render(){
   const b=dataBounds();
   const lagWarn = F.basis==='sd' && F.to && b.max && F.to>=addDays(b.max,-2) ? ` <span class="warn">· The last 2–3 days are still filling in as late surveys arrive.</span>`:'';
   $('scope').innerHTML=`Showing <b>${F.driver||'all drivers'}</b> · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'call dates':'survey dates'} <b>${fmtD(F.from)} – ${fmtD(F.to)}</b> · <b>${sc.length}</b> scoreable surveys (${all.length-sc.length} canceled/AAA/unknown)${lagWarn}`;
-  renderKpis(sc,all); renderVpp(); renderMetric(sc); renderLift(sc); renderSplit(sc); renderDist(sc); renderAttention(all); drawRanker(); renderList(all);
+  renderKpis(sc,all); renderVpp(); renderLift(sc); renderSplit(sc); renderDist(sc); renderAttention(all); drawRanker(); renderList(all);
 }
 function renderKpis(sc,all){
   const items=METRICS.map(([m,l])=>{const v=tb(sc,m); return `<div class="kpi ${v!=null&&v<.8?'soft':''}"><div class="v">${pct(v)}</div><div class="l">${l} top-box · n=${nOf(sc,m)}</div></div>`;});
@@ -549,15 +541,6 @@ function renderVpp(){
       <td class="mtd">${isCur?`Tow: ${T[3]||'—'}<br>Light: ${L[3]||'—'}`:''}</td></tr>`;
   }
   $('vppTbl').innerHTML=h+'</tbody>';
-}
-function renderMetric(sc){
-  const tow=sc.filter(r=>r.t==='Tow'), lt=sc.filter(r=>r.t==='Light'); let h='';
-  for(const [m,l] of METRICS){ const a=tb(tow,m), b=tb(lt,m);
-    h+=`<div class="metric"><div class="name">${l}</div><div class="bars">
-      <div class="b" title="Tow n=${nOf(tow,m)}"><span style="width:${(a??0)*100}%;background:var(--tow)"></span>${m==='o'?`<i class="goal" style="left:${GOAL.Tow*100}%"></i>`:''}<em>${pct(a)}</em></div>
-      <div class="b" title="Light n=${nOf(lt,m)}"><span style="width:${(b??0)*100}%;background:var(--light)"></span>${m==='o'?`<i class="goal" style="left:${GOAL.Light*100}%"></i>`:''}<em>${pct(b)}</em></div></div></div>`; }
-  h+=`<div class="note">Tow n=${tow.length}, Light n=${lt.length}. Top-Box = % rated "Totally satisfied", scoreable surveys only.</div>`;
-  $('metricChart').innerHTML=h;
 }
 function renderLift(sc){
   const ts=sc.filter(r=>r.o==='TS').length, s=sc.filter(r=>r.o==='S').length, n=ts+s;
