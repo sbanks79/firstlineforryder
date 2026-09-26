@@ -356,15 +356,15 @@ function causeOf(r){
 }
 // Driver roster (aaa-drivers.csv, shared by every station page) names drivers that come through the survey export as a bare number.
 const ROSTER_FILE = 'aaa-drivers.csv';
-let ROSTER = {};
+let ROSTER = {}; const ROSTER_ALWAYS = new Set();  // IDs whose roster name replaces the survey name too
 async function loadRoster(){
   try{
     const res=await fetch(ROSTER_FILE,{cache:'no-store'}); if(!res.ok) return;
     const aoa=XLSX.utils.sheet_to_json(XLSX.read((await res.text()).replace(/^﻿/,''),{type:'string',raw:true}).Sheets.Sheet1,{header:1,raw:false,defval:''});
-    for(const [id,n] of aoa.slice(1)){ const k=String(id).trim(); if(k&&String(n).trim()) ROSTER[k]=String(n).trim(); }
+    for(const [id,n,always] of aoa.slice(1)){ const k=String(id).trim(); if(k&&String(n).trim()){ ROSTER[k]=String(n).trim(); if(/^y/i.test(String(always||'').trim())) ROSTER_ALWAYS.add(k); } }
   }catch(e){ console.warn('Driver roster not loaded',e); }
 }
-function applyRoster(r){ if(ROSTER[r.id] && (!r.n || r.n===r.id)) r.n=ROSTER[r.id]; return r; }
+function applyRoster(r){ if(ROSTER[r.id] && (!r.n || r.n===r.id || ROSTER_ALWAYS.has(r.id))) r.n=ROSTER[r.id]; return r; }
 function enrich(r){ applyRoster(r); r.tg=tagsOf(r); r.cause=causeOf(r); return r; }
 
 // ---------- parsing uploads
