@@ -160,6 +160,19 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 .presets button.on{background:var(--tow);color:#fff;border-color:var(--tow);box-shadow:0 2px 6px rgba(31,92,153,.35)}
 .scope{background:#fff;border-radius:6px;padding:7px 10px;border:1px solid #C5D8EF}
 #lift,#split{overflow-x:auto}
+.grid2>*{min-width:0}
+/* navy header folds to one line on phones */
+#hdrToggle{display:none}
+@media(max-width:700px){
+  header.top{position:relative;padding:14px 14px}
+  header.top h1{font-size:24px;padding-right:84px}
+  #hdrToggle{display:inline-block;position:absolute;top:12px;right:12px;font-size:13px;padding:5px 11px;border-radius:999px}
+  header.top.collapsed{padding:10px 12px;flex-wrap:nowrap}
+  header.top.collapsed > div:first-child{min-width:0;flex:1}
+  header.top.collapsed h1{font-size:19px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  header.top.collapsed p,header.top.collapsed .dataline,header.top.collapsed .actions{display:none}
+  header.top.collapsed #hdrToggle{top:50%;transform:translateY(-50%)}
+}
 /* filter box folds up on phones */
 .toolbar .ttl{display:flex;align-items:center;flex-wrap:wrap;gap:0 8px}
 #tbToggle,#tbMini{display:none}
@@ -195,7 +208,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 <body>
 <div class="wrap">
 <a class="back" href="https://firstlineroadwest.com/index.html">← Back to Call Taking Portal</a>
-<header class="top">
+<header class="top" id="hdr">
   <div>
     <h1 id="facTitle">C542 College Oak Towing — Overall Satisfaction by Driver</h1>
     <p>AAA member surveys. Filter by driver and dates; every section below follows the filter. Click any driver name for a full profile and a printable coaching sheet.</p>
@@ -209,6 +222,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
     <button class="btn" onclick="dlIssues()">⬇ Issues (CSV)</button>
     <button class="btn" onclick="window.print()">🖨 Print</button>
   </div>
+  <button type="button" class="btn" id="hdrToggle" aria-expanded="true" onclick="toggleHeader()">Hide ▴</button>
 </header>
 <input type="file" id="file" accept=".xlsx,.xls,.csv" multiple hidden>
 <div id="banners"></div>
@@ -524,6 +538,12 @@ function toggleToolbar(collapse){
   $('tbToggle').textContent=collapse?'Show ▾':'Hide ▴'; $('tbToggle').setAttribute('aria-expanded',String(!collapse));
 }
 if(isPhone()) toggleToolbar(true);
+function toggleHeader(collapse){
+  const h=$('hdr'); if(collapse==null) collapse=!h.classList.contains('collapsed');
+  h.classList.toggle('collapsed',collapse);
+  $('hdrToggle').textContent=collapse?'More ▾':'Hide ▴'; $('hdrToggle').setAttribute('aria-expanded',String(!collapse));
+}
+if(isPhone()) toggleHeader(true);
 $('fFrom').onchange=e=>{F.from=e.target.value;F.preset='';render();};
 $('fTo').onchange=e=>{F.to=e.target.value;F.preset='';render();};
 $('fBasis').onchange=e=>{F.basis=e.target.value; if(F.preset) applyPreset(F.preset,false); render();};
