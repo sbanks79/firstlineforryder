@@ -539,7 +539,7 @@ function driverStats(rows){
     const c=k=>d.rows.filter(r=>r.cause===k).length;
     const nO=nOf(d.rows,'o');
     return {...d,n:d.rows.length,o,dr:tb(d.rows,'d'),rt:tb(d.rows,'rt'),k:tb(d.rows,'k'),tier:tierOf(o??0),
-      tow:d.rows.filter(r=>r.t==='Tow').length,light:d.rows.filter(r=>r.t==='Light').length,liftS:s,liftCur:(ts+s)?ts/(ts+s):null,
+      tow:d.rows.filter(r=>r.t==='Tow').length,light:d.rows.filter(r=>r.t==='Light').length,liftS:s,
       lift:nO?s/nO:null,other:nO-ts-s,
       cDrv:c('Driver')+c('Both'),cDisp:c('Dispatch')+c('Both')};
   });
@@ -598,13 +598,14 @@ function renderVpp(){
   $('vppTbl').innerHTML=h+'</tbody>';
 }
 function renderLift(sc){
-  const ts=sc.filter(r=>r.o==='TS').length, s=sc.filter(r=>r.o==='S').length, n=ts+s;
+  // Overall only: every survey with an Overall answer counts in the base, including Neither/Dissatisfied.
+  const n=nOf(sc,'o'), ts=sc.filter(r=>r.o==='TS').length, s=sc.filter(r=>r.o==='S').length, other=n-ts-s;
   if(!n){$('lift').innerHTML='<div class="empty">No Overall scores in this filter.</div>';return;}
-  const cur=ts/n; const drv=driverStats(sc).filter(d=>d.liftS>0).sort((a,b)=>b.liftS-a.liftS||b.n-a.n);
-  let h=`<div class="liftbig"><span class="v">${pct(cur)}</span><span class="arrow">→</span><span class="v" style="color:var(--good)">100.0%</span><span style="font-weight:700;color:var(--good)">+${pct(1-cur)}</span></div>
-  <div class="note" style="margin-top:4px">${ts} totally satisfied + ${s} satisfied. Neutral and dissatisfied are excluded from the lift math.</div>`;
-  if(drv.length){ h+=`<table style="margin-top:12px"><thead><tr><th>Driver</th><th class="num">Satisfied</th><th class="num">Current</th><th class="num">Lift</th></tr></thead><tbody>`;
-    for(const d of drv) h+=`<tr><td><button class="dn" onclick="openDriver('${jsq(d.id)}')">${esc(d.name)}</button></td><td class="num">${d.liftS}</td><td class="num">${pct(d.liftCur)}</td><td class="num"><b>+${pct(1-d.liftCur)}</b></td></tr>`;
+  const cur=ts/n, after=(ts+s)/n; const drv=driverStats(sc).filter(d=>d.liftS>0).sort((a,b)=>b.liftS-a.liftS||b.lift-a.lift);
+  let h=`<div class="liftbig"><span class="v">${pct(cur)}</span><span class="arrow">→</span><span class="v" style="color:var(--good)">${pct(after)}</span><span style="font-weight:700;color:var(--good)">+${pct(after-cur)}</span></div>
+  <div class="note" style="margin-top:4px">Overall Satisfaction only. ${n} surveys: ${ts} Totally satisfied, ${s} Satisfied, ${other} Neither or Dissatisfied. Turning the ${s} Satisfied into Totally satisfied raises Overall to ${pct(after)}; the ${other} Neither/Dissatisfied still count against it.</div>`;
+  if(drv.length){ h+=`<table style="margin-top:12px"><thead><tr><th>Driver</th><th class="num">Satisfied</th><th class="num">Overall now</th><th class="num">If converted</th><th class="num">Lift</th></tr></thead><tbody>`;
+    for(const d of drv) h+=`<tr><td><button class="dn" onclick="openDriver('${jsq(d.id)}')">${esc(d.name)}</button></td><td class="num">${d.liftS}</td><td class="num">${pct(d.o)}</td><td class="num">${pct(d.o+d.lift)}</td><td class="num"><b>+${pct(d.lift)}</b></td></tr>`;
     h+='</tbody></table>'; }
   $('lift').innerHTML=h;
 }
@@ -672,7 +673,7 @@ function openDriver(id){
     h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button onclick="dlDriver('${jsq(id)}')">⬇ Download ${esc(name)}'s responses (CSV)</button><button onclick="printCoach('${jsq(id)}')">🖨 Coaching sheet</button></div>`;
     const split=['Tow','Light'].map(t=>{const r=sc.filter(x=>x.t===t); return r.length?`<tr><td>${t==='Light'?'Light Service':'Tow'}</td><td class="num">${r.length}</td>${METRICS.map(([m])=>`<td class="num ${pcls(tb(r,m))}">${pct(tb(r,m))}</td>`).join('')}</tr>`:''}).join('');
     h+=`<table style="margin-bottom:12px"><thead><tr><th>Type</th><th class="num">Resp</th><th class="num">Overall</th><th class="num">Driver</th><th class="num">RT</th><th class="num">KMI</th></tr></thead><tbody>${split}</tbody></table>`;
-    if(s.liftS) h+=`<p class="note">${s.liftS} "Satisfied" Overall survey${s.liftS>1?'s':''} in this window. Converting ${s.liftS>1?'them':'it'} takes this driver from ${pct(s.liftCur)} to 100%.</p>`;
+    if(s.liftS) h+=`<p class="note">${s.liftS} "Satisfied" Overall survey${s.liftS>1?'s':''} in this window. Converting ${s.liftS>1?'them':'it'} takes this driver's Overall from ${pct(s.o)} to ${pct(s.o+s.lift)}${s.other?` (${s.other} Neither/Dissatisfied still count against it)`:''}.</p>`;
   } else h+='<div class="empty">No scoreable surveys for this driver in the current filter. Widen the dates.</div>';
   const sevOrd={bad:0,mid:1,good:2};
   h+=`<h3 style="margin:14px 0 4px;font-size:16px">Every survey in this window (${inF.length}), worst first</h3>`+[...inF].sort((a,b)=>sevOrd[sev(a)]-sevOrd[sev(b)]||(b[F.basis]||'').localeCompare(a[F.basis]||'')).map(r=>surveyCard(r,false)).join('');
