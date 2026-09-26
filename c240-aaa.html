@@ -148,6 +148,21 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 #coachSheet .sig div{border-top:1px solid #333;padding-top:3px;font-size:11px}
 
 .toolbar input[type=search]{min-width:260px}
+/* driver view, carried over from the first version */
+.pct{font-weight:700;color:#fff;text-align:center;border-radius:4px;padding:3px 6px;display:inline-block;min-width:58px;font-variant-numeric:tabular-nums}
+#ranker tbody tr{cursor:pointer}
+#ranker tbody tr:hover{background:#F0F4FB}
+.resp.bad{border-left:4px solid var(--bad);background:#FFF7F6;padding-left:10px;border-radius:0 6px 6px 0;margin:6px 0}
+.resp.mid{border-left:4px solid var(--warn);background:#FFFBF2;padding-left:10px;border-radius:0 6px 6px 0;margin:6px 0}
+.resp.good{border-left:4px solid var(--good);padding-left:10px;margin:6px 0}
+.mk.five{grid-template-columns:repeat(5,1fr)}
+.mk div.tc{border-top:4px solid #999}
+.cnt{display:grid;grid-template-columns:120px repeat(5,1fr);gap:4px;font-size:13px;text-align:center;margin:4px 0}
+.cnt div{padding:6px 4px;background:#F6F7F9;border-radius:4px}
+.cnt .h{font-weight:700;background:#EEF0F4;font-size:12px}
+.cnt .l{text-align:left;font-weight:700}
+.cnt .z{color:#B8BFC9}
+@media(max-width:600px){.mk.five{grid-template-columns:repeat(2,1fr)}.cnt{grid-template-columns:80px repeat(5,1fr);font-size:12px}}
 </style>
 </head>
 <body>
@@ -240,6 +255,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   </div>
   <div class="tablewrap"><table id="ranker"></table></div>
   <div class="note" id="tierDefs"></div>
+  <div class="note">Click any row to open that driver. Near-miss = Overall "Satisfied" (not Totally). Lift = Overall points gained if those became Totally satisfied.</div>
 </section>
 
 <section class="card">
@@ -283,6 +299,9 @@ function tb(rows,m){const s=rows.filter(r=>r[m]); return s.length? s.filter(r=>r
 function nOf(rows,m){return rows.filter(r=>r[m]).length;}
 function tierOf(p){for(const [t,min] of TIERS) if(p>=min-1e-9) return t; return 'CRITICAL';}
 function tierPill(t){return `<span class="pill t-${t.split(' ')[0]}">${t}</span>`;}
+const TIER_CLR={'TOP PERFORMER':'#1F3864','HIGH PERFORMER':'#375623','AVERAGE':'#BF8F00','BELOW AVERAGE':'#C55A11','NEEDS ATTENTION':'#C00000','CRITICAL':'#7F0000'};
+function pctPill(v){return v==null?'<span class="pct" style="background:#999">—</span>':`<span class="pct" style="background:${TIER_CLR[tierOf(v)]}">${pct(v)}</span>`;}
+function sev(r){ if(LOW.has(r.o)||r.cause==='Driver'||r.cause==='Both') return 'bad'; if(['o','d','rt','k'].some(m=>r[m]&&r[m]!=='TS')) return 'mid'; return 'good'; }
 function pcls(v){return v==null?'':v>=0.9999?'p100':v<.85?'plow':'';}
 function vppLevel(type,p){for(const [min,l] of VPP[type]) if(p>=min-1e-9) return l; return 'No tier';}
 function lvlPill(l){const c={'Level 1':'L1','Level 2':'L2','Level 3':'L3','No tier':'L0'}[l]||'NA'; return `<span class="lvl ${c}">${l}</span>`;}
@@ -474,8 +493,10 @@ function driverStats(rows){
   return Object.values(m).map(d=>{
     const o=tb(d.rows,'o'); const ts=d.rows.filter(r=>r.o==='TS').length, s=d.rows.filter(r=>r.o==='S').length;
     const c=k=>d.rows.filter(r=>r.cause===k).length;
+    const nO=nOf(d.rows,'o');
     return {...d,n:d.rows.length,o,dr:tb(d.rows,'d'),rt:tb(d.rows,'rt'),k:tb(d.rows,'k'),tier:tierOf(o??0),
       tow:d.rows.filter(r=>r.t==='Tow').length,light:d.rows.filter(r=>r.t==='Light').length,liftS:s,liftCur:(ts+s)?ts/(ts+s):null,
+      lift:nO?s/nO:null,other:nO-ts-s,
       cDrv:c('Driver')+c('Both'),cDisp:c('Dispatch')+c('Both')};
   });
 }
@@ -485,7 +506,7 @@ function tagChips(r){return r.tg.map(t=>`<span class="tag ${t!=='Partial Sat'?'b
 function surveyCard(r,showDriver=true){
   const who = !showDriver?'':EXCL.has(r.id.toUpperCase())?` · <b>${esc(r.n)}</b> (no driver attached)`:` · <button class="dn" onclick="openDriver('${jsq(r.id)}')">${esc(r.n)}</button>`;
   const fresh = r.up && r.up===latestUpload() && !allFresh() ? ' · <b style="color:var(--tow)">new in last upload</b>':'';
-  return `<div class="resp"><div class="meta">Call date ${fmtD(r.sd)} · survey ${fmtD(r.dc)} · Call ${esc(r.c)} · ${r.t==='Light'?'Light Service':'Tow'}${who}${r.x==='Y'?' · canceled (not scored)':''}${fresh}</div>
+  return `<div class="resp ${sev(r)}"><div class="meta">Call date ${fmtD(r.sd)} · survey ${fmtD(r.dc)} · Call ${esc(r.c)} · ${r.t==='Light'?'Light Service':'Tow'}${who}${r.x==='Y'?' · canceled (not scored)':''}${fresh}</div>
     <div style="margin:4px 0">${scoreChips(r)} ${causePill(r.cause)}${tagChips(r)}</div>${r.cm?`<div class="quote">"${esc(r.cm)}"</div>`:''}</div>`;
 }
 function allFresh(){ const l=latestUpload(); return DB.rows.every(r=>r.up===l); }
@@ -587,10 +608,10 @@ function currentRows(){
 }
 function drawRanker(){
   const d=currentRows();
-  const cols=[['#',null],['Driver','name'],['Responses','n'],['Overall %','o'],['Driver %','dr'],['RT %','rt'],['KMI %','k'],['Tier',null],['Driver-caused','cDrv'],['Dispatch-caused','cDisp'],['Tow / Light',null]];
+  const cols=[['#',null],['Driver','name'],['Responses','n'],['Overall %','o'],['Driver %','dr'],['RT %','rt'],['KMI %','k'],['Near-miss','liftS'],['Lift','lift'],['Tier',null],['Driver-caused','cDrv'],['Dispatch-caused','cDisp'],['Tow / Light',null]];
   let h='<thead><tr>'+cols.map(([l,k])=>`<th class="${k&&k!=='name'?'num':''}" ${k?`onclick="sortBy('${k}')"`:''}>${l}${view.sort===k?(view.dir<0?' ▾':' ▴'):''}</th>`).join('')+'</tr></thead><tbody>';
-  d.forEach((x,i)=>{h+=`<tr><td>${i+1}</td><td><button class="dn" onclick="openDriver('${jsq(x.id)}')">${esc(x.name)}</button></td><td class="num">${x.n}</td><td class="num ${pcls(x.o)}">${pct(x.o)}</td><td class="num ${pcls(x.dr)}">${pct(x.dr)}</td><td class="num ${pcls(x.rt)}">${pct(x.rt)}</td><td class="num ${pcls(x.k)}">${pct(x.k)}</td><td>${tierPill(x.tier)}</td><td class="num ${x.cDrv?'plow':''}">${x.cDrv}</td><td class="num">${x.cDisp}</td><td>${x.tow} / ${x.light}</td></tr>`;});
-  if(!d.length) h+='<tr><td colspan="11">No drivers match. Lower the minimum responses, clear the tier, or widen the dates.</td></tr>';
+  d.forEach((x,i)=>{h+=`<tr onclick="openDriver('${jsq(x.id)}')"><td>${i+1}</td><td><button class="dn" onclick="event.stopPropagation();openDriver('${jsq(x.id)}')">${esc(x.name)}</button></td><td class="num">${x.n}</td><td class="num">${pctPill(x.o)}</td><td class="num">${pctPill(x.dr)}</td><td class="num">${pctPill(x.rt)}</td><td class="num">${pctPill(x.k)}</td><td class="num">${x.liftS||''}</td><td class="num">${x.lift?'+'+(x.lift*100).toFixed(1)+' pts':''}</td><td>${tierPill(x.tier)}</td><td class="num ${x.cDrv?'plow':''}">${x.cDrv}</td><td class="num">${x.cDisp}</td><td>${x.tow} / ${x.light}</td></tr>`;});
+  if(!d.length) h+='<tr><td colspan="13">No drivers match. Lower the minimum responses, clear the tier, or widen the dates.</td></tr>';
   $('ranker').innerHTML=h+'</tbody>';
 }
 function sortBy(k){ if(view.sort===k) view.dir*=-1; else {view.sort=k; view.dir=k==='name'?1:-1;} drawRanker(); }
@@ -605,12 +626,18 @@ function openDriver(id){
   $('dlgSub').textContent=`Driver ID ${id} · ${fmtD(F.from)} – ${fmtD(F.to)} · ${inF.length} surveys (${sc.length} scoreable)${rank?` · rank ${rank} of ${allD.length}`:''}`;
   let h='';
   if(s){
-    h+=`<p>${tierPill(s.tier)} ${s.cDrv||s.cDisp?`<span style="font-size:14px;margin-left:8px">Driver-caused: <b>${s.cDrv}</b> · Dispatch-caused: <b>${s.cDisp}</b></span>`:''}</p><div class="mk">${[['o','Overall'],['dr','Driver'],['rt','Response Time'],['k','Kept Informed']].map(([k,l])=>`<div><b class="${pcls(s[k])}">${pct(s[k])}</b><span>${l}</span></div>`).join('')}</div>`;
+    h+=`<p>${tierPill(s.tier)} <span style="font-size:14px;margin-left:8px">${s.tow} Tow / ${s.light} Light · ${inF.length-sc.length} canceled${s.cDrv||s.cDisp?` · Driver-caused: <b>${s.cDrv}</b> · Dispatch-caused: <b>${s.cDisp}</b>`:''}</span></p>`;
+    h+=`<div class="mk five">${[['o','o','Overall'],['dr','d','Driver'],['rt','rt','Response Time'],['k','k','Kept Informed']].map(([k,m,l])=>`<div class="tc" style="border-top-color:${s[k]==null?'#999':TIER_CLR[tierOf(s[k])]}"><b>${pct(s[k])}</b><span>${l}<br>${sc.filter(r=>r[m]==='TS').length} of ${nOf(sc,m)} Totally</span></div>`).join('')}
+      <div class="tc" style="border-top-color:#BF8F00"><b>${s.lift?'+'+(s.lift*100).toFixed(1):'—'}</b><span>Lift pts if Satisfied → Totally<br>${s.liftS} Satisfied · ${s.other} neutral/dissat</span></div></div>`;
+    h+=`<div class="cnt"><div class="h l">Metric</div>${['TS','S','N','D','TD'].map(c=>`<div class="h">${LBL[c]}</div>`).join('')}</div>`+
+      METRICS.map(([m,l])=>`<div class="cnt"><div class="l">${l}</div>${['TS','S','N','D','TD'].map(c=>{const n=sc.filter(r=>r[m]===c).length; return `<div class="${n?'':'z'}" style="${n&&LOW.has(c)?'color:var(--bad);font-weight:700':''}">${n}</div>`;}).join('')}</div>`).join('');
+    h+=`<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button onclick="dlDriver('${jsq(id)}')">⬇ Download ${esc(name)}'s responses (CSV)</button><button onclick="printCoach('${jsq(id)}')">🖨 Coaching sheet</button></div>`;
     const split=['Tow','Light'].map(t=>{const r=sc.filter(x=>x.t===t); return r.length?`<tr><td>${t==='Light'?'Light Service':'Tow'}</td><td class="num">${r.length}</td>${METRICS.map(([m])=>`<td class="num ${pcls(tb(r,m))}">${pct(tb(r,m))}</td>`).join('')}</tr>`:''}).join('');
     h+=`<table style="margin-bottom:12px"><thead><tr><th>Type</th><th class="num">Resp</th><th class="num">Overall</th><th class="num">Driver</th><th class="num">RT</th><th class="num">KMI</th></tr></thead><tbody>${split}</tbody></table>`;
     if(s.liftS) h+=`<p class="note">${s.liftS} "Satisfied" Overall survey${s.liftS>1?'s':''} in this window. Converting ${s.liftS>1?'them':'it'} takes this driver from ${pct(s.liftCur)} to 100%.</p>`;
   } else h+='<div class="empty">No scoreable surveys for this driver in the current filter. Widen the dates.</div>';
-  h+='<h3 style="margin:14px 0 4px;font-size:16px">Every survey in this window</h3>'+[...inF].sort((a,b)=>(b[F.basis]||'').localeCompare(a[F.basis]||'')).map(r=>surveyCard(r,false)).join('');
+  const sevOrd={bad:0,mid:1,good:2};
+  h+=`<h3 style="margin:14px 0 4px;font-size:16px">Every survey in this window (${inF.length}), worst first</h3>`+[...inF].sort((a,b)=>sevOrd[sev(a)]-sevOrd[sev(b)]||(b[F.basis]||'').localeCompare(a[F.basis]||'')).map(r=>surveyCard(r,false)).join('');
   $('dlgBody').innerHTML=h; dlg.showModal();
 }
 dlg.addEventListener('click',e=>{if(e.target===dlg) dlg.close();});
@@ -658,6 +685,8 @@ function dlAll(){csv(`${FAC_CODE}_Responses_${tag()}.csv`,['Driver ID','Driver N
 const DH=['Driver ID','Name','Responses','Tow','Light','Overall %','Driver %','RT %','KMI %','Tier','Driver-caused','Dispatch-caused','Satisfied (lift)'];
 const dRows=d=>d.map(x=>[x.id,x.name,x.n,x.tow,x.light,P(x.o),P(x.dr),P(x.rt),P(x.k),x.tier,x.cDrv,x.cDisp,x.liftS]);
 function dlDrivers(){csv(`${FAC_CODE}_Driver_Summary_${tag()}.csv`,DH,dRows(driverStats(filtered()).sort((a,b)=>(b.o-a.o)||(b.n-a.n))));}
+function dlDriver(id){const rs=DB.rows.filter(r=>r.id===id&&inRange(r)&&(F.type==='all'||r.t===F.type)); const nm=((rs[0]||{}).n||id).replace(/[^\w]+/g,'_');
+  csv(`${FAC_CODE}_${nm}_${tag()}.csv`,['Call ID','Service Date','Date Completed','Type','Overall','Driver','RT','KMI','Canceled','Cause','Issue Tags','Comment'],rs.map(r=>[r.c,r.sd,r.dc,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.x,r.cause,r.tg.join('; '),r.cm]));}
 function dlView(){csv(`${FAC_CODE}_Driver_Ranker_${tag()}.csv`,DH,dRows(currentRows()));}
 function dlIssues(){csv(`${FAC_CODE}_Issues_${tag()}.csv`,['Cause','Issue Tags','Call ID','Driver ID','Driver Name','Service Date','Date Completed','Type','Overall','Driver','RT','KMI','Comment'],filtered(true).filter(r=>r.cause).map(r=>[r.cause,r.tg.join('; '),r.c,r.id,r.n,r.sd,r.dc,r.t,LBL[r.o],LBL[r.d],LBL[r.rt],LBL[r.k],r.cm]));}
 function dlData(){
