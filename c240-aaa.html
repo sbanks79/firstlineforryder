@@ -151,7 +151,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 /* make the filter bar stand out */
 .toolbar{background:#EAF2FC;border:2px solid var(--tow);border-left-width:8px;box-shadow:0 4px 14px rgba(31,92,153,.18)}
 .toolbar .ttl{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;color:var(--tow);margin:0 0 8px;letter-spacing:.3px}
-.toolbar .ttl span{font-family:Barlow,sans-serif;font-size:13px;font-weight:500;color:var(--ink2);margin-left:8px;letter-spacing:0}
+.toolbar .ttl .desc{font-family:Barlow,sans-serif;font-size:13px;font-weight:500;color:var(--ink2);margin-left:8px;letter-spacing:0}
 .toolbar label{color:var(--ink)}
 .toolbar input[type=date],.toolbar input[type=search],.toolbar select{border-color:#9DBBE0}
 .presets{gap:8px;margin-top:12px}
@@ -159,6 +159,22 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 .presets button:hover{background:#D4E5F8}
 .presets button.on{background:var(--tow);color:#fff;border-color:var(--tow);box-shadow:0 2px 6px rgba(31,92,153,.35)}
 .scope{background:#fff;border-radius:6px;padding:7px 10px;border:1px solid #C5D8EF}
+#lift,#split{overflow-x:auto}
+/* filter box folds up on phones */
+.toolbar .ttl{display:flex;align-items:center;flex-wrap:wrap;gap:0 8px}
+#tbToggle,#tbMini{display:none}
+@media(max-width:700px){
+  .toolbar{padding:10px 12px;border-left-width:6px}
+  .toolbar .ttl{margin:0}
+  .toolbar .ttl .desc{display:none}
+  #tbToggle{display:inline-block;margin-left:auto;font-size:14px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--tow);color:#fff;background:var(--tow)}
+  .toolbar.collapsed #tbBody{display:none}
+  .toolbar.collapsed #tbMini{display:block;margin-top:6px;font-size:13px;color:var(--ink);cursor:pointer}
+  .toolbar #tbBody{margin-top:8px}
+  .toolbar .row label{flex:1 1 45%}
+  .toolbar input[type=search]{min-width:0;width:100%}
+  .presets button{font-size:13px;padding:6px 11px}
+}
 /* driver view, carried over from the first version */
 .pct{font-weight:700;color:#fff;text-align:center;border-radius:4px;padding:3px 6px;display:inline-block;min-width:58px;font-variant-numeric:tabular-nums}
 #ranker tbody tr{cursor:pointer}
@@ -198,8 +214,10 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 <div id="banners"></div>
 
 <div id="app">
-<div class="toolbar noprint">
-  <div class="ttl">🔎 Filter surveys<span>Pick a date range, driver, or service type. Everything below updates.</span></div>
+<div class="toolbar noprint" id="toolbar">
+  <div class="ttl"><span class="tt">🔎 Filter surveys</span><span class="desc">Pick a date range, driver, or service type. Everything below updates.</span><button type="button" id="tbToggle" aria-expanded="true" aria-controls="tbBody" onclick="toggleToolbar()">Hide ▴</button></div>
+  <div id="tbMini" onclick="toggleToolbar(false)"></div>
+  <div id="tbBody">
   <div class="row">
     <label>Driver<input type="search" id="fDriver" list="driverList" placeholder="All drivers — type a name or ID"></label>
     <datalist id="driverList"></datalist>
@@ -211,6 +229,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   </div>
   <div class="presets" id="presets"></div>
   <div class="scope" id="scope"></div>
+  </div>
 </div>
 
 <div class="kpis" id="kpis"></div>
@@ -489,7 +508,14 @@ function applyPreset(p,doRender=true){
   if(doRender) render();
 }
 $('presets').innerHTML=PRESETS.map(([k,l])=>`<button data-p="${k}">${l}</button>`).join('');
-$('presets').addEventListener('click',e=>{const p=e.target.dataset.p; if(p) applyPreset(p);});
+$('presets').addEventListener('click',e=>{const p=e.target.dataset.p; if(p){ applyPreset(p); if(isPhone()) toggleToolbar(true); }});
+const isPhone=()=>window.matchMedia('(max-width:700px)').matches;
+function toggleToolbar(collapse){
+  const tb=$('toolbar'); if(collapse==null) collapse=!tb.classList.contains('collapsed');
+  tb.classList.toggle('collapsed',collapse);
+  $('tbToggle').textContent=collapse?'Show ▾':'Hide ▴'; $('tbToggle').setAttribute('aria-expanded',String(!collapse));
+}
+if(isPhone()) toggleToolbar(true);
 $('fFrom').onchange=e=>{F.from=e.target.value;F.preset='';render();};
 $('fTo').onchange=e=>{F.to=e.target.value;F.preset='';render();};
 $('fBasis').onchange=e=>{F.basis=e.target.value; if(F.preset) applyPreset(F.preset,false); render();};
@@ -538,6 +564,8 @@ function render(){
   const b=dataBounds();
   const lagWarn = F.basis==='sd' && F.to && b.max && F.to>=addDays(b.max,-2) ? ` <span class="warn">· The last 2–3 days are still filling in as late surveys arrive.</span>`:'';
   $('scope').innerHTML=`Showing <b>${F.driver||'all drivers'}</b> · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'call dates':'survey dates'} <b>${fmtD(F.from)} – ${fmtD(F.to)}</b> · <b>${sc.length}</b> scoreable surveys (${all.length-sc.length} canceled/AAA/unknown)${lagWarn}`;
+  const pl=(PRESETS.find(p=>p[0]===F.preset)||[])[1];
+  $('tbMini').innerHTML=`<b>${pl||fmtD(F.from)+' – '+fmtD(F.to)}</b> · ${esc(F.driver)||'All drivers'} · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light':'Tow'} · <b>${sc.length}</b> surveys`;
   renderKpis(sc,all); renderVpp(); renderLift(sc); renderSplit(sc); renderDist(sc); renderAttention(all); drawRanker(); renderList(all);
 }
 function renderKpis(sc,all){
