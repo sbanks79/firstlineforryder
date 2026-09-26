@@ -148,6 +148,17 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 #coachSheet .sig div{border-top:1px solid #333;padding-top:3px;font-size:11px}
 
 .toolbar input[type=search]{min-width:260px}
+/* make the filter bar stand out */
+.toolbar{background:#EAF2FC;border:2px solid var(--tow);border-left-width:8px;box-shadow:0 4px 14px rgba(31,92,153,.18)}
+.toolbar .ttl{font-family:"Barlow Condensed",sans-serif;font-size:20px;font-weight:700;color:var(--tow);margin:0 0 8px;letter-spacing:.3px}
+.toolbar .ttl span{font-family:Barlow,sans-serif;font-size:13px;font-weight:500;color:var(--ink2);margin-left:8px;letter-spacing:0}
+.toolbar label{color:var(--ink)}
+.toolbar input[type=date],.toolbar input[type=search],.toolbar select{border-color:#9DBBE0}
+.presets{gap:8px;margin-top:12px}
+.presets button{font-size:14px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--tow);color:var(--tow);background:#fff}
+.presets button:hover{background:#D4E5F8}
+.presets button.on{background:var(--tow);color:#fff;border-color:var(--tow);box-shadow:0 2px 6px rgba(31,92,153,.35)}
+.scope{background:#fff;border-radius:6px;padding:7px 10px;border:1px solid #C5D8EF}
 /* driver view, carried over from the first version */
 .pct{font-weight:700;color:#fff;text-align:center;border-radius:4px;padding:3px 6px;display:inline-block;min-width:58px;font-variant-numeric:tabular-nums}
 #ranker tbody tr{cursor:pointer}
@@ -188,6 +199,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 
 <div id="app">
 <div class="toolbar noprint">
+  <div class="ttl">🔎 Filter surveys<span>Pick a date range, driver, or service type. Everything below updates.</span></div>
   <div class="row">
     <label>Driver<input type="search" id="fDriver" list="driverList" placeholder="All drivers — type a name or ID"></label>
     <datalist id="driverList"></datalist>
