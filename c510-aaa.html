@@ -119,6 +119,8 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 .banner.info{background:#E8F1FB;border:1px solid #B8D2EE}
 .banner.ok{background:#E6F4EA;border:1px solid #A9D5B6}
 .dataline{font-size:13px;color:#C8D3E2;margin-top:8px}
+.uploadnote{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:3px 11px}
+.uploadnote:empty{display:none}
 .vpptbl td,.vpptbl th{text-align:center}.vpptbl td:first-child,.vpptbl th:first-child{text-align:left}
 .lvl{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px}
 .lvl.L1{background:#DDF0E3;color:#1D5A37}.lvl.L2{background:#FFF1D6;color:#7A4B00}.lvl.L3{background:#FFE2CC;color:#8A3B00}.lvl.L0{background:#FAD9D6;color:#8E1B14}.lvl.NA{background:#EEF1F5;color:#6A7686}
@@ -213,6 +215,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
     <h1 id="facTitle">C510 Ellison's Tow — Overall Satisfaction by Driver</h1>
     <p>AAA member surveys. Filter by driver and dates; every section below follows the filter. Click any driver name for a full profile and a printable coaching sheet.</p>
     <div class="dataline" id="dataLine">No survey data loaded yet.</div>
+    <div class="uploadnote" id="uploadNote"></div>
   </div>
   <div class="actions">
     <button class="btn" onclick="document.getElementById('file').click()">⬆ Upload surveys</button>
@@ -452,7 +455,20 @@ function today(){ return new Date().toISOString().slice(0,10); }
 function savePending(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }catch(e){} }
 function clearPending(){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
 function readPending(){ try{ const s=localStorage.getItem(LS_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
-let pending=false, lastMerge=null;
+let pending=false, lastMerge=null, PUBLISHED=null;
+const GH_COMMITS = `https://api.github.com/repos/sbanks79/firstlineforryder/commits?path=${DATA_FILE}&per_page=1`;
+async function loadPublished(lm){
+  try{ const res=await fetch(GH_COMMITS); if(res.ok){ const j=await res.json(); const d=j&&j[0]&&j[0].commit&&j[0].commit.committer&&j[0].commit.committer.date; if(d) return d; } }catch(e){}
+  return lm ? new Date(lm).toISOString() : null;
+}
+function fmtPT(iso){
+  const d=new Date(iso); if(isNaN(d)) return '';
+  return d.toLocaleString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'}).replace(/, (\d{1,2}:\d{2})/,' at $1');
+}
+function renderUploadNote(){
+  const el=$('uploadNote'); if(!el) return;
+  el.textContent = PUBLISHED ? `🕒 Latest upload: ${fmtPT(PUBLISHED)}` : '';
+}
 async function boot(){
   await loadRoster();
   let server=null;
@@ -464,6 +480,7 @@ async function boot(){
       const rows=parseWorkbook(wb).rows;
       const lm=res.headers.get('Last-Modified');
       const maxUp=rows.map(r=>r.up).filter(Boolean).sort().pop();
+      PUBLISHED=await loadPublished(lm);
       server={facility:(rows.find(r=>r.fac)||{}).fac||'',updated:lm?new Date(lm).toISOString():(maxUp?maxUp+'T23:59:00Z':new Date(0).toISOString()),rows};
     }
   }catch(e){ console.warn('CSV data file not loaded',e); }
@@ -516,7 +533,8 @@ function initFilters(){
   $('fFrom').min=$('fTo').min=b.min; $('fFrom').max=$('fTo').max=b.max;
   if(F.preset) applyPreset(F.preset,false);
   const sd=DB.rows.map(r=>r.sd).filter(Boolean).sort(), dc=DB.rows.map(r=>r.dc).filter(Boolean).sort();
-  $('dataLine').textContent = DB.rows.length ? `${DB.rows.length} surveys on file · calls ${fmtD(sd[0])} – ${fmtD(sd[sd.length-1])} · latest survey completed ${fmtD(dc[dc.length-1])} · data updated ${DB.updated?new Date(DB.updated).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}):'—'}` : 'No survey data loaded yet.';
+  $('dataLine').textContent = DB.rows.length ? `${DB.rows.length} surveys on file · calls ${fmtD(sd[0])} – ${fmtD(sd[sd.length-1])} · latest survey completed ${fmtD(dc[dc.length-1])}` : 'No survey data loaded yet.';
+  renderUploadNote();
   if(DB.facility) { const m=DB.facility.match(/^(C\d+)\s*-?\s*(.*)$/); $('facTitle').textContent=`${m?m[1]+' '+m[2]:DB.facility} — Overall Satisfaction by Driver`; document.title=$('facTitle').textContent+' Dashboard'; }
 }
 const PRESETS=[['3','Last 3 days of data'],['7','Last 7'],['14','Last 14'],['30','Last 30'],['mtd','Month to date'],['pm','Prior month'],['90','Last 90'],['180','Last 180'],['all','All data']];
