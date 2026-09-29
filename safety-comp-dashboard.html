@@ -549,27 +549,24 @@ const DEFAULT_DATA = {
     ]
   },
   repairs: [
-    { asset:"ACTION-1301", shop:"Redwood City", repair:"High pressure sensor", notes:"VGT & turbo done at the dealership" },
     { asset:"ACTION-1302", shop:"W.W. Williams", repair:"Toolbox", notes:"" },
-    { asset:"ACTION-1315", shop:"Dealership", repair:"Lights & software", notes:"Out of the dealership but has to go back" },
+    { asset:"ACTION-1315", shop:"Back in service", repair:"Software issue", notes:"Goes back to TEC of SF once 1320 returns" },
     { asset:"ACTION-1318", shop:"—", repair:"Toolbox door", notes:"" },
-    { asset:"ACTION-1320", shop:"Monarch", repair:"Turbo", notes:"" },
+    { asset:"ACTION-1320", shop:"Monarch", repair:"Turbo", notes:"Covered under warranty · turbo expected first week of Oct" },
     { asset:"ACTION-1336", shop:"—", repair:"Check engine light & windshield crack", notes:"CEL fails smog until codes clear" },
     { asset:"ACTION-1379", shop:"—", repair:"Smog", due:"Oct", notes:"" },
     { asset:"ACTION-1385", shop:"Pacific Truck and Tractor", repair:"DPR pressure sensor", notes:"" },
     { asset:"ACTION-1391", shop:"—", repair:"Smog", due:"Sept", notes:"check engine light on" },
-    { asset:"ACTION-4680", shop:"—", repair:"Turbo actuator", notes:"" },
-    { asset:"ACTION-4683", shop:"—", repair:"Blind spot mirror & clutch brake", notes:"Mirror ordered, still to come in" },
+    { asset:"ACTION-4680", shop:"College Oak", repair:"Driveline replacement & exhaust filter cleaning", notes:"" },
+    { asset:"ACTION-4683", shop:"—", repair:"Tractor hydraulic line (section)", notes:"Truck is fine · should be done by beginning of Oct" },
     { asset:"ACTION-4684", shop:"—", repair:"Unresolved issues", notes:"Was at Coast Counties, problem not fixed" },
     { asset:'ACTION-4684B "Cozad"', shop:"College Oak", repair:"Cable chain", notes:"Going to College Oak · waiting on part" },
-    { asset:"ACTION-4685", shop:"Pacific Truck and Tractor", repair:"VGR Cooler", notes:"" },
+    { asset:"ACTION-4685", shop:"On the road", repair:"Check engine light & AC", notes:"" },
     { asset:"ACTION-4686", shop:"—", repair:"VIN verification", notes:"4-axle flatbed, just lettered" },
-    { asset:"ACTION-4690 Old", shop:"Bay Area Truck", repair:"AC & under reach", notes:"" },
+    { asset:"ACTION-4690 Old", shop:"Great America", repair:"AC & under reach", notes:"Picked up and brought to Great America to fix the under reach" },
     { asset:"ACTION-4690 New", shop:"—", repair:"Due for service", notes:"" },
     { asset:"ACTION-4692", shop:"—", repair:"Lights need to be replaced", notes:"" },
-    { asset:"ACTION-4693", shop:"—", repair:"Clutch replacement — review amount paid", notes:"Repair complete; open item is the invoice" },
     { asset:"ACTION-JEEP", shop:"—", repair:"Recall", due:"Sept", notes:"" },
-    { asset:"RWC Rotator", shop:"—", repair:"Tires", notes:"" },
     { asset:"ELLISON'S-1173", shop:"Boardwalk", repair:"Overheating", notes:"" },
     { asset:"GAT-1351", shop:"—", repair:"Recall", due:"Oct", notes:"" },
     { asset:"GAT-1354", shop:"—", repair:"Recall", due:"Sept", notes:"" },
@@ -607,7 +604,7 @@ const DVIR_ISSUES = [
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-22a";
+const DATA_VERSION = "2026-09-29a";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 

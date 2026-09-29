@@ -99,7 +99,6 @@
   <div class="foot">
     <div class="hd">Notes</div>
     <div><b>1336</b> — the check engine light will fail an OBD-II smog test outright. Codes have to clear and the readiness monitors reset on a drive cycle before it can even be tested, so this needs shop time ahead of any registration work.</div>
-    <div><b>4693</b> — the clutch replacement is complete; the open item is reviewing what was charged for it, not further repair.</div>
     <div><b>4684</b> — came back from Coast Counties with the problem unresolved. Worth establishing whether this is a comeback on their work before paying for a second diagnosis elsewhere.</div>
     <div><b>203</b> — carried on the list with no open items so it is visibly accounted for rather than simply absent.</div>
     <div><b>4690 Old / 4690 New</b> — two different trucks share the 4690 number. The old one has the AC and under reach work; the new one is due for service.</div>
@@ -110,20 +109,18 @@
 <script>
 // One row per item. A unit with several items appears several times.
 const ITEMS = [
-  { unit:"4680",        item:"Turbo actuator",                       cat:"Mechanical",  status:"Open" },
-  { unit:"4683",        item:"Passenger blind spot mirror",          cat:"DOT / Safety", status:"Part ordered",
-    note:"Mirror ordered — still need to get it in" },
-  { unit:"4683",        item:"Clutch brake",                         cat:"Mechanical",  status:"Open" },
+  { unit:"4680",        item:"Driveline replacement & exhaust filter cleaning", cat:"Mechanical", status:"Open",
+    note:"At College Oak" },
+  { unit:"4683",        item:"Tractor hydraulic line (section)",     cat:"Mechanical",  status:"Open",
+    note:"Truck is fine · should be done by beginning of Oct" },
   { unit:"4684",        item:"Still has issues after Coast Counties", cat:"Mechanical", status:"Needs diagnosis",
     note:"Was at Coast Counties; problem not resolved" },
-  { unit:"4690 Old",    item:"AC & under reach",                     cat:"Mechanical",  status:"Open" },
+  { unit:"4690 Old",    item:"AC & under reach",                     cat:"Mechanical",  status:"Open",
+    note:"Picked up and brought to Great America to fix the under reach" },
   { unit:"4690 New",    item:"Due for service",                      cat:"Service",     status:"Due" },
   { unit:"4692",        item:"Lights need to be replaced",           cat:"DOT / Safety", status:"Open" },
-  { unit:"4693",        item:"Clutch replacement — review amount paid", cat:"Billing",  status:"Review",
-    note:"Clutch replaced; open item is the invoice, not the repair" },
   { unit:"1336",        item:"Check engine light",                   cat:"DOT / Safety", status:"Open" },
   { unit:"1336",        item:"Small crack in windshield",            cat:"DOT / Safety", status:"Open" },
-  { unit:"RWC Rotator", item:"Tires",                                cat:"Mechanical",  status:"Open" },
   { unit:"203",         item:"No repairs necessary at this time",    cat:"—",           status:"Clear" }
 ];
 
