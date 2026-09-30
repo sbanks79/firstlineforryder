@@ -255,7 +255,10 @@
 const DEFAULT_DATA = {
   registrations: [
     { asset:"GAT-102", exp:"2026/07/31", days:-32, status:"Expired", note:"blocked on repair" },
-    { asset:"ACTION-4684", exp:"2026/08/30", days:-2, status:"Expired", note:"in process at DMV" }
+    { asset:"ACTION-4684", exp:"2026/08/30", days:-2, status:"Expired", note:"in process at DMV" },
+    { asset:"ACTION-4683", exp:"—", days:"—", status:"Needs Registration", note:"" },
+    { asset:"GAT-1311", exp:"—", days:"—", status:"Needs Registration", note:"" },
+    { asset:"GAT-1319", exp:"—", days:"—", status:"Needs Registration", note:"" }
   ],
   cameras: [
     { asset:"ACTION-1301 FB", status:"In for Repair", location:"Redwood City", days:"30+", severity:"amber" },
@@ -604,7 +607,7 @@ const DVIR_ISSUES = [
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-09-29a";
+const DATA_VERSION = "2026-09-30a";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
@@ -712,6 +715,7 @@ function renderRegistrations(){
             <option ${r.status==='Expired'?'selected':''}>Expired</option>
             <option ${r.status==='Expiring Soon'?'selected':''}>Expiring Soon</option>
             <option ${r.status==='Current'?'selected':''}>Current</option>
+            <option ${r.status==='Needs Registration'?'selected':''}>Needs Registration</option>
           </select>` :
         `<span class="status-badge" style="background:${r.status==='Expired'?'var(--red)':(r.status==='Current'?'var(--green)':'var(--yellow)')};">${r.status}</span>
          ${(r.note || (r.blocked ? 'blocked on repair' : '')) ? `<span style="font-size:10px;color:var(--sub);margin-left:6px;">· ${r.note || 'blocked on repair'}</span>` : ''}`}
