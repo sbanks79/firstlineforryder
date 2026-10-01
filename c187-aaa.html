@@ -28,6 +28,21 @@ button:focus-visible,.btn:focus-visible,select:focus-visible,a:focus-visible{out
 .kpi .v{font-family:"Barlow Condensed",sans-serif;font-size:36px;font-weight:700;line-height:1}
 .kpi .l{color:var(--ink2);font-size:13px;margin-top:4px}
 .kpi.soft .v{color:var(--bad)}
+.cnthero{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:baseline;margin:0 0 14px;padding:12px 14px;background:#EEF3F9;border-left:5px solid var(--tow);border-radius:6px;font-size:15px}
+.cnthero b.big{font-family:"Barlow Condensed",sans-serif;font-size:26px}
+.cntgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.sct{border:1px solid var(--line);border-radius:8px;padding:12px;cursor:pointer;background:#fff;position:relative}
+.sct:hover{border-color:var(--tow)}
+.sct.top{border:2px solid var(--tow);background:#F3F7FC}
+.sct.sel{outline:3px solid var(--light)}
+.sct.nodrv{cursor:default;background:var(--paper)}
+.sct .srk{position:absolute;top:8px;right:10px;font-size:12px;color:var(--ink2);font-weight:600}
+.sct .snm{font-weight:700;font-size:14px;line-height:1.2;padding-right:26px;min-height:34px;overflow-wrap:anywhere}
+.sct .snum{font-family:"Barlow Condensed",sans-serif;font-size:34px;font-weight:700;line-height:1;margin-top:6px}
+.sct .snum small{font-size:16px;color:var(--ink2);font-weight:600;margin-left:4px}
+.sct .sbar{height:5px;background:var(--line);border-radius:3px;margin:8px 0 6px;overflow:hidden}
+.sct .sbar i{display:block;height:100%;background:var(--tow)}
+.sct .smo{font-size:13px;color:var(--ink2)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:900px){.grid2{grid-template-columns:1fr}}
 section.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 20px;margin-top:16px}
@@ -251,6 +266,14 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
 </div>
 
 <div class="kpis" id="kpis"></div>
+
+<section class="card">
+  <h2>Survey Count by Driver</h2>
+  <div class="sub">Who is bringing in the most surveys for the dates and service type picked above. Counts every survey, canceled calls included. Shows all drivers even when one driver is picked; that driver is outlined. Tap a square to open the driver.</div>
+  <div id="cntHero"></div>
+  <div class="cntgrid" id="cntGrid"></div>
+  <div class="note" id="cntNote"></div>
+</section>
 
 <section class="card">
   <h2>VPP Tier by Month</h2>
@@ -613,7 +636,32 @@ function render(){
   $('scope').innerHTML=`Showing <b>${F.driver||'all drivers'}</b> · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'call dates':'survey dates'} <b>${fmtD(F.from)} – ${fmtD(F.to)}</b> · <b>${sc.length}</b> scoreable surveys (${all.length-sc.length} canceled/AAA/unknown)${lagWarn}`;
   const pl=(PRESETS.find(p=>p[0]===F.preset)||[])[1];
   $('tbMini').innerHTML=`<b>${pl||fmtD(F.from)+' – '+fmtD(F.to)}</b> · ${esc(F.driver)||'All drivers'} · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light':'Tow'} · <b>${sc.length}</b> surveys`;
-  renderKpis(sc,all); renderVpp(); renderMetric(sc); renderLift(sc); renderSplit(sc); renderDist(sc); renderAttention(all); drawRanker(); renderList(all);
+  renderKpis(sc,all); renderCounts(); renderVpp(); renderMetric(sc); renderLift(sc); renderSplit(sc); renderDist(sc); renderAttention(all); drawRanker(); renderList(all);
+}
+// survey count by driver (date + type filters only, so share-of-station stays meaningful)
+let cntAll=false;
+function renderCounts(){
+  const rows=DB.rows.filter(r=>inRange(r)&&(F.type==='all'||r.t===F.type));
+  const total=rows.length;
+  if(!total){ $('cntHero').innerHTML=''; $('cntGrid').innerHTML='<div class="note">No surveys in this period.</div>'; $('cntNote').innerHTML=''; return; }
+  const b=dataBounds(); const from=F.from&&F.from>b.min?F.from:b.min, to=F.to&&F.to<b.max?F.to:b.max;
+  const days=Math.max(1,Math.round((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/864e5)+1);
+  const months=days/30.44, short=days<28;
+  const perMo=n=>n/months;
+  const fmtMo=v=>v>=10?Math.round(v).toString():v.toFixed(1);
+  const m={}; let none=0;
+  for(const r of rows){ if(EXCL.has(String(r.id).toUpperCase())){none++;continue;} (m[r.id] ||= {id:r.id,name:r.n,n:0}).n++; }
+  const list=Object.values(m).sort((a,b)=>b.n-a.n||a.name.localeCompare(b.name));
+  const sel=F.driver?list.find(d=>driverMatch({id:d.id,n:d.name})):null;
+  const top=list[0], max=top?top.n:1;
+  const moWord=short?'monthly pace':'avg / month';
+  $('cntHero').innerHTML=`<div class="cnthero">${top?`<span>Most surveys: <b class="big">${esc(top.name)}</b> · <b>${top.n}</b> surveys · <b>${pct(top.n/total)}</b> of the station's ${total}</span>`:''}<span>Station total <b>${total}</b> · ${moWord} <b>${fmtMo(perMo(total))}</b></span><span>${list.length} drivers · ${fmtD(from)} – ${fmtD(to)} (${days} day${days>1?'s':''})</span></div>`;
+  const shown=cntAll?list:list.slice(0,12);
+  if(sel && !shown.includes(sel)) shown.push(sel);
+  let h=shown.map(d=>`<div class="sct ${d===top?'top':''} ${d===sel?'sel':''}" onclick="openDriver('${jsq(d.id)}')" title="${esc(d.name)} (${esc(d.id)})"><span class="srk">#${list.indexOf(d)+1}</span><div class="snm">${esc(d.name)}</div><div class="snum">${d.n}<small>${pct(d.n/total)}</small></div><div class="sbar"><i style="width:${(d.n/max*100).toFixed(1)}%"></i></div><div class="smo">${moWord}: <b>${fmtMo(perMo(d.n))}</b></div></div>`).join('');
+  if(none) h+=`<div class="sct nodrv"><div class="snm">No driver attached</div><div class="snum">${none}<small>${pct(none/total)}</small></div><div class="sbar"><i style="width:${(none/max*100).toFixed(1)}%;background:var(--n)"></i></div><div class="smo">AAA / DLY / unknown</div></div>`;
+  $('cntGrid').innerHTML=h;
+  $('cntNote').innerHTML=(list.length>12?`<button class="btn" onclick="cntAll=!cntAll;renderCounts()">${cntAll?'Show top 12 only':'Show all '+list.length+' drivers'}</button> `:'')+(short?'Period is under 4 weeks, so "monthly pace" projects the count to a 30-day month.':'"Avg / month" is the count spread over the length of the period (30.4 days a month).');
 }
 function renderKpis(sc,all){
   const items=METRICS.map(([m,l])=>{const v=tb(sc,m); return `<div class="kpi ${v!=null&&v<.8?'soft':''}"><div class="v">${pct(v)}</div><div class="l">${l} top-box · n=${nOf(sc,m)}</div></div>`;});
