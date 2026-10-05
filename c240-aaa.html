@@ -633,10 +633,10 @@ function render(){
   const sc=filtered(), all=filtered(true);
   const b=dataBounds();
   const lagWarn = F.basis==='sd' && F.to && b.max && F.to>=addDays(b.max,-2) ? ` <span class="warn">· The last 2–3 days are still filling in as late surveys arrive.</span>`:'';
-  $('scope').innerHTML=`Showing <b>${F.driver||'all drivers'}</b> · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'call dates':'survey dates'} <b>${fmtD(F.from)} – ${fmtD(F.to)}</b> · <b>${sc.length}</b> scoreable surveys (${all.length-sc.length} canceled/AAA/unknown)${lagWarn}`;
+  $('scope').innerHTML=`Showing <b>${F.driver||'all drivers'}</b> · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light Service':'Tow'} · ${F.basis==='sd'?'call dates':'survey dates'} <b>${fmtD(F.from)} – ${fmtD(F.to)}</b> · <b>${all.length}</b> surveys, all counted (${all.length-sc.length} canceled or no driver)${lagWarn}`;
   const pl=(PRESETS.find(p=>p[0]===F.preset)||[])[1];
-  $('tbMini').innerHTML=`<b>${pl||fmtD(F.from)+' – '+fmtD(F.to)}</b> · ${esc(F.driver)||'All drivers'} · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light':'Tow'} · <b>${sc.length}</b> surveys`;
-  renderKpis(sc,all); renderCounts(); renderVpp(); renderMetric(sc); renderLift(sc); renderSplit(sc); renderDist(sc); renderAttention(all); drawRanker(); renderList(all);
+  $('tbMini').innerHTML=`<b>${pl||fmtD(F.from)+' – '+fmtD(F.to)}</b> · ${esc(F.driver)||'All drivers'} · ${F.type==='all'?'Tow + Light':F.type==='Light'?'Light':'Tow'} · <b>${all.length}</b> surveys`;
+  renderKpis(sc,all); renderCounts(); renderVpp(); renderMetric(all); renderLift(all,sc); renderSplit(all,sc); renderDist(all); renderAttention(all); drawRanker(); renderList(all);
 }
 // survey count by driver (date + type filters only, so share-of-station stays meaningful)
 let cntAll=false;
@@ -664,8 +664,8 @@ function renderCounts(){
   $('cntNote').innerHTML=(list.length>12?`<button class="btn" onclick="cntAll=!cntAll;renderCounts()">${cntAll?'Show top 12 only':'Show all '+list.length+' drivers'}</button> `:'')+(short?'Period is under 4 weeks, so "monthly pace" projects the count to a 30-day month.':'"Avg / month" is the count spread over the length of the period (30.4 days a month).');
 }
 function renderKpis(sc,all){
-  const items=METRICS.map(([m,l])=>{const v=tb(sc,m); return `<div class="kpi ${v!=null&&v<.8?'soft':''}"><div class="v">${pct(v)}</div><div class="l">${l} top-box · n=${nOf(sc,m)}</div></div>`;});
-  items.unshift(`<div class="kpi"><div class="v">${all.length}</div><div class="l">Surveys (${sc.length} scoreable)</div></div>`);
+  const items=METRICS.map(([m,l])=>{const v=tb(all,m); return `<div class="kpi ${v!=null&&v<.8?'soft':''}"><div class="v">${pct(v)}</div><div class="l">${l} top-box · n=${nOf(all,m)}</div></div>`;});
+  items.unshift(`<div class="kpi"><div class="v">${all.length}</div><div class="l">Surveys (incl. ${all.length-sc.length} canceled / no driver)</div></div>`);
   $('kpis').innerHTML=items.join('');
 }
 function cushion(type,ts,n){
@@ -692,18 +692,18 @@ function renderVpp(){
   }
   $('vppTbl').innerHTML=h+'</tbody>';
 }
-function renderMetric(sc){
-  const tow=sc.filter(r=>r.t==='Tow'), lt=sc.filter(r=>r.t==='Light'); let h='';
+function renderMetric(rows){
+  const tow=rows.filter(r=>r.t==='Tow'), lt=rows.filter(r=>r.t==='Light'); let h='';
   for(const [m,l] of METRICS){ const a=tb(tow,m), b=tb(lt,m);
     h+=`<div class="metric"><div class="name">${l}</div><div class="bars">
       <div class="b" title="Tow n=${nOf(tow,m)}"><span style="width:${(a??0)*100}%;background:var(--tow)"></span>${m==='o'?`<i class="goal" style="left:${GOAL.Tow*100}%"></i>`:''}<em>${pct(a)}</em></div>
       <div class="b" title="Light n=${nOf(lt,m)}"><span style="width:${(b??0)*100}%;background:var(--light)"></span>${m==='o'?`<i class="goal" style="left:${GOAL.Light*100}%"></i>`:''}<em>${pct(b)}</em></div></div></div>`; }
-  h+=`<div class="note">Tow n=${tow.length}, Light n=${lt.length}. Top-Box = % rated "Totally satisfied", scoreable surveys only. Driver, Response Time and Kept Informed are shown for coaching; only Overall counts toward VPP and lift.</div>`;
+  h+=`<div class="note">Tow n=${tow.length}, Light n=${lt.length}. Top-Box = % rated "Totally satisfied", every survey counted (canceled and no-driver surveys included, matching AAA's system). Driver, Response Time and Kept Informed are shown for coaching; only Overall counts toward VPP and lift.</div>`;
   $('metricChart').innerHTML=h;
 }
-function renderLift(sc){
-  // Overall only: every survey with an Overall answer counts in the base, including Neither/Dissatisfied.
-  const n=nOf(sc,'o'), ts=sc.filter(r=>r.o==='TS').length, s=sc.filter(r=>r.o==='S').length, other=n-ts-s;
+function renderLift(all,sc){
+  // Overall only: every survey with an Overall answer counts in the base (canceled/no-driver included); the driver table uses driver-attached surveys.
+  const n=nOf(all,'o'), ts=all.filter(r=>r.o==='TS').length, s=all.filter(r=>r.o==='S').length, other=n-ts-s;
   if(!n){$('lift').innerHTML='<div class="empty">No Overall scores in this filter.</div>';return;}
   const cur=ts/n, after=(ts+s)/n; const drv=driverStats(sc).filter(d=>d.liftS>0).sort((a,b)=>b.liftS-a.liftS||b.lift-a.lift);
   let h=`<div class="liftbig"><span class="v">${pct(cur)}</span><span class="arrow">→</span><span class="v" style="color:var(--good)">${pct(after)}</span><span style="font-weight:700;color:var(--good)">+${pct(after-cur)}</span></div>
@@ -713,8 +713,8 @@ function renderLift(sc){
     h+='</tbody></table>'; }
   $('lift').innerHTML=h;
 }
-function renderSplit(sc){
-  const c=k=>sc.filter(r=>r.cause===k).length; const tot=['Dispatch','Driver','Both','Unclear'].reduce((a,k)=>a+c(k),0);
+function renderSplit(all,sc){
+  const c=k=>all.filter(r=>r.cause===k).length; const tot=['Dispatch','Driver','Both','Unclear'].reduce((a,k)=>a+c(k),0);
   if(!tot){$('split').innerHTML='<div class="empty">Every survey in this filter was Totally satisfied on everything.</div>';return;}
   let h=`<div class="split"><div class="sd"><b>${c('Dispatch')}</b><span>Dispatch (${pct(c('Dispatch')/tot)})</span></div><div class="sv"><b>${c('Driver')}</b><span>Driver (${pct(c('Driver')/tot)})</span></div><div class="sb"><b>${c('Both')}</b><span>Both</span></div><div class="su"><b>${c('Unclear')}</b><span>Unclear / near-miss</span></div></div>`;
   const rows=driverStats(sc).filter(d=>d.cDrv||d.cDisp).sort((a,b)=>b.cDrv-a.cDrv||b.cDisp-a.cDisp);
@@ -722,7 +722,7 @@ function renderSplit(sc){
   for(const d of rows) h+=`<tr><td><button class="dn" onclick="openDriver('${jsq(d.id)}')">${esc(d.name)}</button></td><td class="num ${d.cDrv?'plow':''}">${d.cDrv}</td><td class="num">${d.cDisp}</td><td>${d.cDrv>d.cDisp?'Coach the driver':d.cDisp>d.cDrv?'Look at dispatch before coaching':'Mixed'}</td></tr>`;
   $('split').innerHTML=h+'</tbody></table>';
 }
-function renderDist(sc){
+function renderDist(sc){ /* receives every survey */
   const cols={TS:'var(--ts)',S:'var(--s)',N:'var(--n)',D:'var(--d)',TD:'var(--td)'}; let h='';
   for(const [m,l] of METRICS){ const rs=sc.filter(r=>r[m]); const n=rs.length||1;
     const seg=['TS','S','N','D','TD'].map(k=>{const c=rs.filter(r=>r[m]===k).length; return c?`<i style="width:${c/n*100}%;background:${cols[k]}" title="${LBL[k]}: ${c}"></i>`:''}).join('');
