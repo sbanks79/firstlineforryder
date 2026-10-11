@@ -874,33 +874,38 @@ function buildCoachSheet(id,from,to){
   const sc=mine.filter(isScoreable);
   const name=(DB.rows.find(r=>r.id===id)||{}).n||id;
   const stn=DB.rows.filter(r=>csInR(r,from,to)&&(F.type==='all'||r.t===F.type));
-  const q=r=>esc(csClip(csMask(r.cm,name)));
+  const q=r=>esc(csMask(r.cm,name));
   const newest=(a,b)=>(b.sd||'').localeCompare(a.sd||'');
-  const hasCm=r=>r.cm&&r.cm.trim().length>2;
+  const hasCm=r=>!!r.cm&&r.cm.trim().length>1&&!/^(n\/?a|na|none|no|\.+)$/i.test(r.cm.trim());
   const used=new Set();
   // D: needs attention (driver-related)
   const D=sc.filter(r=>r.cause==='Driver'||r.cause==='Both'||['S','N','D','TD'].includes(r.d)).sort(newest); D.forEach(r=>used.add(r));
   // B: long waits / updates (includes this driver's canceled calls with a wait)
   const B=mine.filter(r=>!used.has(r)&&(r.cause!==''||r.x==='Y')&&(r.cause==='Dispatch'||r.tg.includes('Wait Time')||r.tg.includes('Kept-Informed Issue'))).sort(newest); B.forEach(r=>used.add(r));
   // C: Satisfied -> Totally
-  const C=sc.filter(r=>!used.has(r)&&r.o==='S').sort(newest);
+  const C=sc.filter(r=>!used.has(r)&&r.o==='S').sort(newest); C.forEach(r=>used.add(r));
+  // anything left that isn't Totally Satisfied: canceled -> B (context), scored -> D
+  mine.filter(r=>!used.has(r)&&r.o!=='TS').forEach(r=>{ used.add(r); (r.x==='Y'||!isScoreable(r)?B:D).push(r); });
+  B.sort(newest); D.sort(newest);
   // A: praise
   const tsAll=sc.filter(r=>r.o==='TS');
-  const A=tsAll.filter(r=>hasCm(r)&&r.cm.length>=15&&!used.has(r)&&(CS_PRAISE.test(r.cm)||csFirst(name).some(f=>f.length>2&&r.cm.toLowerCase().includes(f))))
-    .sort((a,b)=>(b.cm.length>=60)-(a.cm.length>=60)||newest(a,b)).slice(0,6);
+  const praise=r=>CS_PRAISE.test(r.cm)||csFirst(name).some(f=>f.length>2&&r.cm.toLowerCase().includes(f));
+  const tsLeft=mine.filter(r=>!used.has(r)&&r.o==='TS');
+  const A=tsLeft.filter(hasCm).sort((a,b)=>praise(b)-praise(a)||newest(a,b));
+  const tsNoCm=tsLeft.length-A.length;
   const t=(rows,m)=>tb(rows,m);
   const strip=[['o','Overall'],['d','Driver'],['rt','Response Time'],['k','Kept Informed']].map(([m,l])=>
     `<div class="cs-box"><div class="cs-l">${l}</div><div class="cs-v">${pct(t(sc,m))}</div><div class="cs-s">Station ${pct(t(stn,m))}</div></div>`).join('');
   const item=(r,tip)=>`<div class="cs-item"><div class="cs-meta">${fmtD(r.sd)} · Call ${esc(r.c)} · ${r.t==='Light'?'Light Service':'Tow'}${r.x==='Y'?' · canceled':''}</div>
-    <div class="cs-q">${hasCm(r)&&r.cm.trim().toUpperCase()!=='N/A'?'"'+q(r)+'"':'<i>No comment</i>'}</div>${tip?`<div class="cs-tip"><b>What you can control:</b> ${esc(tip)}</div>`:''}</div>`;
-  const more=(n,max)=>n>max?`<p class="cs-note">Plus ${n-max} more like these. Ask your supervisor if you'd like to see them.</p>`:'';
-  const secA = A.length ? A.map(r=>`<div class="cs-item"><div class="cs-meta">${fmtD(r.sd)} · Call ${esc(r.c)}</div><div class="cs-q">"${q(r)}"</div></div>`).join('')
+    <div class="cs-q">${hasCm(r)?'"'+q(r)+'"':'<i>No comment</i>'}</div>${tip?`<div class="cs-tip"><b>What you can control:</b> ${esc(tip)}</div>`:''}</div>`;
+  const secA = A.length ? A.map(r=>`<div class="cs-item"><div class="cs-meta">${fmtD(r.sd)} · Call ${esc(r.c)}${r.x==='Y'?' · canceled':''}</div><div class="cs-q">"${q(r)}"</div></div>`).join('')
+      +(tsNoCm?`<p class="cs-note">Plus ${tsNoCm} more Totally Satisfied survey${tsNoCm>1?'s':''} with no comment. Keep doing this.</p>`:'')
     : `<p>${tsAll.length?`<b>${tsAll.length}</b> member${tsAll.length>1?'s':''} rated you Totally Satisfied in this period. Keep doing this.`:'No Totally Satisfied surveys came in for you yet this period. Every call is a new chance to earn one.'}</p>`;
-  const secB = B.length ? B.slice(0,5).map(r=>item(r,csTip(r,'wait'))).join('')+more(B.length,5)
+  const secB = B.length ? B.map(r=>item(r,csTip(r,'wait'))).join('')
     : '<p>No long-wait comments this period. Nice work keeping members in the loop.</p>';
-  const secC = C.length ? C.slice(0,6).map(r=>item(r,csTip(r,'almost'))).join('')+more(C.length,6)
+  const secC = C.length ? C.map(r=>item(r,csTip(r,'almost'))).join('')
     : '<p>No "Satisfied" ratings this period. Your happy members were thrilled.</p>';
-  const secD = D.length ? D.slice(0,6).map(r=>item(r,csTip(r,'attn'))).join('')+more(D.length,6)
+  const secD = D.length ? D.map(r=>item(r,csTip(r,'attn'))).join('')
     : '<p>Nothing here this period. Keep doing what you\'re doing.</p>';
   return `<div class="cs-sheet">
    <div class="cs-head"><h1>Your Member Feedback · ${esc(csFac())} · ${fmtD(from)} – ${fmtD(to)}</h1>
