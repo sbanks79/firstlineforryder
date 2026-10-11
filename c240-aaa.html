@@ -158,11 +158,29 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
   body.coach #coachSheet{display:block!important;padding:0 6mm;font-size:12.5px}
   .toolbar{position:static}
 }
-#coachSheet h1{font-family:"Barlow Condensed",sans-serif;font-size:24px;margin:0}
-#coachSheet h3{background:#E8EDF4;padding:4px 8px;margin:14px 0 6px;font-size:14px}
-#coachSheet table{font-size:12px}
-#coachSheet .lines div{border-bottom:1px solid #999;height:22px}
-#coachSheet .sig{display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:16px;margin-top:36px}
+@page{margin:12mm 10mm}
+#coachSheet{color:#13233A}
+#coachSheet .cs-sheet{font-size:11.5px;line-height:1.35}
+#coachSheet .cs-sheet+.cs-sheet{break-before:page;page-break-before:always}
+#coachSheet h1{font-family:"Barlow Condensed",sans-serif;font-size:22px;margin:0}
+#coachSheet .cs-who{font-size:13px;margin:2px 0 6px}
+#coachSheet .cs-banner{font-size:11px;background:#F1F6EC;border-left:4px solid #2E7D4F;padding:5px 8px;margin:4px 0 8px}
+#coachSheet .cs-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#coachSheet .cs-box{border:1px solid #C9D3E0;border-radius:6px;padding:5px 8px;text-align:center}
+#coachSheet .cs-l{font-size:11px;font-weight:700;color:#4A5A70}
+#coachSheet .cs-v{font-size:20px;font-weight:700}
+#coachSheet .cs-s{font-size:10.5px;color:#4A5A70}
+#coachSheet .cs-note{font-size:10.5px;color:#4A5A70;margin:4px 0}
+#coachSheet h3{background:#E8EDF4;padding:3px 8px;margin:10px 0 4px;font-size:13px;break-after:avoid;page-break-after:avoid}
+#coachSheet .cs-item{border-bottom:1px solid #E3E8EF;padding:4px 2px;break-inside:avoid;page-break-inside:avoid}
+#coachSheet .cs-meta{font-size:10px;color:#6A788C}
+#coachSheet .cs-tip{margin-top:2px;padding-left:10px;border-left:3px solid #1F5C99}
+#coachSheet .cs-check{margin:4px 0 0 18px;padding:0}#coachSheet .cs-check li{margin:2px 0}
+#coachSheet .cs-keep{break-inside:avoid;page-break-inside:avoid}
+#coachSheet .cs-ack{margin:12px 0 0;font-size:11px}
+#coachSheet p{margin:4px 0}
+#coachSheet .lines div{border-bottom:1px solid #999;height:24px}
+#coachSheet .sig{display:grid;grid-template-columns:2fr 1fr 2fr 1fr;gap:16px;margin-top:30px}
 #coachSheet .sig div{border-top:1px solid #333;padding-top:3px;font-size:11px}
 
 .toolbar input[type=search]{min-width:260px}
@@ -240,6 +258,7 @@ dialog::backdrop{background:rgba(19,35,58,.55)}
     <button class="btn" onclick="dlDrivers()">⬇ Driver Summary (Excel)</button>
     <button class="btn" onclick="dlIssues()">⬇ Issues (CSV)</button>
     <button class="btn" onclick="window.print()">🖨 Print</button>
+    <button class="btn" onclick="printAllCoach()" title="One sheet per driver with 3+ surveys in the last 14 days">🖨 Print all coaching sheets</button>
   </div>
   <button type="button" class="btn" id="hdrToggle" aria-expanded="true" onclick="toggleHeader()">Hide ▴</button>
 </header>
@@ -785,35 +804,141 @@ function openDriver(id){
 }
 dlg.addEventListener('click',e=>{if(e.target===dlg) dlg.close();});
 $('coachBtn').onclick=()=>printCoach(dlgId);
-function printCoach(id){
-  const inF=DB.rows.filter(r=>r.id===id&&inRange(r)&&(F.type==='all'||r.t===F.type)&&isScoreable(r));
-  const s=driverStats(inF)[0]; const name=(DB.rows.find(r=>r.id===id)||{}).n||id;
-  const fac=$('facTitle').textContent.replace(' — Overall Satisfaction by Driver','');
-  const bad=inF.filter(r=>r.cause==='Driver'||r.cause==='Both'||BAD.has(r.o));
-  const disp=inF.filter(r=>r.cause==='Dispatch');
-  const good=inF.filter(r=>r.o==='TS'&&r.cm&&r.cm.length>12&&!r.cause).slice(-4);
-  const focus=[];
-  if(s){
-    const soft=[['dr','Driver'],['rt','Response Time'],['k','Kept Informed']].filter(([k])=>s[k]!=null).sort((a,b)=>s[a[0]]-s[b[0]])[0];
-    if(soft && s[soft[0]]<1) focus.push(`${soft[1]} is the softest score at ${pct(s[soft[0]])}.${soft[0]==='k'?' Call or text the member whenever the ETA changes.':soft[0]==='rt'?' Check how much of this is dispatch before holding the driver to it.':' Review the member comments below together.'}`);
-    if(s.cDrv) focus.push(`${s.cDrv} survey${s.cDrv>1?'s point':' points'} to the driver directly. Go through each comment below.`);
-    if(s.cDisp) focus.push(`${s.cDisp} survey${s.cDisp>1?'s point':' points'} to dispatch (assignment, waits, updates). Don't coach the driver on delays he didn't control.`);
-    if(s.liftS) focus.push(`${s.liftS} member${s.liftS>1?'s':''} rated Overall "Satisfied", not "Totally". Those are the easiest points to win back.`);
-    if(!focus.length) focus.push('No issues in this window. Use this session for recognition.');
+// ---------- printed coaching sheet (written to the driver; positive, non-disciplinary)
+const CS_CHECK=['<b>Call when assigned:</b> introduce yourself, confirm the location, and give an honest ETA.',
+  '<b>Update if your ETA slips.</b> Call when you are 5 minutes out.',
+  '<b>On arrival:</b> smile, say your name, and "Sorry for the wait. Let\'s get you taken care of."',
+  '<b>Safety first:</b> hazards on, cones out, member out of traffic.',
+  '<b>Explain</b> what you are doing and why before you do it.',
+  '<b>Battery:</b> test it, show the result, offer the option, no pressure.',
+  '<b>Before you leave:</b> "Is there anything else I can do for you today?"',
+  '<b>Close with thanks:</b> "Thank you for being a AAA member." If you know how long they have been a member: "Thank you for your [X] years with AAA."',
+  '<b>Let them know</b> they may get a survey, and that "Totally Satisfied" is what counts.'];
+const CS_TIP={
+  wait:'Call the member as soon as you are assigned and give an honest ETA. Open with "I\'m sorry you\'ve been waiting, I came as fast as I could," even when the wait was not yours.',
+  ki:'Call or text if your ETA changes by 10 minutes or more. Call again when you are 5 minutes out.',
+  safety:'Check on safety first. Offer water, AC, or a seat in the cab. Stay until they are safely moving.',
+  battery:'Offer the jump first. If the battery tests bad, explain the option once, give the price up front including install, and respect a no.',
+  greet:'Start every call the same way: a greeting, your name, and "I\'m here to help."',
+  know:'Look up unfamiliar vehicles before you arrive. Ask the shop lead for help when you need it.',
+  cab:'Keep the cab neutral: radio off or low, and keep the conversation about the car.',
+  finish:'Small touches win "Totally": explain what you did, ask "Is there anything else I can do for you today?", and thank them for being a AAA member.',
+  sup:'Read this one with your supervisor.'};
+const CS_RX={
+  battery:/batter|upsell|up-sell|pushy|pressur|charge|fee|price|cost|expensive|sell/i,
+  greet:/greet|rude|attitude|people skills|unprofessional|grumpy|aggressive|btoneb|irritated|exchanged words/i,
+  know:/didn.?t know|did not know|hybrid|btrainingb|battery location|clueless|no idea/i,
+  cab:/radio|music|talked too much|talk too much|personal question/i,
+  safety:/\bheat\b|hot day|\bhot\b|night|dark|freeway|highway|off.?ramp|\bkids?\b|children|child|disab|wheelchair|traffic|turning lane|unsafe/i,
+  other:/another (company|tow)|other (company|tow)|someone (else )?(came|help)|called (another|a (tow|different|private))|friend|another person|other person|independent tow|fixed before|car started|got it (started|going)|no longer need|should have been cancel|started on its own/i};
+function csFirst(name){ const n=String(name||'').replace(/"[^"]*"/g,' ').trim(); const nick=(String(name||'').match(/"([^"]+)"/)||[])[1]; return [n.split(/\s+/)[0],nick].filter(Boolean).map(s=>s.toLowerCase()); }
+// Hide phone numbers, emails and member full names in sign-offs. Keeps the driver's first name.
+function csMask(cm,driverName){
+  let s=String(cm||'');
+  s=s.replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g,'[removed]');
+  s=s.replace(/(\+?1[\s.-]?)?\(?\b\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}\b/g,'[removed]');
+  const firsts=csFirst(driverName);
+  const NM="[A-Z][a-zA-Z'’-]+(?:\\s+[A-Z]\\.)?(?:\\s+[A-Z][a-zA-Z'’-]+){1,2}";
+  s=s.replace(new RegExp(`\\b([Tt]hank [Yy]ou|[Tt]hanks|[Ss]incerely|[Rr]egards|[Bb]est [Rr]egards|[Rr]espectfully|[Cc]heers)([,!.:]?\\s+)(${NM})`,'g'),(m,a,b,nm)=>{
+    if(!/^[A-Z]/.test(nm)) return m;
+    const f=nm.split(/\s+/)[0].toLowerCase(); return a+b+(firsts.includes(f)?nm.split(/\s+/)[0]:'[removed]');});
+  s=s.replace(new RegExp(`(\\s[-–—]\\s*)(${NM})\\s*$`),(m,a,nm)=>firsts.includes(nm.split(/\s+/)[0].toLowerCase())?m:a+'[removed]');
+  return s;
+}
+function csClip(s,n=340){ return s.length>n? s.slice(0,n).replace(/\s+\S*$/,'')+'…' : s; }
+function csTip(r,kind){
+  const cm=r.cm||'';
+  if(kind==='wait'){
+    if(r.x==='Y' && CS_RX.other.test(cm)) return '';
+    if(CS_RX.safety.test(cm)) return CS_TIP.safety;
+    if(r.tg.includes('Kept-Informed Issue')) return CS_TIP.ki;
+    return CS_TIP.wait;
   }
-  const tbl=rs=>rs.length?`<table><thead><tr><th>Call date</th><th>Call ID</th><th>Scores</th><th>Member comment</th></tr></thead><tbody>${rs.map(r=>`<tr><td>${fmtD(r.sd)}</td><td>${esc(r.c)}</td><td style="white-space:nowrap">OV ${LBL[r.o]||'N/A'}<br>DR ${LBL[r.d]||'N/A'}<br>RT ${LBL[r.rt]||'N/A'}</td><td>${esc(r.cm)||'<i>No comment</i>'}</td></tr>`).join('')}</tbody></table>`:'<p><i>None in this window.</i></p>';
-  $('coachSheet').innerHTML=`<h1>Driver Coaching Session · ${esc(fac)}</h1>
-   <p>Review period: ${fmtD(F.from)} – ${fmtD(F.to)} (${F.basis==='sd'?'call date':'survey date'}) · Source: AAA driver satisfaction surveys</p>
-   <p><b>Driver:</b> ${esc(name)} &nbsp; <b>Driver ID:</b> ${esc(id)} &nbsp; <b>Surveys:</b> ${inF.length} &nbsp; <b>Tier:</b> ${s?s.tier:'—'}</p>
-   <table><thead><tr><th>Overall</th><th>Driver</th><th>Response Time</th><th>Kept Informed</th><th>Driver-caused</th><th>Dispatch-caused</th></tr></thead><tbody><tr><td>${pct(s?.o)}</td><td>${pct(s?.dr)}</td><td>${pct(s?.rt)}</td><td>${pct(s?.k)}</td><td>${s?.cDrv??0}</td><td>${s?.cDisp??0}</td></tr></tbody></table>
-   <h3>Where to focus</h3><ul>${focus.map(f=>`<li>${esc(f)}</li>`).join('')}</ul>
-   <h3>What members said: needs improvement (driver)</h3>${tbl(bad)}
-   ${disp.length?`<h3>Dispatch-side (context, not the driver's fault)</h3>${tbl(disp)}`:''}
-   <h3>What's going well: keep doing this</h3>${tbl(good)}
-   <h3>Action plan / driver commitments</h3><div class="lines"><div></div><div></div><div></div></div>
-   <h3>Notes</h3><div class="lines"><div></div><div></div><div></div></div>
-   <div class="sig"><div>Driver signature</div><div>Date</div><div>Supervisor signature</div><div>Date</div></div>`;
-  document.body.classList.add('coach'); window.print(); setTimeout(()=>document.body.classList.remove('coach'),500);
+  if(CS_RX.battery.test(cm)) return CS_TIP.battery;
+  if(CS_RX.greet.test(cm)) return CS_TIP.greet;
+  if(CS_RX.know.test(cm)) return CS_TIP.know;
+  if(CS_RX.cab.test(cm)) return CS_TIP.cab;
+  if(kind==='almost'){
+    if(CS_RX.safety.test(cm)) return CS_TIP.safety;
+    if(r.tg.includes('Wait Time')||r.tg.includes('RT Issue')||r.rt==='S') return CS_TIP.wait;
+    if(r.tg.includes('Kept-Informed Issue')||r.k==='S') return CS_TIP.ki;
+    return CS_TIP.finish;
+  }
+  return CS_TIP.sup;
+}
+const CS_PRAISE=/\b(driver|tech|technician|he|him|his|she|her|guy|man|gentleman|lady|woman|operator|mechanic|rep|assistant|person who|young man)\b/i;
+function csInR(r,from,to){ const d=r[F.basis]; if(!d) return !from&&!to; return (!from||d>=from)&&(!to||d<=to); }
+function csFac(){ return $('facTitle').textContent.replace(' — Overall Satisfaction by Driver','').trim(); }
+function buildCoachSheet(id,from,to){
+  const mine=DB.rows.filter(r=>r.id===id&&csInR(r,from,to)&&(F.type==='all'||r.t===F.type));
+  const sc=mine.filter(isScoreable);
+  const name=(DB.rows.find(r=>r.id===id)||{}).n||id;
+  const stn=DB.rows.filter(r=>csInR(r,from,to)&&(F.type==='all'||r.t===F.type));
+  const q=r=>esc(csClip(csMask(r.cm,name)));
+  const newest=(a,b)=>(b.sd||'').localeCompare(a.sd||'');
+  const hasCm=r=>r.cm&&r.cm.trim().length>2;
+  const used=new Set();
+  // D: needs attention (driver-related)
+  const D=sc.filter(r=>r.cause==='Driver'||r.cause==='Both'||['S','N','D','TD'].includes(r.d)).sort(newest); D.forEach(r=>used.add(r));
+  // B: long waits / updates (includes this driver's canceled calls with a wait)
+  const B=mine.filter(r=>!used.has(r)&&(r.cause!==''||r.x==='Y')&&(r.cause==='Dispatch'||r.tg.includes('Wait Time')||r.tg.includes('Kept-Informed Issue'))).sort(newest); B.forEach(r=>used.add(r));
+  // C: Satisfied -> Totally
+  const C=sc.filter(r=>!used.has(r)&&r.o==='S').sort(newest);
+  // A: praise
+  const tsAll=sc.filter(r=>r.o==='TS');
+  const A=tsAll.filter(r=>hasCm(r)&&r.cm.length>=15&&!used.has(r)&&(CS_PRAISE.test(r.cm)||csFirst(name).some(f=>f.length>2&&r.cm.toLowerCase().includes(f))))
+    .sort((a,b)=>(b.cm.length>=60)-(a.cm.length>=60)||newest(a,b)).slice(0,6);
+  const t=(rows,m)=>tb(rows,m);
+  const strip=[['o','Overall'],['d','Driver'],['rt','Response Time'],['k','Kept Informed']].map(([m,l])=>
+    `<div class="cs-box"><div class="cs-l">${l}</div><div class="cs-v">${pct(t(sc,m))}</div><div class="cs-s">Station ${pct(t(stn,m))}</div></div>`).join('');
+  const item=(r,tip)=>`<div class="cs-item"><div class="cs-meta">${fmtD(r.sd)} · Call ${esc(r.c)} · ${r.t==='Light'?'Light Service':'Tow'}${r.x==='Y'?' · canceled':''}</div>
+    <div class="cs-q">${hasCm(r)&&r.cm.trim().toUpperCase()!=='N/A'?'"'+q(r)+'"':'<i>No comment</i>'}</div>${tip?`<div class="cs-tip"><b>What you can control:</b> ${esc(tip)}</div>`:''}</div>`;
+  const more=(n,max)=>n>max?`<p class="cs-note">Plus ${n-max} more like these. Ask your supervisor if you'd like to see them.</p>`:'';
+  const secA = A.length ? A.map(r=>`<div class="cs-item"><div class="cs-meta">${fmtD(r.sd)} · Call ${esc(r.c)}</div><div class="cs-q">"${q(r)}"</div></div>`).join('')
+    : `<p>${tsAll.length?`<b>${tsAll.length}</b> member${tsAll.length>1?'s':''} rated you Totally Satisfied in this period. Keep doing this.`:'No Totally Satisfied surveys came in for you yet this period. Every call is a new chance to earn one.'}</p>`;
+  const secB = B.length ? B.slice(0,5).map(r=>item(r,csTip(r,'wait'))).join('')+more(B.length,5)
+    : '<p>No long-wait comments this period. Nice work keeping members in the loop.</p>';
+  const secC = C.length ? C.slice(0,6).map(r=>item(r,csTip(r,'almost'))).join('')+more(C.length,6)
+    : '<p>No "Satisfied" ratings this period. Your happy members were thrilled.</p>';
+  const secD = D.length ? D.slice(0,6).map(r=>item(r,csTip(r,'attn'))).join('')+more(D.length,6)
+    : '<p>Nothing here this period. Keep doing what you\'re doing.</p>';
+  return `<div class="cs-sheet">
+   <div class="cs-head"><h1>Your Member Feedback · ${esc(csFac())} · ${fmtD(from)} – ${fmtD(to)}</h1>
+   <div class="cs-who"><b>${esc(name)}</b> · ${sc.length} survey${sc.length===1?'':'s'}${mine.length>sc.length?` (plus ${mine.length-sc.length} canceled)`:''} · ${F.type==='all'?'Tow + Light Service':F.type==='Light'?'Light Service':'Tow'}</div></div>
+   <p class="cs-banner">This is not a write-up. It's a look at what AAA members said about your calls so you can see what's working and where the easy wins are.</p>
+   <div class="cs-strip">${strip}</div>
+   <p class="cs-note">Percent of members who were Totally Satisfied. "Station" is everyone at ${esc(csFac().replace(/^C\d+\s*/,''))} for the same dates.</p>
+   <h3>A. What you're doing well</h3>${secA}
+   <h3>B. Long-wait calls: how you can win them back</h3>${secB}
+   <h3>C. Almost there: Satisfied → Totally Satisfied</h3>${C.length?'<p class="cs-note">These members were happy but not thrilled. Small touches move them to Totally Satisfied.</p>':''}${secC}
+   <h3>D. Needs your attention</h3>${secD}
+   <div class="cs-keep"><h3>E. Every call, every time</h3><ol class="cs-check">${CS_CHECK.map(c=>`<li>${c}</li>`).join('')}</ol></div>
+   <div class="cs-keep"><h3>F. My one goal for the next 2 weeks</h3><div class="lines"><div></div><div></div></div>
+   <p class="cs-ack">I have received and reviewed this member feedback. This sheet is for coaching and reference only and is not disciplinary.</p>
+   <div class="sig"><div>Driver signature</div><div>Date</div><div>Supervisor</div><div>Date</div></div>
+   <p class="cs-note" style="margin-top:8px">Sign and turn in with your paperwork.</p></div>
+  </div>`;
+}
+function printSheets(html){
+  $('coachSheet').innerHTML=html; document.body.classList.add('coach');
+  const done=()=>document.body.classList.remove('coach');
+  window.addEventListener('afterprint',done,{once:true});
+  window.print(); setTimeout(()=>{ if(!matchMedia('print').matches) done(); },1500);
+}
+function printCoach(id){ printSheets(buildCoachSheet(id,F.from,F.to)); }
+function csLast(n){ const w=String(n||'').replace(/"[^"]*"/g,' ').trim().split(/\s+/); return /^\d+$/.test(w[0]||'')?'~'+w[0]:(w[w.length-1]||'').toLowerCase(); }
+function coachAllList(){
+  const b=dataBounds(); const to=b.max, from=to?addDays(to,-13):'';
+  const rows=DB.rows.filter(r=>csInR(r,from,to)&&(F.type==='all'||r.t===F.type)&&isScoreable(r));
+  const ids={}; rows.forEach(r=>{ (ids[r.id] ||= {id:r.id,n:r.n,k:0}).k++; });
+  const list=Object.values(ids).filter(d=>d.k>=3).sort((a,b)=>csLast(a.n).localeCompare(csLast(b.n))||String(a.n).localeCompare(String(b.n)));
+  return {from,to,list};
+}
+function printAllCoach(){
+  const {from,to,list}=coachAllList();
+  if(!list.length){ alert(`No drivers have 3 or more surveys between ${fmtD(from)} and ${fmtD(to)}.`); return; }
+  if(!confirm(`Print ${list.length} coaching sheet${list.length>1?'s':''} for ${fmtD(from)} – ${fmtD(to)} (last 14 days, ${F.basis==='sd'?'call dates':'survey dates'}, ${F.type==='all'?'Tow + Light':F.type})?\n\nOne sheet per driver with 3+ surveys, sorted by last name:\n`+list.map(d=>`• ${d.n} (${d.k})`).join('\n'))) return;
+  printSheets(list.map(d=>buildCoachSheet(d.id,from,to)).join(''));
 }
 
 // ---------- exports
