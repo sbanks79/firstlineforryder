@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="/gate.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bay Area Daily Metrics</title>
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb; --surface-2:#f3f2ee;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --ctx:#c9c8c1; --total:#52514e;
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  --good-bg:#e3f4e3; --warn-bg:#fdf1d2; --serious-bg:#fbe3d8; --critical-bg:#f8dcdc;
+  --up:#006300; --down:#b42318;
+  --accent:#2a78d6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+    --ink:#f0efec; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --ctx:#3a3a37; --total:#c3c2b7;
+    --good-bg:#16341a; --warn-bg:#3a2f12; --serious-bg:#3b2318; --critical-bg:#3d1b1b;
+    --up:#0ca30c; --down:#e66767; --accent:#3987e5;
+  }
+}
+:root[data-theme="dark"]{
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19; --surface-2:#232321;
+    --ink:#f0efec; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --ctx:#3a3a37; --total:#c3c2b7;
+    --good-bg:#16341a; --warn-bg:#3a2f12; --serious-bg:#3b2318; --critical-bg:#3d1b1b;
+    --up:#0ca30c; --down:#e66767; --accent:#3987e5;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}
+h1{font-size:22px;margin:0 0 2px;font-weight:650;letter-spacing:-.01em}
+h2{font-size:15px;margin:0;font-weight:620}
+.sub{color:var(--ink-2);font-size:13px}
+.muted{color:var(--muted)}
+.back{display:inline-block;font-weight:600;font-size:13px;text-decoration:none;color:var(--accent);margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px}
+.card-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;position:sticky;top:0;z-index:5;background:var(--page);padding:8px 0 10px;margin-bottom:8px}
+.seg{display:inline-flex;max-width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{flex:0 0 auto;border:0;background:transparent;color:var(--ink-2);padding:6px 11px;font:inherit;font-size:13px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button[aria-pressed="true"]{background:var(--surface-2);color:var(--ink);font-weight:600}
+select,input[type=date]{font:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)}
+.btn{font:inherit;font-size:13px;padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px}
+.kpi .lab{font-size:12px;color:var(--ink-2);display:flex;justify-content:space-between;gap:6px}
+.kpi .val{font-size:28px;font-weight:650;margin:4px 0 2px;letter-spacing:-.02em}
+.kpi .cmp{font-size:12px;color:var(--ink-2)}
+.kpi .rank{font-size:12px;margin-top:6px}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;white-space:nowrap}
+.pill.good{background:var(--good-bg);color:var(--ink)} .pill.good::before{content:"●";color:var(--good)}
+.pill.warn{background:var(--warn-bg);color:var(--ink)} .pill.warn::before{content:"▲";color:var(--warn)}
+.pill.serious{background:var(--serious-bg);color:var(--ink)} .pill.serious::before{content:"◆";color:var(--serious)}
+.pill.critical{background:var(--critical-bg);color:var(--ink)} .pill.critical::before{content:"■";color:var(--critical)}
+.better{color:var(--up);font-weight:600} .worse{color:var(--down);font-weight:600}
+.insights{margin:0;padding-left:18px} .insights li{margin:4px 0}
+.grid2{display:grid;grid-template-columns:1fr;gap:16px}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--ink-2);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);min-width:180px;display:none;z-index:4}
+.tip .d{font-weight:600;margin-bottom:4px}
+.tip .r{display:flex;justify-content:space-between;gap:12px;font-variant-numeric:tabular-nums}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:12px;color:var(--ink-2);font-weight:600;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--surface)}
+th:first-child,td:first-child{text-align:left}
+tr.mine td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+tr.mine td:first-child{font-weight:600}
+tr.tot td{font-weight:600;border-top:1px solid var(--axis)}
+.tag{font-size:10px;font-weight:700;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+.hm td{padding:5px 4px;text-align:center;font-size:12px}
+.hm td.c{border-radius:4px;border:2px solid var(--surface)}
+.hm td.good{background:var(--good-bg)} .hm td.warn{background:var(--warn-bg)} .hm td.serious{background:var(--serious-bg)} .hm td.critical{background:var(--critical-bg)}
+.hm td.critical{font-weight:700}
+.hm th{font-size:11px;text-align:center;cursor:default}
+.hm th:first-child,.hm td:first-child{text-align:left;padding-right:10px}
+textarea{width:100%;min-height:140px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)}
+.note{font-size:12px;color:var(--ink-2)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+details summary{cursor:pointer;font-weight:620}
+.ok{color:var(--up)} .err{color:var(--down)}
+@media (min-width: 900px){ .grid2{grid-template-columns:1fr 1fr} }
+@media print{ .controls,.no-print{display:none} body{background:#fff} .card{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="back" href="https://firstlineroadwest.com/index.html">← Back to Call Taking Portal</a>
+<header>
+  <div>
+    <h1>Bay Area Daily Metrics</h1>
+    <div class="sub" id="subtitle"></div>
+  </div>
+  <div class="sub" id="updated"></div>
+</header>
+
+<div class="controls" role="toolbar" aria-label="Filters">
+  <div class="seg" id="winSeg" aria-label="Date window">
+    <button data-w="1">Latest day</button><button data-w="7">Last 7</button><button data-w="14">Last 14</button><button data-w="0">All</button>
+  </div>
+  <div class="seg" id="metricSeg" aria-label="Metric"></div>
+</div>
+
+<section class="kpis" id="kpis" aria-label="FirstLine stations vs Bay Central"></section>
+
+<div class="card" style="margin-top:16px">
+  <div class="card-h"><h2>What matters right now</h2><span class="note" id="insWin"></span></div>
+  <ul class="insights" id="insights"></ul>
+</div>
+
+<div class="card">
+  <div class="card-h"><h2 id="trendTitle">Trend</h2>
+    <label class="note"><input type="checkbox" id="showCtx" checked> show other stations</label></div>
+  <div class="chart" id="trend"></div>
+  <div class="legend" id="trendLegend"></div>
+</div>
+
+<div class="card">
+  <div class="card-h"><h2 id="lbTitle">Station leaderboard</h2><span class="note">Volume-weighted over the selected window. Click a header to sort.</span></div>
+  <div class="tbl-wrap"><table id="lb"></table></div>
+</div>
+
+<div class="card">
+  <div class="card-h"><h2 id="hmTitle">Daily heatmap</h2><span class="note" id="hmNote"></span></div>
+  <div class="tbl-wrap"><table class="hm" id="hm"></table></div>
+</div>
+
+<div class="card no-print">
+  <details>
+    <summary>Add new days (paste James's email)</summary>
+    <p class="note">In Outlook, open the newest Bay Central Daily Metrics email, select the whole table(s) (Ctrl+A in the message body works), copy, and paste below. Weekend emails with 3 days paste fine; the day headers ("Friday 10/9") set the dates. If no day header is found, the date below is used.</p>
+    <textarea id="paste" placeholder="Paste the email table here…"></textarea>
+    <div class="row">
+      <label class="note">Fallback date <input type="date" id="fallbackDate"></label>
+      <button class="btn" id="parseBtn">Preview</button>
+      <button class="btn primary" id="addBtn" disabled>Add to dashboard</button>
+      <span class="note" id="parseMsg"></span>
+    </div>
+    <div class="tbl-wrap" id="preview" style="margin-top:10px"></div>
+    <hr style="border:0;border-top:1px solid var(--grid);margin:16px 0">
+    <p class="note">New days are kept in this browser until you publish. To make them permanent for everyone: <b>Download updated page</b> (bay-area.html), replace the file in GitHub, commit.</p>
+    <div class="row">
+      <button class="btn primary" id="dlHtml">Download updated page</button>
+      <button class="btn" id="dlCsv">Download all data (CSV)</button>
+      <button class="btn" id="clearLocal">Clear browser-only additions</button>
+      <span class="note" id="localMsg"></span>
+    </div>
+  </details>
+</div>
+
+<div class="card">
+  <details>
+    <summary>How to read this / data notes</summary>
+    <ul class="note">
+      <li><b>Source:</b> James Wright (AAA AFR) "Bay Central Daily Metrics" emails. Each row is one service day.</li>
+      <li><b>FirstLine</b> = C240 Action, C187 Great America, C510 Ellison's. Combined numbers are volume-weighted.</li>
+      <li><b>Status colors are approximate.</b> They are inferred from the fill colors in James's emails, not from a published AAA standard: Avg RT good &lt;36 min, watch &lt;40, poor &lt;45, critical 45+; RT&gt;90 good &lt;5%, critical 11%+; Battery conv good 40%+, critical &lt;30%; Passed calls good &lt;3%, critical 3%+; Cancel good ≤8%, critical &gt;10%. Confirm the real cutoffs with James and edit <code>THRESH</code> in the page source.</li>
+      <li><b>Battery conversion</b> is weighted by total call volume (battery-call counts aren't in the email), so combined battery % is directional.</li>
+      <li><b>Bay Central total</b> is James's reported Total / AFR SubTotal row. From 10/2 on it excludes C636 (Bay Area Autoworks).</li>
+      <li><b>Gaps:</b> no emails for 9/18–9/21. C464 Friendly Towing appears 9/11–9/15 only; C636 appears from 10/2 (missing 10/7).</li>
+      <li><b>One correction:</b> the 10/9 table listed C462 twice. The 8-call row was relabeled C636 (it matches C636's profile and the gap between James's total and the station sum).</li>
+      <li>Lower is better for response time, RT&gt;90, passed calls and cancels. Higher is better for battery conversion.</li>
+    </ul>
+  </details>
+</div>
+</div>
+
+<script type="application/json" id="bc-data">{"names":{"C653":"Highway Towing - San Jose","C187":"Great America Towing LLC","C521":"A's Towing","C240":"Action Towing and Road Service, LLC.","C510":"Ellison's Tow","C636":"Bay Area Autoworks and Towing","C408":"Metro Towing - Livermore","C664":"Eagle Towing","C217":"Island Auto Towing","C462":"Elevate Towing & Recovery, Inc","C464":"Friendly Towing"},"rows":[["2026-09-11","TOTAL",659,35.0,4.2,44.0,3.0,8.2],["2026-09-11","C187",51,52.0,12.2,9.1,5.6,8.0],["2026-09-11","C217",54,28.0,2.0,50.0,1.9,9.4],["2026-09-11","C240",188,34.0,3.3,39.6,2.6,10.9],["2026-09-11","C408",76,40.0,8.0,16.7,2.6,9.3],["2026-09-11","C462",43,43.0,2.3,0.0,0.0,6.8],["2026-09-11","C464",7,27.0,0.0,null,30.0,12.5],["2026-09-11","C510",121,35.0,2.6,74.3,3.2,7.6],["2026-09-11","C521",42,22.0,0.0,null,0.0,4.5],["2026-09-11","C653",24,28.0,4.3,44.4,0.0,0.0],["2026-09-11","C664",53,33.0,5.9,22.2,3.7,3.8],["2026-09-12","TOTAL",543,33.0,4.0,37.0,2.0,9.4],["2026-09-12","C187",43,33.0,7.0,41.7,2.3,6.8],["2026-09-12","C217",47,25.0,0.0,50.0,0.0,6.4],["2026-09-12","C240",162,32.0,3.9,30.2,1.2,7.9],["2026-09-12","C408",37,28.0,5.4,100.0,0.0,19.5],["2026-09-12","C462",28,36.0,0.0,0.0,3.4,13.3],["2026-09-12","C464",8,49.0,12.5,null,30.0,0.0],["2026-09-12","C510",113,38.0,5.4,51.4,1.7,12.4],["2026-09-12","C521",45,37.0,7.0,null,0.0,6.5],["2026-09-12","C653",14,23.0,0.0,0.0,0.0,0.0],["2026-09-12","C664",46,29.0,0.0,18.2,4.2,8.5],["2026-09-13","TOTAL",402,30.0,2.1,43.8,1.5,11.0],["2026-09-13","C187",31,40.0,0.0,22.2,3.1,18.8],["2026-09-13","C217",38,22.0,0.0,41.7,2.6,16.2],["2026-09-13","C240",135,31.0,3.9,39.7,0.7,9.9],["2026-09-13","C408",32,24.0,0.0,100.0,3.0,12.9],["2026-09-13","C462",14,19.0,0.0,0.0,6.7,6.7],["2026-09-13","C464",3,26.0,0.0,null,0.0,0.0],["2026-09-13","C510",75,32.0,1.3,64.5,1.4,5.5],["2026-09-13","C521",26,23.0,0.0,null,0.0,7.4],["2026-09-13","C653",9,40.0,11.1,25.0,0.0,12.5],["2026-09-13","C664",39,30.0,2.6,38.5,0.0,17.1],["2026-09-14","TOTAL",693,36.0,6.2,48.6,2.7,6.6],["2026-09-14","C187",47,46.0,12.8,21.4,6.0,10.4],["2026-09-14","C217",58,39.0,8.8,62.5,1.7,3.4],["2026-09-14","C240",182,33.0,5.6,36.2,4.2,8.3],["2026-09-14","C408",66,42.0,6.2,42.9,1.5,10.3],["2026-09-14","C462",40,31.0,5.1,0.0,0.0,2.6],["2026-09-14","C464",6,26.0,0.0,null,14.3,0.0],["2026-09-14","C510",130,36.0,2.3,75.7,2.3,6.5],["2026-09-14","C521",73,26.0,1.4,null,1.4,1.4],["2026-09-14","C653",20,21.0,0.0,50.0,0.0,5.0],["2026-09-14","C664",71,49.0,15.7,61.5,1.4,7.0],["2026-09-15","TOTAL",649,33.0,3.3,43.3,2.3,7.5],["2026-09-15","C187",55,32.0,3.7,23.1,1.8,11.8],["2026-09-15","C217",40,35.0,0.0,66.7,0.0,5.3],["2026-09-15","C240",200,31.0,2.5,45.6,1.5,8.0],["2026-09-15","C408",66,33.0,3.2,0.0,2.9,10.9],["2026-09-15","C462",32,32.0,0.0,12.5,0.0,3.0],["2026-09-15","C464",11,51.0,18.2,null,15.4,15.4],["2026-09-15","C510",121,36.0,4.2,48.8,4.0,3.4],["2026-09-15","C521",42,16.0,0.0,null,0.0,4.7],["2026-09-15","C653",14,24.0,7.1,80.0,0.0,14.3],["2026-09-15","C664",68,40.0,6.1,43.8,2.9,8.7],["2026-09-16","TOTAL",604,34.0,3.4,38.9,2.0,5.4],["2026-09-16","C187",52,42.0,8.0,33.3,1.9,6.1],["2026-09-16","C217",48,44.0,14.6,33.3,0.0,11.1],["2026-09-16","C240",195,34.0,2.1,33.3,1.0,3.7],["2026-09-16","C408",51,32.0,0.0,50.0,2.0,6.4],["2026-09-16","C462",38,42.0,5.3,44.4,0.0,0.0],["2026-09-16","C510",92,34.0,2.2,43.3,4.2,9.0],["2026-09-16","C521",55,18.0,0.0,null,0.0,2.0],["2026-09-16","C653",15,19.0,0.0,33.3,0.0,12.5],["2026-09-16","C664",57,37.0,1.8,60.0,0.0,4.1],["2026-09-17","TOTAL",605,33.0,4.1,44.0,1.6,6.0],["2026-09-17","C187",45,37.0,6.7,0.0,2.2,13.3],["2026-09-17","C217",46,43.0,6.8,54.5,4.2,4.9],["2026-09-17","C240",194,33.0,2.1,54.7,0.5,5.9],["2026-09-17","C408",52,29.0,2.0,33.3,1.9,2.0],["2026-09-17","C462",30,47.0,16.7,0.0,0.0,9.4],["2026-09-17","C510",110,36.0,5.5,41.0,2.7,5.5],["2026-09-17","C521",55,25.0,1.8,null,1.9,1.9],["2026-09-17","C653",13,11.0,0.0,66.7,0.0,7.7],["2026-09-17","C664",60,30.0,1.7,40.0,1.6,6.8],["2026-09-22","TOTAL",657,36.0,4.8,47.2,1.8,7.0],["2026-09-22","C187",55,36.0,1.9,58.3,1.8,7.4],["2026-09-22","C217",49,33.0,2.2,33.3,3.9,8.7],["2026-09-22","C240",215,34.0,5.2,42.9,1.4,7.1],["2026-09-22","C408",57,31.0,0.0,75.0,1.8,5.3],["2026-09-22","C462",37,54.0,13.9,44.4,0.0,10.8],["2026-09-22","C510",122,38.0,3.4,54.5,3.2,7.8],["2026-09-22","C521",55,18.0,0.0,null,0.0,0.0],["2026-09-22","C653",11,27.0,0.0,0.0,0.0,0.0],["2026-09-22","C664",56,51.0,16.1,50.0,1.8,10.5],["2026-09-23","TOTAL",602,32.6,3.4,39.3,2.0,7.2],["2026-09-23","C187",48,46.8,10.9,33.3,2.0,10.2],["2026-09-23","C217",47,29.9,2.4,63.6,2.1,10.3],["2026-09-23","C240",179,29.3,0.6,36.2,1.1,6.4],["2026-09-23","C408",43,34.5,0.0,50.0,2.3,4.7],["2026-09-23","C462",43,35.8,7.0,33.3,2.3,7.3],["2026-09-23","C510",127,36.4,6.4,47.1,3.8,8.7],["2026-09-23","C521",48,19.0,0.0,null,0.0,6.5],["2026-09-23","C653",12,19.8,0.0,0.0,0.0,0.0],["2026-09-23","C664",55,35.3,3.6,28.6,1.8,5.7],["2026-09-24","TOTAL",584,35.4,4.9,50.0,1.7,7.6],["2026-09-24","C187",40,33.4,2.5,57.1,0.0,11.9],["2026-09-24","C217",43,30.0,2.4,71.4,4.4,11.6],["2026-09-24","C240",184,38.1,5.6,53.8,2.1,6.7],["2026-09-24","C408",57,37.7,3.7,80.0,0.0,5.7],["2026-09-24","C462",35,48.0,14.3,25.0,2.8,7.9],["2026-09-24","C510",107,39.4,6.7,33.3,1.8,11.0],["2026-09-24","C521",57,23.2,0.0,null,0.0,1.9],["2026-09-24","C653",13,11.9,0.0,66.7,0.0,0.0],["2026-09-24","C664",48,31.7,4.3,42.9,2.0,6.5],["2026-09-25","TOTAL",533,32.7,3.3,43.7,4.0,7.3],["2026-09-25","C187",45,23.3,0.0,58.8,2.2,8.7],["2026-09-25","C217",49,50.6,4.2,90.0,5.8,8.2],["2026-09-25","C240",176,32.7,2.4,24.5,1.7,6.4],["2026-09-25","C408",43,33.1,0.0,66.7,4.5,17.8],["2026-09-25","C462",32,42.2,18.8,50.0,5.9,5.9],["2026-09-25","C510",81,25.3,1.3,55.2,6.9,5.5],["2026-09-25","C521",49,24.6,0.0,null,4.0,0.0],["2026-09-25","C653",9,14.2,0.0,0.0,0.0,10.0],["2026-09-25","C664",49,41.7,8.7,33.3,5.8,8.5],["2026-09-26","TOTAL",495,29.4,2.7,41.0,0.8,7.1],["2026-09-26","C187",41,20.2,0.0,18.2,0.0,2.7],["2026-09-26","C217",49,36.0,6.3,75.0,0.0,11.8],["2026-09-26","C240",163,29.3,2.6,45.1,1.2,8.5],["2026-09-26","C408",44,35.1,4.5,50.0,2.3,2.3],["2026-09-26","C462",24,35.1,4.2,60.0,0.0,4.0],["2026-09-26","C510",89,28.2,2.4,37.8,0.0,6.9],["2026-09-26","C521",28,28.0,3.6,null,0.0,7.1],["2026-09-26","C653",6,17.0,0.0,0.0,0.0,16.7],["2026-09-26","C664",51,27.7,0.0,21.1,1.9,5.9],["2026-09-27","TOTAL",432,29.5,3.1,38.6,1.8,9.3],["2026-09-27","C187",26,21.6,0.0,40.0,0.0,11.5],["2026-09-27","C217",34,26.3,3.3,36.4,0.0,18.9],["2026-09-27","C240",142,28.6,4.3,34.0,2.8,8.9],["2026-09-27","C408",38,36.3,0.0,33.3,2.6,5.7],["2026-09-27","C462",24,40.6,0.0,50.0,0.0,4.2],["2026-09-27","C510",87,28.5,2.4,50.0,1.1,7.2],["2026-09-27","C521",37,28.6,2.8,null,0.0,5.7],["2026-09-27","C653",9,14.3,0.0,0.0,0.0,10.0],["2026-09-27","C664",35,35.1,9.1,16.7,5.4,13.9],["2026-09-28","TOTAL",685,33.0,4.1,44.8,1.4,7.0],["2026-09-28","C187",51,29.6,0.0,21.4,1.9,6.1],["2026-09-28","C217",52,31.1,4.1,81.8,1.9,6.4],["2026-09-28","C240",216,34.3,7.1,46.4,0.5,9.1],["2026-09-28","C408",59,33.1,1.8,40.0,3.3,5.2],["2026-09-28","C462",41,43.8,5.0,14.3,4.7,4.9],["2026-09-28","C510",135,36.3,4.6,50.0,0.7,7.7],["2026-09-28","C521",63,22.8,0.0,null,0.0,3.3],["2026-09-28","C653",12,25.6,0.0,0.0,0.0,0.0],["2026-09-28","C664",56,29.5,1.8,46.7,3.4,7.7],["2026-09-29","TOTAL",696,33.4,3.1,44.4,2.7,7.5],["2026-09-29","C187",53,25.9,1.9,54.5,3.6,4.1],["2026-09-29","C217",58,38.7,10.9,37.5,3.3,11.9],["2026-09-29","C240",214,30.4,1.9,44.9,0.9,9.1],["2026-09-29","C408",60,39.5,3.4,83.3,7.8,3.6],["2026-09-29","C462",37,36.5,2.8,20.0,2.7,5.6],["2026-09-29","C510",130,40.8,3.9,45.7,3.0,7.3],["2026-09-29","C521",63,24.1,0.0,null,1.6,6.3],["2026-09-29","C653",17,22.5,0.0,0.0,0.0,5.9],["2026-09-29","C664",64,34.0,3.2,36.4,3.0,7.9],["2026-09-30","TOTAL",642,34.8,4.3,47.1,1.7,7.9],["2026-09-30","C187",51,27.4,0.0,53.8,1.9,12.2],["2026-09-30","C217",42,60.4,11.9,61.5,0.0,13.6],["2026-09-30","C240",226,30.9,1.8,50.9,0.9,6.5],["2026-09-30","C408",43,38.8,9.5,100.0,6.5,11.6],["2026-09-30","C462",35,38.8,0.0,33.3,0.0,8.6],["2026-09-30","C510",113,37.5,7.1,41.7,1.7,9.9],["2026-09-30","C521",52,25.3,2.0,null,0.0,2.0],["2026-09-30","C653",19,12.6,0.0,33.3,0.0,0.0],["2026-09-30","C664",61,43.0,8.6,22.2,4.7,5.0],["2026-10-01","TOTAL",614,34.5,4.1,36.4,3.2,6.1],["2026-10-01","C187",47,33.2,8.7,0.0,4.1,14.9],["2026-10-01","C217",48,34.8,0.0,66.7,2.0,10.4],["2026-10-01","C240",217,36.5,5.3,29.2,1.8,5.7],["2026-10-01","C408",47,32.6,0.0,57.1,9.6,0.0],["2026-10-01","C462",38,43.8,5.4,33.3,0.0,10.3],["2026-10-01","C510",101,29.7,1.0,51.5,2.9,4.0],["2026-10-01","C521",52,20.5,0.0,null,0.0,4.1],["2026-10-01","C653",20,32.9,0.0,0.0,4.8,0.0],["2026-10-01","C664",44,47.8,14.3,37.5,8.5,6.5],["2026-10-02","TOTAL",613,36.1,6.7,42.3,3.3,7.0],["2026-10-02","C187",38,28.8,0.0,33.3,2.6,7.9],["2026-10-02","C217",56,41.0,10.9,40.0,1.8,3.7],["2026-10-02","C240",170,32.5,4.8,37.7,1.2,6.6],["2026-10-02","C408",60,34.9,1.8,20.0,3.3,8.1],["2026-10-02","C462",34,64.2,26.5,0.0,5.6,12.8],["2026-10-02","C510",124,40.0,7.4,53.8,5.3,7.9],["2026-10-02","C521",50,23.3,0.0,null,3.9,4.3],["2026-10-02","C636",13,53.1,15.4,null,0.0,7.7],["2026-10-02","C653",22,29.8,9.5,33.3,0.0,10.0],["2026-10-02","C664",59,37.3,8.8,66.7,6.3,5.3],["2026-10-03","TOTAL",545,33.9,4.4,39.7,2.0,10.4],["2026-10-03","C187",32,27.4,3.2,30.8,3.0,11.4],["2026-10-03","C217",38,32.6,2.8,50.0,5.1,11.4],["2026-10-03","C240",194,33.9,5.9,32.3,0.5,10.0],["2026-10-03","C408",51,39.7,0.0,0.0,3.8,10.0],["2026-10-03","C462",29,44.2,11.1,40.0,6.5,25.0],["2026-10-03","C510",87,29.7,1.2,58.1,1.1,8.4],["2026-10-03","C521",50,29.0,4.0,null,0.0,4.3],["2026-10-03","C636",18,39.3,5.6,null,5.3,0.0],["2026-10-03","C653",18,41.1,6.3,0.0,0.0,5.3],["2026-10-03","C664",46,37.1,6.5,55.6,4.2,12.8],["2026-10-04","TOTAL",423,33.0,5.1,38.0,1.4,7.3],["2026-10-04","C187",26,29.3,3.8,62.5,7.1,7.7],["2026-10-04","C217",28,23.3,3.8,42.9,0.0,0.0],["2026-10-04","C240",150,38.5,9.0,36.8,1.3,11.2],["2026-10-04","C408",39,31.1,0.0,40.0,2.5,7.5],["2026-10-04","C462",24,44.2,8.3,66.7,4.2,0.0],["2026-10-04","C510",70,29.0,1.4,38.1,0.0,4.6],["2026-10-04","C521",33,28.0,0.0,null,0.0,5.9],["2026-10-04","C636",5,61.0,20.0,null,0.0,33.3],["2026-10-04","C653",12,30.2,8.3,0.0,0.0,7.7],["2026-10-04","C664",41,29.4,5.0,16.7,0.0,7.7],["2026-10-05","TOTAL",730,39.7,7.3,46.2,2.6,5.8],["2026-10-05","C187",37,41.5,11.1,33.3,7.5,10.8],["2026-10-05","C217",56,33.1,1.8,80.0,1.8,9.3],["2026-10-05","C240",252,38.1,9.5,41.0,1.6,4.9],["2026-10-05","C408",56,43.5,9.3,66.7,3.5,7.0],["2026-10-05","C462",35,42.0,3.0,22.2,2.9,2.8],["2026-10-05","C510",144,46.8,8.4,40.5,2.7,4.9],["2026-10-05","C521",75,37.1,5.3,null,1.4,4.0],["2026-10-05","C636",14,36.8,0.0,null,0.0,0.0],["2026-10-05","C653",17,35.2,14.3,25.0,0.0,5.6],["2026-10-05","C664",58,32.3,0.0,76.2,4.9,8.2],["2026-10-06","TOTAL",667,34.7,4.4,43.7,2.4,7.7],["2026-10-06","C187",55,35.0,5.7,23.1,3.5,14.3],["2026-10-06","C217",53,30.2,3.8,38.5,3.6,3.9],["2026-10-06","C240",219,29.7,1.9,35.8,1.4,8.1],["2026-10-06","C408",51,37.6,4.2,100.0,5.8,5.8],["2026-10-06","C462",40,42.4,2.6,50.0,0.0,5.3],["2026-10-06","C510",129,42.4,8.7,64.1,2.3,4.9],["2026-10-06","C521",54,32.2,3.8,null,5.6,5.9],["2026-10-06","C636",10,28.6,0.0,null,0.0,9.1],["2026-10-06","C653",20,32.6,10.0,20.0,0.0,0.0],["2026-10-06","C664",46,34.3,2.3,50.0,0.0,20.0],["2026-10-07","TOTAL",597,32.1,3.6,40.8,2.3,8.3],["2026-10-07","C187",43,23.4,2.6,11.1,0.0,4.9],["2026-10-07","C217",38,30.2,2.7,60.0,0.0,5.4],["2026-10-07","C240",193,28.3,2.1,40.9,0.5,8.4],["2026-10-07","C408",54,42.8,5.8,80.0,3.7,9.1],["2026-10-07","C462",29,43.8,13.8,0.0,14.7,13.8],["2026-10-07","C510",110,31.1,1.8,37.5,0.9,9.2],["2026-10-07","C521",59,40.1,6.8,null,1.8,7.3],["2026-10-07","C653",16,18.9,0.0,100.0,0.0,12.5],["2026-10-07","C664",55,34.2,3.6,40.0,6.8,7.1],["2026-10-08","TOTAL",642,33.0,4.1,48.1,2.6,6.2],["2026-10-08","C187",49,33.8,4.5,54.5,0.0,6.3],["2026-10-08","C217",53,40.7,7.7,70.0,5.4,5.9],["2026-10-08","C240",209,31.0,2.5,39.2,1.4,4.1],["2026-10-08","C408",64,36.0,3.3,50.0,1.6,1.6],["2026-10-08","C462",32,48.9,16.7,16.7,0.0,16.7],["2026-10-08","C510",114,33.0,1.8,57.1,2.6,10.4],["2026-10-08","C521",52,26.0,1.9,null,2.1,0.0],["2026-10-08","C636",14,35.8,0.0,null,0.0,7.1],["2026-10-08","C653",23,14.8,0.0,75.0,0.0,8.3],["2026-10-08","C664",46,34.6,9.3,42.9,11.5,8.3],["2026-10-09","TOTAL",572,33.0,4.9,54.5,2.7,5.8],["2026-10-09","C187",50,26.2,2.1,63.6,0.0,2.0],["2026-10-09","C217",50,29.9,4.3,44.4,5.7,10.4],["2026-10-09","C240",184,35.6,5.1,62.2,2.6,2.9],["2026-10-09","C408",45,37.5,4.5,0.0,2.3,6.4],["2026-10-09","C462",22,68.3,27.3,25.0,0.0,30.0],["2026-10-09","C510",98,25.5,1.0,48.1,3.9,3.3],["2026-10-09","C521",45,27.3,4.4,null,2.3,4.4],["2026-10-09","C636",8,41.0,0.0,null,0.0,0.0],["2026-10-09","C653",13,26.4,0.0,33.3,0.0,7.1],["2026-10-09","C664",65,34.8,6.3,60.0,3.0,4.8],["2026-10-10","TOTAL",512,37.7,6.4,45.2,1.4,7.8],["2026-10-10","C187",50,39.0,8.2,50.0,0.0,8.0],["2026-10-10","C217",38,28.0,0.0,45.5,5.0,16.2],["2026-10-10","C240",146,31.4,2.1,36.2,1.4,4.2],["2026-10-10","C408",36,32.8,2.9,50.0,2.7,2.9],["2026-10-10","C462",31,65.3,30.0,42.9,0.0,25.0],["2026-10-10","C510",95,37.3,6.4,56.4,1.0,7.7],["2026-10-10","C521",42,39.5,2.4,null,0.0,7.3],["2026-10-10","C636",6,26.8,0.0,null,0.0,0.0],["2026-10-10","C653",19,34.8,5.3,0.0,0.0,0.0],["2026-10-10","C664",55,47.0,13.0,50.0,1.8,7.8],["2026-10-11","TOTAL",434,31.8,3.3,39.5,2.7,8.5],["2026-10-11","C187",37,33.3,5.4,45.5,0.0,9.1],["2026-10-11","C217",31,25.3,0.0,41.7,3.2,6.3],["2026-10-11","C240",137,30.9,3.7,37.7,1.4,8.6],["2026-10-11","C408",41,26.7,2.5,12.5,0.0,5.0],["2026-10-11","C462",26,60.0,11.5,25.0,13.3,8.3],["2026-10-11","C510",80,32.2,1.3,53.1,3.6,4.0],["2026-10-11","C521",26,29.4,4.0,null,0.0,28.6],["2026-10-11","C636",8,36.0,0.0,null,0.0,0.0],["2026-10-11","C653",9,13.7,0.0,0.0,0.0,0.0],["2026-10-11","C664",47,31.0,2.1,40.0,4.1,8.7],["2026-10-12","TOTAL",736,31.7,2.4,45.6,2.1,5.1],["2026-10-12","C187",59,30.0,3.4,50.0,1.7,5.3],["2026-10-12","C217",53,23.7,0.0,53.8,0.0,11.1],["2026-10-12","C240",232,30.4,2.2,45.1,1.7,4.5],["2026-10-12","C408",55,35.3,1.9,40.0,5.3,3.6],["2026-10-12","C462",44,47.1,9.1,20.0,4.3,4.4],["2026-10-12","C510",133,31.0,0.8,47.9,0.7,3.1],["2026-10-12","C521",69,31.2,0.0,null,0.0,2.9],["2026-10-12","C636",10,24.9,0.0,null,9.1,10.0],["2026-10-12","C653",26,22.5,3.8,25.0,0.0,3.8],["2026-10-12","C664",65,35.7,4.8,54.5,7.2,11.1],["2026-10-13","TOTAL",696,34.6,4.3,40.1,2.6,7.0],["2026-10-13","C187",54,28.4,1.9,30.0,1.8,6.1],["2026-10-13","C217",55,42.0,11.5,66.7,3.6,8.0],["2026-10-13","C240",208,31.7,2.4,40.0,0.5,5.0],["2026-10-13","C408",55,36.9,3.8,66.7,3.7,5.6],["2026-10-13","C462",41,57.8,17.9,30.0,7.1,17.5],["2026-10-13","C510",142,34.8,3.6,35.8,4.7,3.6],["2026-10-13","C521",69,29.2,1.5,null,0.0,7.5],["2026-10-13","C636",4,34.8,0.0,null,0.0,0.0],["2026-10-13","C653",17,16.8,0.0,42.9,0.0,11.8],["2026-10-13","C664",55,37.0,3.7,45.5,3.6,13.8]]}</script>
+<script>
+(function(){
+"use strict";
+var PAGE_SRC = "<!doctype html>\n" + document.documentElement.outerHTML;
+var LS_KEY = "bcDailyMetrics.additions.v1";
+var MINE = ["C240","C187","C510"];
+var MINE_LABEL = {C240:"Action (C240)",C187:"Great America (C187)",C510:"Ellison's (C510)"};
+var SER = {C240:"--s1",C187:"--s2",C510:"--s3"};
+var METRICS = [
+  {k:"avg_rt",  i:3, name:"Avg response", short:"Avg RT", unit:" min", dir:-1, dec:1},
+  {k:"rt90",    i:4, name:"RT > 90 min",  short:"RT>90",  unit:"%", dir:-1, dec:1},
+  {k:"battery", i:5, name:"Battery conv", short:"Battery",unit:"%", dir:1,  dec:1},
+  {k:"passed",  i:6, name:"Passed calls", short:"Passed", unit:"%", dir:-1, dec:1},
+  {k:"cancel",  i:7, name:"Cancel rate",  short:"Cancel", unit:"%", dir:-1, dec:1},
+  {k:"volume",  i:2, name:"Volume",       short:"Volume", unit:"",  dir:0,  dec:0}
+];
+// approximate status cutoffs [good, warn, serious] — inferred from James's cell colors
+var THRESH = {
+  avg_rt:{dir:-1, cut:[36,40,45]},
+  rt90:{dir:-1, cut:[5,8,11]},
+  battery:{dir:1, cut:[40,35,30]},
+  passed:{dir:-1, cut:[3,3,3]},
+  cancel:{dir:-1, cut:[8,10,10]}
+};
+function status(k,v){
+  var t=THRESH[k]; if(!t||v==null||isNaN(v)) return "";
+  var c=t.cut;
+  if(t.dir<0){ if(v<c[0]||(k==="cancel"&&v<=c[0])) return "good"; if(v<c[1]) return "warn"; if(v<c[2]) return "serious"; return "critical"; }
+  if(v>=c[0]) return "good"; if(v>=c[1]) return "warn"; if(v>=c[2]) return "serious"; return "critical";
+}
+var STATUS_TXT={good:"On target",warn:"Watch",serious:"Poor",critical:"Critical"};
+
+// ---------- data ----------
+var base = JSON.parse(document.getElementById("bc-data").textContent);
+var NAMES = base.names;
+function loadLocal(){ try{ var s=localStorage.getItem(LS_KEY); return s?JSON.parse(s):{names:{},rows:[]}; }catch(e){ return {names:{},rows:[]}; } }
+function saveLocal(o){ try{ localStorage.setItem(LS_KEY, JSON.stringify(o)); return true; }catch(e){ return false; } }
+var local = loadLocal();
+var ROWS=[];
+function rebuild(){
+  var m={};
+  base.rows.forEach(function(r){ m[r[0]+"|"+r[1]]=r; });
+  local.rows.forEach(function(r){ m[r[0]+"|"+r[1]]=r; });
+  Object.keys(local.names||{}).forEach(function(k){ NAMES[k]=local.names[k]; });
+  ROWS=Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){return a[0]<b[0]?-1:a[0]>b[0]?1:(a[1]==="TOTAL"?-1:b[1]==="TOTAL"?1:a[1]<b[1]?-1:1);});
+}
+rebuild();
+function dates(){ var s={}; ROWS.forEach(function(r){s[r[0]]=1;}); return Object.keys(s).sort(); }
+
+// ---------- state ----------
+var state={win:7, metric:"avg_rt", sortK:null, sortDir:1};
+try{ var sv=JSON.parse(localStorage.getItem("bcDailyMetrics.view")||"null"); if(sv){state.win=sv.win;state.metric=sv.metric;} }catch(e){}
+function saveView(){ try{localStorage.setItem("bcDailyMetrics.view",JSON.stringify({win:state.win,metric:state.metric}));}catch(e){} }
+
+// ---------- helpers ----------
+var $=function(id){return document.getElementById(id);};
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function fmtD(d){var p=d.split("-");var dt=new Date(+p[0],+p[1]-1,+p[2]);return dt.toLocaleDateString("en-US",{weekday:"short",month:"numeric",day:"numeric"});}
+function fmtShort(d){var p=d.split("-");return (+p[1])+"/"+(+p[2]);}
+function fmt(m,v){ if(v==null||isNaN(v)) return "—"; return m.dec===0?Math.round(v).toLocaleString():v.toFixed(m.dec)+(m.unit==="%"?"%":""); }
+function fu(m,v){return fmt(m,v)+(m.unit===' min'&&v!=null?' min':'');}
+function M(k){return METRICS.filter(function(m){return m.k===k;})[0];}
+function windowDates(){ var d=dates(); return state.win?d.slice(-state.win):d; }
+function priorDates(){ var d=dates(); if(!state.win) return []; return d.slice(Math.max(0,d.length-2*state.win), d.length-state.win); }
+function agg(rows){ // volume-weighted
+  var o={volume:0}; var acc={}; METRICS.forEach(function(m){ if(m.k!=="volume") acc[m.k]={s:0,w:0}; });
+  rows.forEach(function(r){ var v=r[2]||0; o.volume+=v; METRICS.forEach(function(m){ if(m.k==="volume")return; var x=r[m.i]; if(x!=null&&!isNaN(x)){acc[m.k].s+=x*v;acc[m.k].w+=v;} }); });
+  Object.keys(acc).forEach(function(k){ o[k]=acc[k].w?acc[k].s/acc[k].w:null; });
+  o.days={}; rows.forEach(function(r){o.days[r[0]]=1;}); o.nDays=Object.keys(o.days).length;
+  if(o.nDays) o.volPerDay=o.volume/o.nDays;
+  return o;
+}
+function rowsFor(ds, filt){ var s={}; ds.forEach(function(d){s[d]=1;}); return ROWS.filter(function(r){return s[r[0]]&&filt(r);}); }
+function stationsIn(ds){ var s={}; rowsFor(ds,function(r){return r[1]!=="TOTAL";}).forEach(function(r){s[r[1]]=1;}); return Object.keys(s).sort(); }
+function better(m,a,b){ if(a==null||b==null) return 0; return m.dir*(a-b); } // >0 means a better
+
+// ---------- controls ----------
+function buildControls(){
+  var ws=$("winSeg"); [].forEach.call(ws.children,function(b){ b.setAttribute("aria-pressed", String(+b.dataset.w===state.win)); b.onclick=function(){state.win=+b.dataset.w;saveView();render();}; });
+  var ms=$("metricSeg"); ms.innerHTML="";
+  METRICS.forEach(function(m){ var b=document.createElement("button"); b.textContent=m.short; b.setAttribute("aria-pressed",String(m.k===state.metric)); b.onclick=function(){state.metric=m.k;saveView();render();}; ms.appendChild(b); });
+}
+
+// ---------- KPIs ----------
+function renderKPIs(){
+  var ds=windowDates(), pd=priorDates();
+  var mine=agg(rowsFor(ds,function(r){return MINE.indexOf(r[1])>=0;}));
+  var mineP=agg(rowsFor(pd,function(r){return MINE.indexOf(r[1])>=0;}));
+  var rest=agg(rowsFor(ds,function(r){return r[1]!=="TOTAL"&&MINE.indexOf(r[1])<0;}));
+  var h="";
+  METRICS.forEach(function(m){
+    var v= m.k==="volume"?mine.volPerDay:mine[m.k];
+    var vp= m.k==="volume"?mineP.volPerDay:mineP[m.k];
+    var vr= m.k==="volume"?rest.volPerDay:rest[m.k];
+    var st=status(m.k,v);
+    var delta="";
+    if(pd.length && vp!=null && v!=null){
+      var dlt=v-vp, good=m.dir===0?null:(m.dir*dlt>0);
+      var cls=good===null?"":(Math.abs(dlt)<0.05?"":(good?"better":"worse"));
+      var arrow=dlt>0?"▲":dlt<0?"▼":"";
+      delta='<span class="'+cls+'">'+arrow+" "+(m.dec===0?Math.abs(Math.round(dlt)):Math.abs(dlt).toFixed(1))+(m.unit==="%"?" pts":m.unit)+"</span> vs prior "+pd.length+"d";
+    }
+    var cmpRest = m.k==="volume" ? "" : ' · rest of region '+fmt(m,vr);
+    h+='<div class="kpi"><div class="lab"><span>'+m.name+(m.k==="volume"?" / day":"")+'</span>'+(st?'<span class="pill '+st+'">'+STATUS_TXT[st]+'</span>':"")+'</div>'+
+       '<div class="val">'+fmt(m,v)+(m.unit===" min"&&v!=null?'<span style="font-size:14px;font-weight:500;color:var(--ink-2)"> min</span>':"")+'</div>'+
+       '<div class="cmp">'+(delta||"&nbsp;")+cmpRest+'</div></div>';
+  });
+  $("kpis").innerHTML='<div style="grid-column:1/-1" class="sub"><b style="color:var(--ink)">FirstLine stations combined</b> (C240 + C187 + C510) · '+ (ds.length===1?fmtD(ds[0]):(ds.length+" report days, "+fmtShort(ds[0])+"–"+fmtShort(ds[ds.length-1]))) +'</div>'+h;
+}
+
+// ---------- leaderboard ----------
+function leaderboard(ds){
+  return stationsIn(ds).map(function(s){ var a=agg(rowsFor(ds,function(r){return r[1]===s;})); a.id=s; return a; });
+}
+function rankOf(list,id,m){
+  var vals=list.filter(function(x){return x[m.k]!=null;}).sort(function(a,b){return m.dir>0?b[m.k]-a[m.k]:a[m.k]-b[m.k];});
+  for(var i=0;i<vals.length;i++) if(vals[i].id===id) return {r:i+1,n:vals.length};
+  return null;
+}
+function renderLB(){
+  var ds=windowDates(); var list=leaderboard(ds); var m=M(state.metric);
+  var sk=state.sortK||state.metric, sm=M(sk);
+  var dir = sk==="volume" ? -1 : (sm.dir>0?-1:1);
+  if(state.sortK) dir*=state.sortDir;
+  list.sort(function(a,b){ var x=sk==="volume"?a.volPerDay:a[sk], y=sk==="volume"?b.volPerDay:b[sk]; if(x==null)return 1; if(y==null)return -1; return dir*(x-y); });
+  var tot=agg(rowsFor(ds,function(r){return r[1]==="TOTAL";}));
+  $("lbTitle").textContent="Station leaderboard — ranked by "+M(sk).name;
+  var cols=[["volume","Vol/day"],["avg_rt","Avg RT"],["rt90","RT>90"],["battery","Battery"],["passed","Passed"],["cancel","Cancel"]];
+  var h='<thead><tr><th>#</th><th style="text-align:left">Station</th>'+cols.map(function(c){return '<th data-k="'+c[0]+'">'+c[1]+(c[0]===sk?(" "+(dir<0?"↓":"↑")):"")+'</th>';}).join("")+'<th>Days</th></tr></thead><tbody>';
+  list.forEach(function(a,i){
+    var mine=MINE.indexOf(a.id)>=0;
+    h+='<tr class="'+(mine?"mine":"")+'"><td>'+(i+1)+'</td><td style="text-align:left">'+a.id+" "+esc(NAMES[a.id]||"")+(mine?'<span class="tag">FL</span>':"")+'</td>'+
+      cols.map(function(c){ var mm=M(c[0]); var v=c[0]==="volume"?a.volPerDay:a[c[0]]; var st=status(c[0],v); return '<td>'+(st&&st!=="good"?'<span class="pill '+st+'">'+fmt(mm,v)+'</span>':fmt(mm,v))+'</td>'; }).join("")+'<td>'+a.nDays+'</td></tr>';
+  });
+  h+='<tr class="tot"><td></td><td style="text-align:left">Bay Central total (reported)</td>'+cols.map(function(c){var mm=M(c[0]);return '<td>'+fmt(mm,c[0]==="volume"?tot.volPerDay:tot[c[0]])+'</td>';}).join("")+'<td>'+tot.nDays+'</td></tr></tbody>';
+  $("lb").innerHTML=h;
+  [].forEach.call($("lb").querySelectorAll("th[data-k]"),function(th){ th.onclick=function(){ var k=th.dataset.k; if(state.sortK===k) state.sortDir*=-1; else {state.sortK=k;state.sortDir=1;} renderLB(); }; });
+}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+// ---------- heatmap ----------
+function renderHM(){
+  var m=M(state.metric); var ds=windowDates(); if(ds.length<7) ds=dates().slice(-14);
+  var st=stationsIn(ds);
+  st.sort(function(a,b){ var ia=MINE.indexOf(a), ib=MINE.indexOf(b); if(ia>=0||ib>=0) return (ia<0?99:ia)-(ib<0?99:ib); return a<b?-1:1; });
+  var idx={}; ROWS.forEach(function(r){idx[r[0]+"|"+r[1]]=r;});
+  $("hmTitle").textContent="Daily heatmap — "+m.name;
+  $("hmNote").textContent=(m.k==="volume"?"Calls per day":"Cell tint = approximate status; ■ critical")+" · "+fmtShort(ds[0])+"–"+fmtShort(ds[ds.length-1]);
+  var h='<thead><tr><th>Station</th>'+ds.map(function(d){return '<th>'+fmtD(d).replace(",","<br>")+'</th>';}).join("")+'</tr></thead><tbody>';
+  st.concat(["TOTAL"]).forEach(function(s){
+    var mine=MINE.indexOf(s)>=0;
+    h+='<tr class="'+(mine?"mine":"")+(s==="TOTAL"?" tot":"")+'"><td>'+(s==="TOTAL"?"Bay Central total":(mine?MINE_LABEL[s]:s+" "+esc((NAMES[s]||"").split(/[ ,-]/)[0])))+'</td>';
+    ds.forEach(function(d){ var r=idx[d+"|"+s]; var v=r?r[m.i]:null; var c=status(m.k,v); h+='<td class="c '+c+'" title="'+esc((NAMES[s]||s)+" · "+fmtD(d)+" · "+m.name+": "+fmt(m,v)+(c?" ("+STATUS_TXT[c]+")":""))+'">'+(r?fmt(m,v).replace("%",""):"")+'</td>'; });
+    h+='</tr>';
+  });
+  $("hm").innerHTML=h+'</tbody>';
+}
+
+// ---------- trend chart ----------
+function renderTrend(){
+  var m=M(state.metric); var ds=windowDates(); if(ds.length<5) ds=dates().slice(-14);
+  $("trendTitle").textContent=m.name+" by day"+(m.unit===" min"?" (minutes)":m.unit==="%"?" (%)":" (calls)");
+  var el=$("trend"); var W=Math.max(320,el.clientWidth||800), H=W<600?240:300;
+  var pad={l:40,r:W<600?14:92,t:12,b:28};
+  var idx={}; ROWS.forEach(function(r){idx[r[0]+"|"+r[1]]=r;});
+  var showCtx=$("showCtx").checked;
+  var all=stationsIn(ds);
+  var series=[];
+  if(showCtx) all.forEach(function(s){ if(MINE.indexOf(s)<0) series.push({id:s,ctx:true}); });
+  if(m.k!=="volume") series.push({id:"TOTAL",tot:true});
+  MINE.forEach(function(s){ series.push({id:s,mine:true}); });
+  series.forEach(function(se){ se.pts=ds.map(function(d,i){ var r=idx[d+"|"+se.id]; return {i:i,d:d,v:r?r[m.i]:null}; }); });
+  var vals=[]; series.forEach(function(se){ se.pts.forEach(function(p){ if(p.v!=null) vals.push(p.v); }); });
+  var lo=Math.min.apply(null,vals), hi=Math.max.apply(null,vals);
+  if(m.unit==="%"||m.k==="volume") lo=0; else lo=Math.floor(lo/5)*5;
+  hi=niceMax(hi);
+  var x=function(i){return pad.l+(ds.length===1?0:(i*(W-pad.l-pad.r)/(ds.length-1)));};
+  var y=function(v){return pad.t+(H-pad.t-pad.b)*(1-(v-lo)/(hi-lo||1));};
+  var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+m.name+' trend">';
+  var ticks=niceTicks(lo,hi);
+  ticks.forEach(function(t){ s+='<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="var(--grid)" stroke-width="1"/>'+
+    '<text x="'+(pad.l-6)+'" y="'+(y(t)+4)+'" text-anchor="end" font-size="11" fill="var(--muted)" style="font-variant-numeric:tabular-nums">'+t+'</text>'; });
+  // threshold reference line (good cutoff)
+  var th=THRESH[m.k];
+  if(th && th.cut[0]>=lo && th.cut[0]<=hi){ s+='<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+y(th.cut[0])+'" y2="'+y(th.cut[0])+'" stroke="var(--good)" stroke-width="1" stroke-dasharray="4 4" opacity=".8"/>'+
+    '<text x="'+(W-pad.r-2)+'" y="'+(y(th.cut[0])-4)+'" text-anchor="end" font-size="10" fill="var(--ink-2)">≈ target '+th.cut[0]+'</text>'; }
+  var step=Math.ceil(ds.length/(W<600?6:12));
+  ds.forEach(function(d,i){ if(i%step===0||i===ds.length-1) s+='<text x="'+x(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--muted)">'+fmtShort(d)+'</text>'; });
+  s+='<line x1="'+pad.l+'" x2="'+(W-pad.r)+'" y1="'+(H-pad.b)+'" y2="'+(H-pad.b)+'" stroke="var(--axis)"/>';
+  series.forEach(function(se){
+    var col=se.ctx?"var(--ctx)":se.tot?"var(--total)":"var("+SER[se.id]+")";
+    var w=se.ctx?1.25:2, dash=se.tot?' stroke-dasharray="5 4"':"";
+    var path="",pen=false;
+    se.pts.forEach(function(p){ if(p.v==null){pen=false;return;} path+=(pen?"L":"M")+x(p.i).toFixed(1)+","+y(p.v).toFixed(1); pen=true; });
+    s+='<path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="'+w+'" stroke-linejoin="round" stroke-linecap="round"'+dash+'/>';
+    if(se.mine) se.pts.forEach(function(p){ if(p.v!=null && ds.length<=31) s+='<circle cx="'+x(p.i)+'" cy="'+y(p.v)+'" r="3" fill="'+col+'" stroke="var(--surface)" stroke-width="2"/>'; });
+  });
+  // direct labels at right end
+  if(W>=600){
+    var labs=series.filter(function(se){return se.mine||se.tot;}).map(function(se){ var last=null; se.pts.forEach(function(p){if(p.v!=null)last=p;}); return last?{se:se,y:y(last.v)}:null; }).filter(Boolean).sort(function(a,b){return a.y-b.y;});
+    for(var i=1;i<labs.length;i++) if(labs[i].y-labs[i-1].y<13) labs[i].y=labs[i-1].y+13;
+    labs.forEach(function(l){ var nm=l.se.tot?"Bay Central":({C240:"Action",C187:"Great Am.",C510:"Ellison's"})[l.se.id]; s+='<text x="'+(W-pad.r+8)+'" y="'+(l.y+4)+'" font-size="11" fill="var(--ink-2)">'+nm+'</text>'; });
+  }
+  s+='<line id="xh" x1="0" x2="0" y1="'+pad.t+'" y2="'+(H-pad.b)+'" stroke="var(--axis)" stroke-width="1" style="display:none"/>';
+  s+='<rect x="'+pad.l+'" y="'+pad.t+'" width="'+(W-pad.l-pad.r)+'" height="'+(H-pad.t-pad.b)+'" fill="transparent" id="hit"/></svg><div class="tip" id="tip"></div>';
+  el.innerHTML=s;
+  // legend
+  var lg='';
+  MINE.forEach(function(sid){ lg+='<span><i class="sw" style="background:var('+SER[sid]+')"></i>'+MINE_LABEL[sid]+'</span>'; });
+  if(m.k!=="volume") lg+='<span><i class="sw" style="background:repeating-linear-gradient(90deg,var(--total) 0 5px,transparent 5px 8px)"></i>Bay Central total</span>';
+  if(showCtx) lg+='<span><i class="sw" style="background:var(--ctx)"></i>Other stations</span>';
+  $("trendLegend").innerHTML=lg;
+  // hover
+  var hit=el.querySelector("#hit"), tip=el.querySelector("#tip"), xh=el.querySelector("#xh"), svg=el.querySelector("svg");
+  function move(ev){
+    var rect=svg.getBoundingClientRect(); var sx=(ev.clientX-rect.left)*W/rect.width;
+    var i=Math.round((sx-pad.l)/((W-pad.l-pad.r)/Math.max(1,ds.length-1))); i=Math.max(0,Math.min(ds.length-1,i));
+    xh.setAttribute("x1",x(i)); xh.setAttribute("x2",x(i)); xh.style.display="";
+    var lines=series.filter(function(se){return !se.ctx;}).map(function(se){ var p=se.pts[i]; var nm=se.tot?"Bay Central":MINE_LABEL[se.id]; var c=se.tot?"var(--total)":"var("+SER[se.id]+")"; var stt=status(m.k,p.v); return '<div class="r"><span><i class="sw" style="background:'+c+';width:10px"></i> '+nm+'</span><b>'+fmt(m,p.v)+(stt&&stt!=="good"?" "+({warn:"▲",serious:"◆",critical:"■"})[stt]:"")+'</b></div>'; }).join("");
+    var others=series.filter(function(se){return se.ctx&&se.pts[i].v!=null;}).map(function(se){return {id:se.id,v:se.pts[i].v};});
+    if(others.length){ others.sort(function(a,b){return m.dir>=0?b.v-a.v:a.v-b.v;}); lines+='<div class="r muted" style="margin-top:4px"><span>Best other: '+others[0].id+'</span><span>'+fmt(m,others[0].v)+'</span></div>'; }
+    tip.innerHTML='<div class="d">'+fmtD(ds[i])+'</div>'+lines; tip.style.display="block";
+    var px=x(i)*rect.width/W; var tw=tip.offsetWidth; tip.style.left=Math.min(Math.max(0,px+12),rect.width-tw)+"px"; if(px+12+tw>rect.width) tip.style.left=Math.max(0,px-tw-12)+"px"; tip.style.top="8px";
+  }
+  hit.addEventListener("mousemove",move); hit.addEventListener("touchstart",function(e){move(e.touches[0]);},{passive:true});
+  hit.addEventListener("mouseleave",function(){tip.style.display="none";xh.style.display="none";});
+}
+function niceMax(v){ var p=Math.pow(10,Math.floor(Math.log10(v||1))); var n=v/p; var c=[1,1.5,2,2.5,3,4,5,6,8,10]; for(var i=0;i<c.length;i++) if(n<=c[i]) return c[i]*p; return 10*p; }
+function niceTicks(lo,hi){ var span=hi-lo; var raw=span/4; var p=Math.pow(10,Math.floor(Math.log10(raw))); var st=[1,2,2.5,5,10].map(function(x){return x*p;}).filter(function(x){return x>=raw;})[0]; var t=[]; for(var v=Math.ceil(lo/st)*st; v<=hi+1e-9; v+=st) t.push(+v.toFixed(2)); return t; }
+
+// ---------- insights ----------
+function renderInsights(){
+  var ds=windowDates(); var list=leaderboard(ds); var out=[];
+  $("insWin").textContent=ds.length===1?fmtD(ds[0]):("Last "+ds.length+" report days");
+  // per FirstLine station: ranks + red flags
+  MINE.forEach(function(sid){
+    var a=list.filter(function(x){return x.id===sid;})[0]; if(!a) return;
+    var worst=null, best=null;
+    METRICS.forEach(function(m){ if(m.k==="volume") return; var rk=rankOf(list,sid,m); if(!rk) return; var pct=rk.r/rk.n;
+      if(!worst||pct>worst.pct) worst={m:m,rk:rk,pct:pct,v:a[m.k]}; if(!best||pct<best.pct) best={m:m,rk:rk,pct:pct,v:a[m.k]}; });
+    var flags=[];
+    METRICS.forEach(function(m){ if(m.k==="volume")return; var n=0; ds.forEach(function(d){ var r=ROWS.filter(function(r){return r[0]===d&&r[1]===sid;})[0]; if(r){var s=status(m.k,r[m.i]); if(s==="critical"||s==="serious") n++;} }); if(n) flags.push({m:m,n:n}); });
+    flags.sort(function(a,b){return b.n-a.n;});
+    var txt='<b>'+MINE_LABEL[sid]+'</b>: best at '+best.m.name+' ('+fu(best.m,best.v)+', #'+best.rk.r+' of '+best.rk.n+'); weakest at '+worst.m.name+' ('+fu(worst.m,worst.v)+', #'+worst.rk.r+' of '+worst.rk.n+').';
+    if(flags.length && ds.length>1) txt+=' Red days: '+flags.slice(0,2).map(function(f){return f.m.short+' '+f.n+'/'+ds.length;}).join(", ")+'.';
+    out.push(txt);
+  });
+  // volume share
+  var mineVol=list.filter(function(x){return MINE.indexOf(x.id)>=0;}).reduce(function(s,x){return s+x.volume;},0);
+  var allVol=list.reduce(function(s,x){return s+x.volume;},0);
+  if(allVol) out.push('FirstLine handled <b>'+Math.round(100*mineVol/allVol)+'%</b> of Bay Central volume ('+mineVol.toLocaleString()+' of '+allVol.toLocaleString()+' calls) in this window.');
+  // biggest cross-region concern
+  var bad=[]; list.forEach(function(a){ ["avg_rt","rt90","passed","cancel"].forEach(function(k){ if(status(k,a[k])==="critical") bad.push(a.id+" "+M(k).short+" "+fmt(M(k),a[k])); }); });
+  if(bad.length) out.push('Region-wide critical averages: '+bad.slice(0,6).join(" · ")+(bad.length>6?" …":"")+'.');
+  $("insights").innerHTML=out.map(function(t){return "<li>"+t+"</li>";}).join("");
+}
+
+// ---------- header ----------
+function renderHeader(){
+  var d=dates(); var nE=local.rows.length;
+  $("subtitle").textContent="AAA Bay Central · "+fmtD(d[0])+" – "+fmtD(d[d.length-1])+" · "+d.length+" report days";
+  $("updated").innerHTML="Latest data: <b>"+fmtD(d[d.length-1])+"</b>"+(nE?' · <span class="worse">'+nE+' rows not yet published</span>':"");
+  $("localMsg").textContent=nE?(nE+" rows saved in this browser only."):"";
+}
+
+function render(){ buildControls(); renderHeader(); renderKPIs(); renderInsights(); renderTrend(); renderLB(); renderHM(); }
+$("showCtx").onchange=renderTrend;
+var rt; window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(renderTrend,150);});
+
+// ---------- paste parser ----------
+var pending=null;
+var DAYRE=/^\s*(mon|tues|wednes|thurs|fri|satur|sun)day\s+(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/i;
+function num(s){ s=(s||"").trim(); if(!s||/^n\/?a$/i.test(s)) return null; s=s.replace("%","").replace(/,/g,""); var v=parseFloat(s); return isNaN(v)?null:v; }
+function yearFor(mo,dy){ var last=dates().slice(-1)[0]; var y=last?+last.slice(0,4):new Date().getFullYear(); var cand=new Date(y,mo-1,dy); var ref=last?new Date(+last.slice(0,4),+last.slice(5,7)-1,+last.slice(8,10)):new Date(); if(cand-ref< -180*864e5) y++; return y; }
+function pad2(n){return (n<10?"0":"")+n;}
+function parsePaste(txt){
+  var lines=txt.replace(/\r/g,"").split("\n"); var cur=$("fallbackDate").value||null; var rows=[], names={}, warn=[];
+  for(var i=0;i<lines.length;i++){
+    var L=lines[i]; if(!L.trim()) continue;
+    var dm=L.match(DAYRE); if(dm && !/C\d{3}/.test(L)){ var mo=+dm[2], dy=+dm[3]; var y=dm[4]?(dm[4].length===2?2000+ +dm[4]:+dm[4]):yearFor(mo,dy); cur=y+"-"+pad2(mo)+"-"+pad2(dy); continue; }
+    var cells=L.split("\t").map(function(c){return c.trim();}).filter(function(c){return c!=="";});
+    if(cells.length<7){ var tk=L.trim().split(/\s+/); if(tk.length>=7){ cells=[tk.slice(0,tk.length-6).join(" ")].concat(tk.slice(-6)); } }
+    if(cells.length<7) continue;
+    var label=cells[0], vals=cells.slice(cells.length-6);
+    // handle split "Facility ID" + "Name" columns
+    if(cells.length===8 && /^C\d{3}$/.test(cells[0])) label=cells[0]+"-"+cells[1];
+    var id=null, nm=null;
+    var fm=label.match(/^(C\d{3})\s*-?\s*(.*)$/);
+    if(fm){ id=fm[1]; nm=fm[2].trim(); } else if(/total/i.test(label)){ id="TOTAL"; } else continue;
+    if(num(vals[0])==null) continue;
+    if(!cur){ warn.push("No date found for some rows — set the fallback date."); break; }
+    var r=[cur,id,num(vals[0]),num(vals[1]),num(vals[2]),num(vals[3]),num(vals[4]),num(vals[5])];
+    if(rows.some(function(x){return x[0]===r[0]&&x[1]===r[1];})) warn.push(cur+" "+id+" appears twice — check it.");
+    rows.push(r); if(id!=="TOTAL"&&nm) names[id]=nm;
+  }
+  return {rows:rows,names:names,warn:warn};
+}
+$("parseBtn").onclick=function(){
+  var p=parsePaste($("paste").value); pending=p;
+  var byD={}; p.rows.forEach(function(r){(byD[r[0]]=byD[r[0]]||[]).push(r);});
+  var existing={}; ROWS.forEach(function(r){existing[r[0]]=1;});
+  var msg=Object.keys(byD).sort().map(function(d){return fmtD(d)+": "+byD[d].length+" rows"+(existing[d]?" (replaces existing)":"");}).join(" · ");
+  $("parseMsg").innerHTML=p.rows.length?'<span class="ok">Found '+p.rows.length+' rows.</span> '+msg+(p.warn.length?' <span class="err">'+p.warn.join(" ")+'</span>':""):'<span class="err">No rows recognized. Copy the table from the email body and try again.</span>';
+  $("addBtn").disabled=!p.rows.length;
+  if(p.rows.length){ var h='<table><thead><tr><th>Date</th><th>Station</th><th>Vol</th><th>Avg RT</th><th>RT>90</th><th>Battery</th><th>Passed</th><th>Cancel</th></tr></thead><tbody>'+
+    p.rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td>'+r.slice(2).map(function(v){return '<td>'+(v==null?"—":v)+'</td>';}).join("")+'</tr>';}).join("")+'</tbody></table>'; $("preview").innerHTML=h; }
+};
+$("addBtn").onclick=function(){
+  if(!pending) return;
+  var m={}; local.rows.forEach(function(r){m[r[0]+"|"+r[1]]=r;}); pending.rows.forEach(function(r){m[r[0]+"|"+r[1]]=r;});
+  local.rows=Object.keys(m).map(function(k){return m[k];}); local.names=Object.assign(local.names||{},pending.names);
+  var ok=saveLocal(local); rebuild(); render();
+  $("parseMsg").innerHTML='<span class="ok">Added.</span>'+(ok?"":' <span class="err">Browser storage unavailable — download the updated page now or the rows will be lost on reload.</span>');
+  $("paste").value=""; $("preview").innerHTML=""; $("addBtn").disabled=true; pending=null;
+};
+$("clearLocal").onclick=function(){ if(!local.rows.length) return; if(!confirm("Remove "+local.rows.length+" unpublished rows from this browser?")) return; local={names:{},rows:[]}; try{localStorage.removeItem(LS_KEY);}catch(e){} location.reload(); };
+function download(name,text,type){ var b=new Blob([text],{type:type}); var a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500); }
+$("dlHtml").onclick=function(){
+  var data={names:NAMES,rows:ROWS};
+  var json=JSON.stringify(data).replace(/</g,"\\u003c");
+  var out=PAGE_SRC.replace(/(<script type="application\/json" id="bc-data">)[\s\S]*?(<\/script>)/, function(_,a,b){return a+json+b;});
+  download("bay-area.html",out,"text/html");
+  $("localMsg").textContent="Downloaded. Replace the file on GitHub, then you can clear browser-only additions.";
+};
+$("dlCsv").onclick=function(){
+  var h="date,facility_id,facility_name,volume,avg_rt,rt90_pct,battery_conv_pct,passed_pct,cancel_pct\n";
+  h+=ROWS.map(function(r){ var nm=r[1]==="TOTAL"?"Bay Central Total":(NAMES[r[1]]||""); return [r[0],r[1],'"'+nm.replace(/"/g,'""')+'"'].concat(r.slice(2).map(function(v){return v==null?"":v;})).join(","); }).join("\n");
+  download("bay-central-daily.csv",h,"text/csv");
+};
+
+render();
+})();
+</script>
+</body>
+</html>
