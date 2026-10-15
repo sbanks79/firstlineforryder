@@ -100,6 +100,8 @@ tr.tot td{font-weight:600;border-top:1px solid var(--axis)}
 .hm td.critical{font-weight:700}
 .hm th{font-size:11px;text-align:center;cursor:default}
 .hm th:first-child,.hm td:first-child{text-align:left;padding-right:10px}
+.hm th.sum,.hm td.sum{border-left:2px solid var(--axis);font-weight:700;padding-left:8px;padding-right:8px}
+.hm tr.grp td{font-weight:600}
 textarea{width:100%;min-height:140px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--ink)}
 .note{font-size:12px;color:var(--ink-2)}
 .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
@@ -122,7 +124,7 @@ details summary{cursor:pointer;font-weight:620}
 
 <div class="controls" role="toolbar" aria-label="Filters">
   <div class="seg" id="winSeg" aria-label="Date window">
-    <button data-w="1">Latest day</button><button data-w="7">Last 7</button><button data-w="14">Last 14</button><button data-w="0">All</button>
+    <button data-w="1">Latest day</button><button data-w="7">Last 7</button><button data-w="14">Last 14</button><button data-w="30">Last 30</button><button data-w="0">All</button>
   </div>
   <div class="seg" id="metricSeg" aria-label="Metric"></div>
   <div class="stpick" id="stSeg" role="group" aria-label="Stations"></div>
@@ -354,19 +356,29 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp
 
 // ---------- heatmap ----------
 function renderHM(){
-  var m=M(state.metric); var ds=windowDates(); if(ds.length<7) ds=dates().slice(-14);
+  // columns = exactly the days in the chosen window, then period summary column(s)
+  var m=M(state.metric); var ds=windowDates(); var vol=m.k==="volume";
   var st=stationsIn(ds).filter(function(s){return MINE.indexOf(s)>=0;});
   st.sort(function(a,b){ var ia=MINE.indexOf(a), ib=MINE.indexOf(b); if(ia>=0||ib>=0) return (ia<0?99:ia)-(ib<0?99:ib); return a<b?-1:1; });
   var idx={}; ROWS.forEach(function(r){idx[r[0]+"|"+r[1]]=r;});
+  var per=ds.length===1?"day":ds.length+" days";
   $("hmTitle").textContent="Daily heatmap — "+m.name;
-  $("hmNote").textContent=(m.k==="volume"?"Calls per day":"Cell tint = approximate status; ■ critical")+" · "+fmtShort(ds[0])+"–"+fmtShort(ds[ds.length-1]);
-  var h='<thead><tr><th>Station</th>'+ds.map(function(d){return '<th>'+fmtD(d).replace(",","<br>")+'</th>';}).join("")+'</tr></thead><tbody>';
-  st.concat(["TOTAL"]).forEach(function(s){
-    var mine=FL.indexOf(s)>=0;
-    h+='<tr class="'+(mine?"mine":"")+(s==="TOTAL"?" tot":"")+'"><td>'+(s==="TOTAL"?"Bay Central total":esc(lab(s)))+'</td>';
-    ds.forEach(function(d){ var r=idx[d+"|"+s]; var v=r?r[m.i]:null; var c=status(m.k,v); h+='<td class="c '+c+'" title="'+esc((NAMES[s]||s)+" · "+fmtD(d)+" · "+m.name+": "+fmt(m,v)+(c?" ("+STATUS_TXT[c]+")":""))+'">'+(r?fmt(m,v).replace("%",""):"")+'</td>'; });
-    h+='</tr>';
-  });
+  $("hmNote").textContent=(vol?"Calls per day · Total and Avg/day for the "+per:"Cell tint = approximate status; ■ critical · "+per+" avg is weighted by calls")+" · "+fmtShort(ds[0])+(ds.length>1?"–"+fmtShort(ds[ds.length-1]):"");
+  var sumHead=vol?'<th class="sum">Total<br>'+per+'</th><th class="sum">Avg<br>per day</th>':'<th class="sum">Avg<br>'+per+'</th>';
+  var h='<thead><tr><th>Station</th>'+ds.map(function(d){return '<th>'+fmtD(d).replace(",","<br>")+'</th>';}).join("")+sumHead+'</tr></thead><tbody>';
+  function cell(name,d,v,has){ var c=status(m.k,v); return '<td class="c '+c+'" title="'+esc(name+" · "+fmtD(d)+" · "+m.name+": "+fmt(m,v)+(c?" ("+STATUS_TXT[c]+")":""))+'">'+(has?fmt(m,v).replace("%",""):"")+'</td>'; }
+  function sumCells(name,a){
+    if(vol) return '<td class="sum" title="'+esc(name+" · total calls")+'">'+fmt(m,a.volume)+'</td><td class="sum" title="'+esc(name+" · average calls per report day")+'">'+fmt(m,a.volPerDay)+'</td>';
+    var v=a[m.k], c=status(m.k,v); return '<td class="c sum '+c+'" title="'+esc(name+" · "+per+" avg (weighted by calls): "+fmt(m,v))+'">'+fmt(m,v).replace("%","")+'</td>';
+  }
+  function line(cls,name,filt){
+    h+='<tr class="'+cls+'"><td>'+esc(name)+'</td>';
+    ds.forEach(function(d){ var rs=rowsFor([d],filt); var a=agg(rs); h+=cell(name,d,vol?(rs.length?a.volume:null):a[m.k],rs.length>0); });
+    h+=sumCells(name,agg(rowsFor(ds,filt)))+'</tr>';
+  }
+  st.forEach(function(sid){ line(FL.indexOf(sid)>=0?"mine":"",lab(sid),function(r){return r[1]===sid;}); });
+  if(st.length>1) line("grp",selName()+" combined",function(r){return MINE.indexOf(r[1])>=0;});
+  line("tot","Bay Central total",function(r){return r[1]==="TOTAL";});
   $("hm").innerHTML=h+'</tbody>';
 }
 
