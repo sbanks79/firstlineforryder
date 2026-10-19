@@ -552,8 +552,8 @@ const DEFAULT_DATA = {
     ]
   },
   repairs: [
-    { asset:"ACTION-1300", shop:"Bay Area Truck", repair:"Camshaft", notes:"" },
-    { asset:"ACTION-1302", shop:"W.W. Williams", repair:"Toolbox", notes:"" },
+    { asset:"ACTION-1300", shop:"Bay Area Truck", repair:"Engine replacement", notes:"Needs an engine (was camshaft)" },
+    { asset:"ACTION-1302", shop:"W.W. Williams", repair:"Transmission", notes:"Expected done by end of October" },
     { asset:"ACTION-1315", shop:"Back in service", repair:"Software issue", notes:"Goes back to TEC of SF once 1320 returns" },
     { asset:"ACTION-1318", shop:"—", repair:"Toolbox door", notes:"Toolbox ordered" },
     { asset:"ACTION-1320", shop:"Monarch", repair:"Turbo", notes:"Still at Monarch · covered under warranty" },
@@ -604,7 +604,7 @@ const DVIR_ISSUES = [
 const STORAGE_KEY = "fleet_dashboard_data_v1";
 // Bump on every published data change. Saved browser edits from an older
 // version are discarded on load, so a publish always wins.
-const DATA_VERSION = "2026-10-12b";
+const DATA_VERSION = "2026-10-19a";
 let staleEditsDiscarded = false;
 const SEVERITY_COLOR = { red:"var(--red)", amber:"var(--amber)", yellow:"var(--yellow)", gray:"#5a6270" };
 
